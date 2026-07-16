@@ -2,10 +2,18 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Script from 'next/script';
 import { createQuizLog, logAnswer, completeQuizLog } from '@/app/actions/log';
 import QuizLoading from '@/components/QuizLoading';
 import AdSlot from '@/components/AdSlot';
 import styles from './QuizPlay.module.css';
+
+// Kakao SDK 타입 확장 선언
+declare global {
+  interface Window {
+    Kakao: any;
+  }
+}
 
 interface Option {
   id: string;
@@ -41,6 +49,75 @@ export default function QuizPlayClient({ quiz }: QuizPlayClientProps) {
   const [totalScore, setTotalScore] = useState(0);
   const [quizLogId, setQuizLogId] = useState<string | null>(null);
   const [isTransitioning, setIsTransitioning] = useState(false);
+  const [kakaoInitialized, setKakaoInitialized] = useState(false);
+  const [copied, setCopied] = useState(false);
+
+  // 로컬/도메인 공유용 URL 산출
+  const shareUrl = typeof window !== 'undefined' ? `${window.location.origin}/quiz/${quiz.id}` : '';
+
+  // 카카오 SDK 로드 완료 시 초기화
+  const handleKakaoLoad = () => {
+    const kakaoKey = process.env.NEXT_PUBLIC_KAKAO_CLIENT_KEY || 'e3ff81b671a9fbdf619e0bde2ceec43d';
+    if (window.Kakao && !window.Kakao.isInitialized()) {
+      try {
+        window.Kakao.init(kakaoKey);
+        setKakaoInitialized(true);
+      } catch (err) {
+        console.error('Failed to init Kakao SDK inside QuizPlay:', err);
+      }
+    } else if (window.Kakao && window.Kakao.isInitialized()) {
+      setKakaoInitialized(true);
+    }
+  };
+
+  // 카카오톡 공유 기능 기동
+  const handleKakaoShare = () => {
+    if (!kakaoInitialized || !window.Kakao) {
+      alert('카카오톡 공유 기능을 준비 중입니다. 잠시 후 다시 시도해 주세요.');
+      return;
+    }
+
+    window.Kakao.Share.sendDefault({
+      objectType: 'feed',
+      content: {
+        title: `[까도까도] ${quiz.title}`,
+        description: `${quiz.description}\n양파처럼 깔수록 재미있고 매콤한 진짜 성향 테스트`,
+        imageUrl: 'https://kkado-kkado.com/icon',
+        link: {
+          mobileWebUrl: shareUrl,
+          webUrl: shareUrl,
+        },
+      },
+      buttons: [
+        {
+          title: '테스트 시작하기 🧅',
+          link: {
+            mobileWebUrl: shareUrl,
+            webUrl: shareUrl,
+          },
+        },
+      ],
+    });
+  };
+
+  // 링크 클립보드 복사
+  const handleCopyLink = () => {
+    if (typeof navigator !== 'undefined' && navigator.clipboard) {
+      navigator.clipboard.writeText(shareUrl).then(() => {
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+      });
+    } else {
+      const el = document.createElement('textarea');
+      el.value = shareUrl;
+      document.body.appendChild(el);
+      el.select();
+      document.execCommand('copy');
+      document.body.removeChild(el);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
+  };
 
   // 퀴즈 시작하기
   const handleStart = async () => {
@@ -96,6 +173,12 @@ export default function QuizPlayClient({ quiz }: QuizPlayClientProps) {
   if (step === 'cover') {
     return (
       <div className={styles.container}>
+        <Script
+          src="https://t1.kakaocdn.net/kakao_js_sdk/2.7.2/kakao.min.js"
+          onLoad={handleKakaoLoad}
+          strategy="afterInteractive"
+        />
+
         <div className={styles.coverCard}>
           <div className={styles.badge}>{quiz.category} 테스트</div>
           <h1 className={styles.title}>{quiz.title}</h1>
@@ -109,6 +192,19 @@ export default function QuizPlayClient({ quiz }: QuizPlayClientProps) {
             테스트 시작하기
             <span className={styles.buttonArrow}>→</span>
           </button>
+
+          {/* 친구에게 성향 테스트 소문내기 공유 기능 */}
+          <div className={styles.shareContainer}>
+            <span className={styles.shareLabel}>📢 이 테스트 친구한테 공유하기</span>
+            <div className={styles.shareButtons}>
+              <button onClick={handleKakaoShare} className={styles.kakaoBtn}>
+                💬 카톡 공유
+              </button>
+              <button onClick={handleCopyLink} className={styles.linkCopyBtn}>
+                🔗 {copied ? '복사 완료!' : '링크 복사'}
+              </button>
+            </div>
+          </div>
         </div>
         <AdSlot type="quiz" />
       </div>
