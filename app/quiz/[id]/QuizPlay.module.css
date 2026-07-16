@@ -1,22 +1,20 @@
 .container {
   max-width: 600px;
   margin: 0 auto;
-  padding: 60px 20px;
-  min-height: 80vh;
+  padding: 30px 16px;
+  min-height: 90dvh;
   display: flex;
   flex-direction: column;
   justify-content: center;
 }
 
-/* 커버 디자인 */
+/* 커버 디자인 (키치 팝업 스타일) */
 .coverCard {
-  background: var(--card-bg);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid var(--card-border);
-  box-shadow: var(--card-shadow);
+  background: #ffffff;
+  border: 3px solid #000000;
+  box-shadow: 8px 8px 0px #000000;
   border-radius: 28px;
-  padding: 48px 32px;
+  padding: 40px 24px;
   text-align: center;
   margin-bottom: 24px;
 }
@@ -24,29 +22,37 @@
 .badge {
   display: inline-block;
   font-size: 12px;
-  font-weight: 700;
-  color: #9272eb;
-  background: rgba(146, 114, 235, 0.1);
-  padding: 6px 14px;
+  font-weight: 800;
+  color: #000000;
+  background: var(--kitsch-yellow);
+  border: 2px solid #000000;
+  padding: 6px 16px;
   border-radius: 99px;
   margin-bottom: 24px;
   letter-spacing: 0.5px;
+  box-shadow: 2px 2px 0px #000000;
+  transform: rotate(-1.5deg);
 }
 
 .title {
-  font-size: 28px;
-  font-weight: 800;
-  color: #1e293b;
+  font-size: 26px;
+  font-weight: 900;
+  color: #000000;
   line-height: 1.35;
-  margin-bottom: 16px;
-  letter-spacing: -0.5px;
+  margin-bottom: 20px;
+  word-break: keep-all;
 }
 
 .desc {
-  font-size: 15px;
-  color: #64748b;
+  font-size: 14px;
+  font-weight: 600;
+  color: #475569;
   line-height: 1.6;
-  margin-bottom: 32px;
+  margin-bottom: 28px;
+  background: #f8fafc;
+  border: 2px solid #000000;
+  padding: 16px;
+  border-radius: 16px;
 }
 
 .infoBox {
@@ -55,50 +61,55 @@
   justify-content: center;
   gap: 12px;
   font-size: 13px;
-  color: #94a3b8;
-  font-weight: 500;
-  margin-bottom: 40px;
+  color: #000000;
+  font-weight: 800;
+  margin-bottom: 32px;
 }
 
 .infoDivider {
-  color: #cbd5e1;
+  color: #000000;
 }
 
 .startButton {
   width: 100%;
-  background: linear-gradient(135deg, #5292f5 0%, #9272eb 100%);
-  color: #ffffff;
-  border: none;
-  border-radius: 16px;
+  background: var(--kitsch-lime);
+  color: #000000;
+  border: 3px solid #000000;
+  border-radius: 18px;
   padding: 18px;
-  font-size: 16px;
-  font-weight: 700;
+  font-size: 17px;
+  font-weight: 900;
   cursor: pointer;
-  box-shadow: 0 8px 25px rgba(82, 146, 245, 0.25);
+  box-shadow: 4px 4px 0px #000000;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
-  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  transition: all 0.2s ease;
 }
 
 .startButton:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 12px 30px rgba(82, 146, 245, 0.35);
+  transform: translate(-3px, -3px);
+  box-shadow: 7px 7px 0px #000000;
+}
+
+.startButton:active {
+  transform: translate(2px, 2px);
+  box-shadow: 2px 2px 0px #000000;
 }
 
 .buttonArrow {
-  font-size: 18px;
+  font-size: 20px;
   transition: transform 0.2s ease;
 }
 
 .startButton:hover .buttonArrow {
-  transform: translateX(4px);
+  transform: translateX(6px);
 }
 
 /* 프로그레스바 */
 .progressBarWrapper {
-  margin-bottom: 32px;
+  margin-bottom: 24px;
 }
 
 .progressBarHeader {
@@ -110,101 +121,111 @@
 
 .progressText {
   font-size: 13px;
-  font-weight: 600;
-  color: #64748b;
+  font-weight: 800;
+  color: #000000;
 }
 
 .progressPercent {
   font-size: 13px;
-  font-weight: 700;
-  color: #5292f5;
+  font-weight: 900;
+  color: #000000;
+  background: #ffffff;
+  border: 2px solid #000000;
+  padding: 2px 8px;
+  border-radius: 6px;
 }
 
 .progressBarTrack {
   width: 100%;
-  height: 6px;
-  background: rgba(0, 0, 0, 0.05);
+  height: 10px;
+  background: #ffffff;
+  border: 2px solid #000000;
   border-radius: 99px;
   overflow: hidden;
 }
 
 .progressBarFill {
   height: 100%;
-  background: linear-gradient(90deg, #5292f5 0%, #9272eb 100%);
+  background: var(--kitsch-pink);
   border-radius: 99px;
   transition: width 0.4s ease;
 }
 
 /* 질문 카드 */
 .questionCard {
-  background: var(--card-bg);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid var(--card-border);
-  box-shadow: var(--card-shadow);
+  background: #ffffff;
+  border: 3px solid #000000;
+  box-shadow: 6px 6px 0px #000000;
   border-radius: 28px;
-  padding: 40px 28px;
+  padding: 36px 20px;
   margin-bottom: 24px;
   display: flex;
   flex-direction: column;
 }
 
 .questionText {
-  font-size: 20px;
-  font-weight: 700;
-  color: #1e293b;
-  line-height: 1.5;
-  margin-bottom: 36px;
+  font-size: 19px;
+  font-weight: 900;
+  color: #000000;
+  line-height: 1.45;
+  margin-bottom: 32px;
   word-break: keep-all;
 }
 
 .qNum {
-  color: #5292f5;
-  font-size: 24px;
+  color: var(--kitsch-pink);
+  font-size: 28px;
   font-style: italic;
   font-weight: 900;
   margin-right: 4px;
+  text-shadow: 2px 2px 0px #000000;
 }
 
 .optionsList {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 14px;
 }
 
+/* 터치 편한 키치 선택 버튼 */
 .optionButton {
   width: 100%;
   background: #ffffff;
-  color: #334155;
-  border: 1px solid rgba(0, 0, 0, 0.06);
-  border-radius: 14px;
-  padding: 16px 20px;
+  color: #000000;
+  border: 3px solid #000000;
+  border-radius: 16px;
+  padding: 18px 20px; /* 모바일 터치를 위한 큼직한 패딩 */
   font-size: 14px;
-  font-weight: 600;
+  font-weight: 800;
   text-align: left;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.15s ease;
   line-height: 1.4;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.01);
+  box-shadow: 3px 3px 0px #000000;
 }
 
 .optionButton:hover {
-  background: #f8fafc;
-  border-color: #5292f5;
-  color: #5292f5;
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(82, 146, 245, 0.08);
+  background: var(--primary-bg);
+  transform: translate(-2px, -2px);
+  box-shadow: 5px 5px 0px #000000;
 }
 
 .optionButton:active {
-  transform: scale(0.99);
+  transform: translate(2px, 2px);
+  box-shadow: 1px 1px 0px #000000;
 }
 
-/* 페이드 인/아웃 트랜지션 애니메이션 */
+/* 카드 4가지 색상 랜덤 테마 */
+.optionButton:nth-child(4n+1):hover { background-color: #fef08a; }
+.optionButton:nth-child(4n+2):hover { background-color: #d9f99d; }
+.optionButton:nth-child(4n+3):hover { background-color: #cffafe; }
+.optionButton:nth-child(4n+4):hover { background-color: #fbcfe8; }
+
+/* 페이드 인/아웃 */
 .fadeIn {
   opacity: 1;
   transform: translateY(0);
-  transition: opacity 0.3s ease, transform 0.3s ease;
+  transition: opacity 0.25s ease, transform 0.25s ease;
 }
 
 .fadeOut {
@@ -213,41 +234,94 @@
   transition: opacity 0.2s ease, transform 0.2s ease;
 }
 
-/* Dark Mode */
-@media (prefers-color-scheme: dark) {
-  .coverCard {
-    background: var(--card-bg);
+/* Mobile Responsive */
+@media (max-width: 480px) {
+  .container {
+    padding: 16px 12px;
+    min-height: 95dvh;
   }
   
-  .title {
-    color: #f1f5f9;
-  }
-  
-  .desc {
-    color: #94a3b8;
-  }
-  
-  .infoBox {
-    color: #64748b;
-  }
-  
-  .progressBarTrack {
-    background: rgba(255, 255, 255, 0.05);
+  .questionCard {
+    padding: 28px 16px;
   }
   
   .questionText {
-    color: #f1f5f9;
+    font-size: 17px;
   }
   
   .optionButton {
-    background: rgba(15, 23, 42, 0.6);
-    color: #cbd5e1;
-    border-color: rgba(255, 255, 255, 0.05);
+    padding: 14px 16px;
+    font-size: 13px;
   }
-  
+
+  .title {
+    font-size: 22px;
+  }
+}
+
+/* Dark Mode */
+@media (prefers-color-scheme: dark) {
+  .coverCard {
+    background: #111827;
+    border-color: #ffffff;
+    box-shadow: 8px 8px 0px #ffffff;
+  }
+  .badge {
+    border-color: #ffffff;
+    color: #000000;
+    box-shadow: 2px 2px 0px #ffffff;
+  }
+  .title {
+    color: #ffffff;
+  }
+  .desc {
+    background: #1f2937;
+    border-color: #ffffff;
+    color: #e5e7eb;
+  }
+  .infoBox {
+    color: #ffffff;
+  }
+  .infoDivider {
+    color: #ffffff;
+  }
+  .startButton {
+    border-color: #ffffff;
+    color: #000000;
+    box-shadow: 4px 4px 0px #ffffff;
+  }
+  .startButton:hover {
+    box-shadow: 7px 7px 0px #ffffff;
+  }
+  .progressPercent {
+    border-color: #ffffff;
+    color: #ffffff;
+    background: #111827;
+  }
+  .progressBarTrack {
+    border-color: #ffffff;
+    background: #111827;
+  }
+  .questionCard {
+    background: #111827;
+    border-color: #ffffff;
+    box-shadow: 6px 6px 0px #ffffff;
+  }
+  .questionText {
+    color: #ffffff;
+  }
+  .optionButton {
+    background: #1f2937;
+    color: #ffffff;
+    border-color: #ffffff;
+    box-shadow: 3px 3px 0px #ffffff;
+  }
   .optionButton:hover {
-    background: rgba(82, 146, 245, 0.1);
-    border-color: #60a5fa;
-    color: #60a5fa;
+    box-shadow: 5px 5px 0px #ffffff;
   }
+  /* 다크모드 호버 색상 명도 조절 */
+  .optionButton:nth-child(4n+1):hover { background-color: #78350f; color: #ffffff; }
+  .optionButton:nth-child(4n+2):hover { background-color: #14532d; color: #ffffff; }
+  .optionButton:nth-child(4n+3):hover { background-color: #164e63; color: #ffffff; }
+  .optionButton:nth-child(4n+4):hover { background-color: #701a75; color: #ffffff; }
 }

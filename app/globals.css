@@ -1,27 +1,29 @@
 :root {
-  --background-start: #f8fafc;
-  --background-end: #e2e8f0;
-  --foreground: #0f172a;
+  /* 키치하고 비비드한 네오브루탈리즘 컬러 파레트 */
+  --bg-color: #fce7f3; /* 연한 핑크 */
+  --fg-color: #000000;
   
-  --primary: #5292f5;
-  --primary-hover: #3b82f6;
-  --secondary: #9272eb;
-  --accent: #ff69b4;
+  --primary: #d946ef; /* 쨍한 보라색 */
+  --primary-bg: #f5f3ff;
   
-  --card-bg: rgba(255, 255, 255, 0.7);
-  --card-border: rgba(255, 255, 255, 0.5);
-  --card-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.04);
+  --kitsch-yellow: #facc15; /* 팝 옐로우 */
+  --kitsch-lime: #a3e635; /* 네온 라임 */
+  --kitsch-pink: #ff007f; /* 핫 핑크 */
+  --kitsch-cyan: #06b6d4; /* 팝 시안 */
+  
+  --border-width: 3px;
+  
+  /* 네오브루탈리즘 특유의 선명한 블랙 하드 쉐도우 */
+  --brutal-shadow: 4px 4px 0px #000000;
+  --brutal-shadow-hover: 8px 8px 0px #000000;
+  --brutal-shadow-active: 2px 2px 0px #000000;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background-start: #0f172a;
-    --background-end: #020617;
-    --foreground: #f8fafc;
-    
-    --card-bg: rgba(15, 23, 42, 0.6);
-    --card-border: rgba(255, 255, 255, 0.05);
-    --card-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.2);
+    --bg-color: #1e1b4b; /* 어두운 남보라 */
+    --fg-color: #ffffff;
+    --primary-bg: #111827;
   }
 }
 
@@ -39,12 +41,19 @@ body {
 }
 
 body {
-  color: var(--foreground);
-  background: linear-gradient(135deg, var(--background-start) 0%, var(--background-end) 100%);
-  background-attachment: fixed;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans KR", sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
+  color: var(--fg-color);
+  background-color: var(--bg-color);
+  /* 팝아트 감성의 레트로 도트 배경 무늬 가미 */
+  background-image: radial-gradient(rgba(0, 0, 0, 0.1) 1.5px, transparent 1.5px);
+  background-size: 24px 24px;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans KR", sans-serif;
   -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+}
+
+@media (prefers-color-scheme: dark) {
+  body {
+    background-image: radial-gradient(rgba(255, 255, 255, 0.05) 1.5px, transparent 1.5px);
+  }
 }
 
 a {

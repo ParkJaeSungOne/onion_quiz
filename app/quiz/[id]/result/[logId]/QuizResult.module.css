@@ -1,7 +1,7 @@
 .container {
-  max-width: 680px;
+  max-width: 600px;
   margin: 0 auto;
-  padding: 60px 20px 100px 20px;
+  padding: 40px 16px 80px 16px;
   min-height: 100vh;
   display: flex;
   flex-direction: column;
@@ -9,26 +9,30 @@
 
 .header {
   text-align: center;
-  margin-bottom: 32px;
+  margin-bottom: 24px;
 }
 
 .categoryBadge {
   display: inline-block;
   font-size: 11px;
-  font-weight: 700;
-  color: #ff69b4;
-  background: rgba(255, 105, 180, 0.1);
-  padding: 4px 10px;
-  border-radius: 6px;
+  font-weight: 900;
+  color: #000000;
+  background: var(--kitsch-cyan);
+  border: 2px solid #000000;
+  padding: 6px 14px;
+  border-radius: 8px;
   margin-bottom: 12px;
   letter-spacing: 0.5px;
+  box-shadow: 2px 2px 0px #000000;
+  transform: rotate(-1deg);
 }
 
 .quizTitle {
-  font-size: 20px;
-  font-weight: 700;
-  color: #64748b;
+  font-size: 16px;
+  font-weight: 800;
+  color: #475569;
   letter-spacing: -0.5px;
+  margin-top: 6px;
 }
 
 .main {
@@ -36,13 +40,11 @@
 }
 
 .resultCard {
-  background: var(--card-bg);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid var(--card-border);
-  box-shadow: var(--card-shadow);
+  background: #ffffff;
+  border: 3px solid #000000;
+  box-shadow: 8px 8px 0px #000000;
   border-radius: 28px;
-  padding: 48px 36px;
+  padding: 40px 24px;
   text-align: center;
 }
 
@@ -50,19 +52,19 @@
 .characterWrapper {
   display: flex;
   justify-content: center;
-  margin-bottom: 28px;
+  margin-bottom: 24px;
 }
 
 .characterCircle {
-  width: 120px;
-  height: 120px;
+  width: 130px;
+  height: 130px;
   border-radius: 50%;
-  background: linear-gradient(135deg, rgba(82, 146, 245, 0.15) 0%, rgba(236, 72, 153, 0.15) 100%);
+  background: var(--kitsch-yellow);
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 2px solid rgba(255, 255, 255, 0.8);
-  box-shadow: 0 10px 25px rgba(31, 38, 135, 0.05);
+  border: 3px solid #000000;
+  box-shadow: 4px 4px 0px #000000;
   position: relative;
   animation: floatCircle 4s ease-in-out infinite;
 }
@@ -70,74 +72,89 @@
 .characterCircle::after {
   content: '';
   position: absolute;
-  inset: -6px;
+  inset: -8px;
   border-radius: 50%;
-  border: 1px dashed rgba(82, 146, 245, 0.3);
-  animation: rotateBorder 12s linear infinite;
+  border: 2px dashed #000000;
+  animation: rotateBorder 16s linear infinite;
 }
 
 .characterEmoji {
-  font-size: 54px;
-  filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.1));
+  font-size: 64px;
+  filter: drop-shadow(2px 2px 0px rgba(0, 0, 0, 0.15));
 }
 
 .scoreText {
-  font-size: 14px;
-  color: #64748b;
-  font-weight: 500;
-  margin-bottom: 12px;
+  font-size: 13px;
+  color: #475569;
+  font-weight: 800;
+  margin-bottom: 8px;
+  background: #f1f5f9;
+  display: inline-block;
+  padding: 4px 12px;
+  border: 2px solid #000000;
+  border-radius: 8px;
 }
 
 .scoreNumber {
-  color: #5292f5;
-  font-size: 18px;
-  font-weight: 800;
+  color: var(--kitsch-pink);
+  font-size: 16px;
+  font-weight: 900;
   margin-left: 2px;
 }
 
 .resultTitle {
-  font-size: 26px;
-  font-weight: 800;
-  color: #1e293b;
+  font-size: 24px;
+  font-weight: 900;
+  color: #000000;
   line-height: 1.35;
+  margin-top: 16px;
   margin-bottom: 20px;
   word-break: keep-all;
+  text-shadow: 1px 1px 0px #f8fafc;
 }
 
 .divider {
-  height: 4px;
-  width: 60px;
-  background: linear-gradient(90deg, #5292f5 0%, #9272eb 100%);
+  height: 6px;
+  width: 80px;
+  background: #000000;
   margin: 0 auto 28px auto;
   border-radius: 99px;
 }
 
 .resultContent {
-  font-size: 15px;
-  color: #475569;
-  line-height: 1.75;
+  font-size: 14px;
+  color: #000000;
+  line-height: 1.8;
   text-align: left;
   word-break: keep-all;
   margin-bottom: 40px;
+  background: #f8fafc;
+  border: 3px solid #000000;
+  padding: 24px 20px;
+  border-radius: 20px;
+  box-shadow: 4px 4px 0px #000000;
+  font-weight: 700;
 }
 
 /* 통계 랭킹 섹션 */
 .statsSection {
-  border-top: 1px dashed rgba(0, 0, 0, 0.08);
+  border-top: 3px dashed #000000;
   padding-top: 36px;
   text-align: left;
 }
 
 .statsHeading {
-  font-size: 16px;
-  font-weight: 700;
-  color: #1e293b;
+  font-size: 17px;
+  font-weight: 900;
+  color: #000000;
   margin-bottom: 6px;
+  text-transform: uppercase;
 }
 
 .statsSubheading {
   font-size: 12px;
-  color: #64748b;
+  color: #475569;
+  font-weight: 700;
   margin-bottom: 24px;
 }
 
@@ -148,17 +165,25 @@
 }
 
 .rankItem {
-  background: rgba(255, 255, 255, 0.4);
-  border: 1px solid rgba(0, 0, 0, 0.03);
-  border-radius: 14px;
+  background: #ffffff;
+  border: 3px solid #000000;
+  box-shadow: 4px 4px 0px #000000;
+  border-radius: 18px;
   padding: 16px;
   transition: all 0.2s ease;
 }
 
 .myRankItem {
-  background: rgba(82, 146, 245, 0.05);
-  border-color: rgba(82, 146, 245, 0.2);
+  background: #ecfdf5; /* 연한 초록배경 */
+  border-color: #000000;
+  box-shadow: 6px 6px 0px #000000;
 }
+
+/* 카드 4가지 색상 랜덤 테마 */
+.rankItem:nth-child(4n+1) { background-color: #fef08a; }
+.rankItem:nth-child(4n+2) { background-color: #d9f99d; }
+.rankItem:nth-child(4n+3) { background-color: #cffafe; }
+.rankItem:nth-child(4n+4) { background-color: #fbcfe8; }
 
 .rankItemHeader {
   display: flex;
@@ -174,27 +199,27 @@
 }
 
 .rankNumber {
-  font-size: 12px;
-  font-weight: 800;
-  color: #94a3b8;
-}
-
-.myRankItem .rankNumber {
-  color: #5292f5;
+  font-size: 13px;
+  font-weight: 900;
+  color: #000000;
+  background: #ffffff;
+  border: 2px solid #000000;
+  padding: 2px 6px;
+  border-radius: 6px;
 }
 
 .rankEmoji {
-  font-size: 16px;
+  font-size: 18px;
 }
 
 .rankTitle {
   font-size: 13px;
-  font-weight: 600;
-  color: #334155;
+  font-weight: 800;
+  color: #000000;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  max-width: 220px;
+  max-width: 200px;
 }
 
 .rankItemValue {
@@ -205,47 +230,48 @@
 
 .myBadge {
   font-size: 10px;
-  font-weight: 700;
+  font-weight: 900;
   color: #ffffff;
-  background: linear-gradient(135deg, #5292f5 0%, #9272eb 100%);
+  background: #000000;
+  border: 2px solid #000000;
   padding: 2px 8px;
-  border-radius: 4px;
-  box-shadow: 0 2px 6px rgba(82, 146, 245, 0.2);
+  border-radius: 6px;
 }
 
 .rankPercent {
-  font-size: 13px;
-  font-weight: 700;
-  color: #475569;
-}
-
-.myRankItem .rankPercent {
-  color: #5292f5;
+  font-size: 14px;
+  font-weight: 900;
+  color: #000000;
+  background: #ffffff;
+  border: 2px solid #000000;
+  padding: 2px 6px;
+  border-radius: 6px;
 }
 
 /* 백분율 바 */
 .trackBar {
   width: 100%;
-  height: 6px;
-  background: rgba(0, 0, 0, 0.03);
+  height: 10px;
+  background: #ffffff;
+  border: 2px solid #000000;
   border-radius: 99px;
   overflow: hidden;
 }
 
 .fillBar {
   height: 100%;
-  background: #cbd5e1;
+  background: #000000;
   border-radius: 99px;
   transition: width 0.6s ease;
 }
 
 .myFillBar {
-  background: linear-gradient(90deg, #5292f5 0%, #9272eb 100%);
+  background: var(--kitsch-pink);
 }
 
 .noResultText {
-  color: #94a3b8;
-  font-size: 15px;
+  color: #000000;
+  font-weight: 700;
 }
 
 .actionArea {
@@ -255,37 +281,39 @@
 }
 
 .backButton {
-  background: #ffffff;
-  color: #334155;
-  border: 1px solid rgba(0, 0, 0, 0.08);
-  border-radius: 16px;
-  padding: 18px 36px;
+  background: var(--kitsch-lime);
+  color: #000000;
+  border: 3px solid #000000;
+  border-radius: 18px;
+  padding: 16px 32px;
   font-size: 15px;
-  font-weight: 700;
+  font-weight: 900;
   cursor: pointer;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.02);
+  box-shadow: 4px 4px 0px #000000;
   display: flex;
   align-items: center;
   gap: 8px;
-  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  transition: all 0.2s ease;
 }
 
 .backButton:hover {
-  background: #f8fafc;
-  border-color: #5292f5;
-  color: #5292f5;
-  transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(82, 146, 245, 0.12);
+  transform: translate(-3px, -3px);
+  box-shadow: 7px 7px 0px #000000;
+}
+
+.backButton:active {
+  transform: translate(2px, 2px);
+  box-shadow: 2px 2px 0px #000000;
 }
 
 .arrow {
-  font-size: 16px;
+  font-size: 18px;
 }
 
 /* 애니메이션 */
 @keyframes floatCircle {
   0% { transform: translateY(0px); }
-  50% { transform: translateY(-6px); }
+  50% { transform: translateY(-8px); }
   100% { transform: translateY(0px); }
 }
 
@@ -296,81 +324,92 @@
 /* Dark Mode */
 @media (prefers-color-scheme: dark) {
   .quizTitle {
-    color: #94a3b8;
+    color: #e2e8f0;
   }
   
-  .resultTitle {
-    color: #f1f5f9;
-  }
-  
-  .resultContent {
-    color: #cbd5e1;
+  .resultCard {
+    background: #111827;
+    border-color: #ffffff;
+    box-shadow: 8px 8px 0px #ffffff;
   }
   
   .characterCircle {
-    background: linear-gradient(135deg, rgba(82, 146, 245, 0.08) 0%, rgba(236, 72, 153, 0.08) 100%);
-    border-color: rgba(255, 255, 255, 0.05);
+    border-color: #ffffff;
+    box-shadow: 4px 4px 0px #ffffff;
   }
   
   .characterCircle::after {
-    border-color: rgba(96, 165, 250, 0.2);
+    border-color: #ffffff;
+  }
+  
+  .scoreText {
+    background: #1f2937;
+    border-color: #ffffff;
+    color: #ffffff;
+  }
+  
+  .resultTitle {
+    color: #ffffff;
+  }
+  
+  .resultContent {
+    background: #1f2937;
+    border-color: #ffffff;
+    color: #ffffff;
+    box-shadow: 4px 4px 0px #ffffff;
   }
   
   .statsSection {
-    border-color: rgba(255, 255, 255, 0.08);
+    border-color: #ffffff;
   }
   
   .statsHeading {
-    color: #f1f5f9;
+    color: #ffffff;
   }
   
   .statsSubheading {
-    color: #64748b;
+    color: #cbd5e1;
   }
   
   .rankItem {
-    background: rgba(15, 23, 42, 0.4);
-    border-color: rgba(255, 255, 255, 0.02);
+    border-color: #ffffff;
+    box-shadow: 4px 4px 0px #ffffff;
   }
   
-  .myRankItem {
-    background: rgba(82, 146, 245, 0.08);
-    border-color: rgba(82, 146, 245, 0.15);
-  }
-  
-  .rankTitle {
-    color: #cbd5e1;
+  .rankNumber {
+    background: #1f2937;
+    border-color: #ffffff;
+    color: #ffffff;
   }
   
   .rankPercent {
-    color: #94a3b8;
+    background: #1f2937;
+    border-color: #ffffff;
+    color: #ffffff;
   }
   
-  .myRankItem .rankPercent {
-    color: #60a5fa;
+  .myBadge {
+    border-color: #ffffff;
+    background: #ffffff;
+    color: #000000;
   }
   
   .trackBar {
-    background: rgba(255, 255, 255, 0.03);
+    border-color: #ffffff;
+    background: #1f2937;
   }
   
   .fillBar {
-    background: #475569;
+    background: #ffffff;
   }
   
-  .myFillBar {
-    background: linear-gradient(90deg, #60a5fa 0%, #a78bfa 100%);
-  }
-
   .backButton {
-    background: rgba(15, 23, 42, 0.6);
-    color: #cbd5e1;
-    border-color: rgba(255, 255, 255, 0.05);
+    border-color: #ffffff;
+    color: #000000;
+    box-shadow: 4px 4px 0px #ffffff;
   }
   
   .backButton:hover {
-    background: rgba(82, 146, 245, 0.1);
-    border-color: #60a5fa;
-    color: #60a5fa;
+    box-shadow: 7px 7px 0px #ffffff;
   }
 }
