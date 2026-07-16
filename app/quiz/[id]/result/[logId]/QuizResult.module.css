@@ -321,4 +321,124 @@
   100% { transform: rotate(360deg); }
 }
 
+/* 🚀 공유 & 이미지 저장 섹션 스타일 */
+.shareSection {
+  margin-top: 36px;
+  padding: 26px 20px;
+  border: 3px solid #000000;
+  box-shadow: 6px 6px 0px #000000;
+  border-radius: 24px;
+  background: #ffffff;
+  text-align: center;
+}
+
+.shareTitle {
+  font-size: 15px;
+  font-weight: 900;
+  color: #000000;
+  margin-bottom: 18px;
+  border-bottom: 2px solid #000000;
+  padding-bottom: 6px;
+  display: inline-block;
+}
+
+.shareButtonsGrid {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.imageSaveBtn {
+  background: var(--kitsch-pink);
+  color: #ffffff;
+  border: 3px solid #000000;
+  box-shadow: 4px 4px 0px #000000;
+  padding: 16px;
+  border-radius: 16px;
+  font-weight: 950;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  width: 100%;
+}
+
+.imageSaveBtn:hover:not(:disabled) {
+  transform: translate(-3px, -3px);
+  box-shadow: 7px 7px 0px #000000;
+}
+
+.imageSaveBtn:active:not(:disabled) {
+  transform: translate(2px, 2px);
+  box-shadow: 2px 2px 0px #000000;
+}
+
+.imageSaveBtn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.socialButtonsGroup {
+  display: flex;
+  gap: 12px;
+}
+
+.kakaoBtn {
+  flex: 1;
+  background: #fef08a; /* 카카오 옐로우 */
+  color: #3b2214;
+  border: 3px solid #000000;
+  box-shadow: 3px 3px 0px #000000;
+  padding: 14px;
+  border-radius: 14px;
+  font-weight: 900;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.kakaoBtn:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: 5px 5px 0px #000000;
+}
+
+.kakaoBtn:active {
+  transform: translate(1px, 1px);
+  box-shadow: 1px 1px 0px #000000;
+}
+
+.linkCopyBtn {
+  flex: 1;
+  background: #ffffff;
+  color: #000000;
+  border: 3px solid #000000;
+  box-shadow: 3px 3px 0px #000000;
+  padding: 14px;
+  border-radius: 14px;
+  font-weight: 900;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.linkCopyBtn:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: 5px 5px 0px #000000;
+}
+
+.linkCopyBtn:active {
+  transform: translate(1px, 1px);
+  box-shadow: 1px 1px 0px #000000;
+}
+
+.kakaoIcon {
+  font-size: 16px;
+}
+
+
 
