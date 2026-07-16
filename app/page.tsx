@@ -8,14 +8,31 @@ import styles from './page.module.css';
 // 매번 요청 시 DB 최신 데이터를 반영하도록 설정
 export const revalidate = 0; 
 
-export default async function Home() {
+interface HomePageProps {
+  searchParams: Promise<{ page?: string }>;
+}
+
+export default async function Home({ searchParams }: HomePageProps) {
+  const { page: pageStr } = await searchParams;
+  const currentPage = parseInt(pageStr || '1', 10);
+  const pageSize = 6; // 한 페이지당 6개 테스트 노출 (속도 최적화)
+
   let quizzes: (Quiz & { questions: { id: string }[] })[] = [];
   let dbError = false;
-
+  let totalPages = 1;
+  let pageNum = 1;
 
   try {
+    const totalCount = await prisma.quiz.count();
+    totalPages = Math.ceil(totalCount / pageSize) || 1;
+    
+    // 유효한 페이지 번호 검증 (범위 가드)
+    pageNum = Math.min(Math.max(1, currentPage), totalPages);
+
     quizzes = await prisma.quiz.findMany({
       orderBy: { createdAt: 'desc' },
+      skip: (pageNum - 1) * pageSize,
+      take: pageSize,
       include: {
         questions: {
           select: { id: true }
@@ -62,36 +79,76 @@ export default async function Home() {
             </a>
           </div>
         ) : (
-          <div className={styles.grid}>
-            {quizzes.map((quiz, index) => {
-              // 퀴즈 카드 렌더링
-              const card = (
-                <Link key={quiz.id} href={`/quiz/${quiz.id}`} className={styles.card}>
-                  <div className={styles.cardHeader}>
-                    <span className={styles.category}>{quiz.category}</span>
-                    <span className={styles.qCount}>{quiz.questions.length}문항</span>
-                  </div>
-                  <h2 className={styles.cardTitle}>{quiz.title}</h2>
-                  <p className={styles.cardDesc}>{quiz.description}</p>
-                  <div className={styles.cardFooter}>
-                    <span className={styles.playText}>테스트 시작하기 →</span>
-                  </div>
-                </Link>
-              );
-
-              // 퀴즈 3개마다 중간 광고 삽입
-              if (index > 0 && index % 3 === 0) {
-                return (
-                  <div key={`ad-wrapper-${quiz.id}`} className={styles.gridAdWrapper}>
-                    <AdSlot type="main" />
-                    {card}
-                  </div>
+          <>
+            <div className={styles.grid}>
+              {quizzes.map((quiz, index) => {
+                // 테스트 카드 렌더링
+                const card = (
+                  <Link key={quiz.id} href={`/quiz/${quiz.id}`} className={styles.card}>
+                    <div className={styles.cardHeader}>
+                      <span className={styles.category}>{quiz.category}</span>
+                      <span className={styles.qCount}>{quiz.questions.length}문항</span>
+                    </div>
+                    <h2 className={styles.cardTitle}>{quiz.title}</h2>
+                    <p className={styles.cardDesc}>{quiz.description}</p>
+                    <div className={styles.cardFooter}>
+                      <span className={styles.playText}>테스트 시작하기 →</span>
+                    </div>
+                  </Link>
                 );
-              }
 
-              return card;
-            })}
-          </div>
+                // 테스트 3개마다 중간 광고 삽입
+                if (index > 0 && index % 3 === 0) {
+                  return (
+                    <div key={`ad-wrapper-${quiz.id}`} className={styles.gridAdWrapper}>
+                      <AdSlot type="main" />
+                      {card}
+                    </div>
+                  );
+                }
+
+                return card;
+              })}
+            </div>
+
+            {/* 네오브루탈리즘 스타일 페이징 UI */}
+            {totalPages > 1 && (
+              <div className={styles.pagination}>
+                {pageNum > 1 ? (
+                  <Link href={`/?page=${pageNum - 1}`} className={styles.pageButton}>
+                    ◀ 이전
+                  </Link>
+                ) : (
+                  <span className={`${styles.pageButton} ${styles.disabled}`}>
+                    ◀ 이전
+                  </span>
+                )}
+
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => {
+                  const isCurrent = p === pageNum;
+                  return isCurrent ? (
+                    <span key={p} className={`${styles.pageButton} ${styles.active}`}>
+                      {p}
+                    </span>
+                  ) : (
+                    <Link key={p} href={`/?page=${p}`} className={styles.pageButton}>
+                      {p}
+                    </Link>
+                  );
+                })}
+
+                {pageNum < totalPages ? (
+                  <Link href={`/?page=${pageNum + 1}`} className={styles.pageButton}>
+                    다음 ▶
+                  </Link>
+                ) : (
+                  <span className={`${styles.pageButton} ${styles.disabled}`}>
+                    다음 ▶
+                  </span>
+                )}
+              </div>
+            )}
+          </>
         )}
       </main>
 
