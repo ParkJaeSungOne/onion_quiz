@@ -52,12 +52,21 @@
   font-size: 13px;
   padding: 10px 16px;
   border-radius: 12px;
+  cursor: pointer;
   transition: all 0.15s ease;
 }
 
-.seedButton:hover {
+.seedButton:hover:not(:disabled) {
   transform: translate(-2px, -2px);
   box-shadow: 5px 5px 0px #000000;
+}
+
+.seedButton:disabled,
+.logoutButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none !important;
+  box-shadow: none !important;
 }
 
 .logoutButton {

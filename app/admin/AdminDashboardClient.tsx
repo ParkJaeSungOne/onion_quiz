@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { logoutAdmin, deleteQuiz } from '@/app/actions/admin';
+import { logoutAdmin, deleteQuiz, triggerAIGenerate } from '@/app/actions/admin';
 import styles from './admin.module.css';
 
 interface RefererStat {
@@ -41,6 +41,7 @@ export default function AdminDashboardClient({ stats, quizStats }: AdminDashboar
   const router = useRouter();
   const [activeQuizId, setActiveQuizId] = useState<number | null>(null);
   const [loading, setLoading] = useState<number | null>(null); // 삭제 진행 상태 관리
+  const [isGenerating, setIsGenerating] = useState(false); // AI 생성 상태 관리
 
   // 로그아웃 처리
   const handleLogout = async () => {
@@ -71,6 +72,29 @@ export default function AdminDashboardClient({ stats, quizStats }: AdminDashboar
     }
   };
 
+  // AI 성향 테스트 수동 생성 요청
+  const handleTriggerGenerate = async () => {
+    if (isGenerating) return;
+    if (!confirm('Gemini AI를 가동하여 새로운 6~10문항 트렌드 성향 테스트를 1개 강제 생성하시겠습니까?\n\n약 5초~10초 정도 소요됩니다.')) {
+      return;
+    }
+    
+    setIsGenerating(true);
+    try {
+      const res = await triggerAIGenerate();
+      if (res.success) {
+        alert(`성공적으로 생성 완료되었습니다! 🎉\n\n새 테스트: “ ${res.title} ”`);
+        router.refresh();
+      } else {
+        alert(`생성 실패: ${res.error}`);
+      }
+    } catch (err) {
+      alert('AI 테스트 생성 도중 오류가 발생했습니다.');
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
   return (
     <div className={styles.container}>
       <header className={styles.header}>
@@ -79,9 +103,13 @@ export default function AdminDashboardClient({ stats, quizStats }: AdminDashboar
           <h1 className={styles.title}>까도까도 관리자 센터</h1>
         </div>
         <div className={styles.headerActions}>
-          <a href="/api/cron/generate" className={styles.seedButton}>
-            ✨ 새 AI 테스트 즉시 수동생성
-          </a>
+          <button 
+            onClick={handleTriggerGenerate} 
+            className={styles.seedButton}
+            disabled={isGenerating}
+          >
+            {isGenerating ? '⏳ 생성 중...' : '✨ 새 AI 테스트 즉시 수동생성'}
+          </button>
           <button onClick={handleLogout} className={styles.logoutButton}>
             로그아웃 ↩
           </button>

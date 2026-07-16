@@ -1,6 +1,6 @@
 'use server';
 
-import { cookies } from 'next/headers';
+import { cookies, headers } from 'next/headers';
 import { revalidatePath } from 'next/cache';
 import prisma from '@/lib/prisma';
 
@@ -58,6 +58,43 @@ export async function deleteQuiz(quizId: number) {
     return { success: true };
   } catch (error: any) {
     console.error('Failed to delete quiz:', error);
+    return { success: false, error: error.message };
+  }
+}
+
+/**
+ * AI 성향 테스트 생성 API 강제 트리거 Action (보안 강화)
+ */
+export async function triggerAIGenerate() {
+  try {
+    const cookieStore = await cookies();
+    const session = cookieStore.get(SESSION_COOKIE_NAME);
+    if (!session || session.value !== 'authenticated') {
+      throw new Error('Unauthorized');
+    }
+
+    // 현재 접속 헤더에서 호스트(도메인) 정보를 안전하게 취득
+    const headersList = await headers();
+    const host = headersList.get('host') || 'localhost:3000';
+    const protocol = host.startsWith('localhost') ? 'http' : 'https';
+
+    const cronSecret = process.env.CRON_SECRET || '';
+    const url = `${protocol}://${host}/api/cron/generate?secret=${cronSecret}`;
+
+    console.log(`Triggering AI Generator via action: ${url}`);
+    
+    const response = await fetch(url, { cache: 'no-store' });
+    const data = await response.json();
+
+    if (!response.ok || !data.success) {
+      throw new Error(data.error || 'AI 테스트 생성 도중 오류가 발생했습니다.');
+    }
+
+    revalidatePath('/');
+    revalidatePath('/admin');
+    return { success: true, title: data.title };
+  } catch (error: any) {
+    console.error('Failed to trigger AI generate:', error);
     return { success: false, error: error.message };
   }
 }
