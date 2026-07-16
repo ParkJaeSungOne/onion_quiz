@@ -3,18 +3,7 @@ import prisma from '@/lib/prisma';
 
 export async function GET() {
   try {
-    // 1. 기존 목 데이터가 이미 적재되어 있는지 타이틀로 검증
-    const existing = await prisma.quiz.findFirst({
-      where: { title: '나의 밤티(BAM-T) 텐션 관상 테스트' }
-    });
 
-    if (existing) {
-      return NextResponse.json({
-        success: true,
-        message: 'Trendy mock quizzes already exist in your database!',
-        quizzes: ['나의 밤티(BAM-T) 텐션 관상 테스트', 'MZ 오피스 빌런 판독기', '카카오톡 메신저 빌런 테스트', '도파민 좀비 측정기', '홍대 힙스터 vs 아재 감성 판독기', '극강의 F형 vs T형 뇌절 테스트', '자발적 마이웨이 아싸 지수', '장바구니 탕진러 지수', '척추 물아일체 게으름 테스트', '은밀한 금사빠 지수 테스트']
-      });
-    }
 
     // 2. 요즘 감성의 참신한 트렌드 퀴즈 10가지 정의 (각 6문항씩 구성 -> 총점 6점 ~ 24점)
     const mockQuizzes = [
