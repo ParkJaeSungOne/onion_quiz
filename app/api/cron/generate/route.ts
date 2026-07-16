@@ -170,9 +170,21 @@ export async function GET(request: Request) {
 
   } catch (error: any) {
     console.error('Quiz Generation Error:', error);
+    let errMsg = error.message || 'An error occurred during quiz generation.';
+    
+    // 429 / RESOURCE_EXHAUSTED / 할당량 초과 에러 해석
+    if (
+      errMsg.includes('429') || 
+      errMsg.toLowerCase().includes('resource_exhausted') || 
+      errMsg.toLowerCase().includes('quota') ||
+      errMsg.toLowerCase().includes('rate limit')
+    ) {
+      errMsg = 'Gemini API 호출 제한(Rate Limit - 429 Too Many Requests)에 도달했습니다. 무료 티어 할당량이 소진되었거나 1분 동안 너무 많은 질문 생성이 가동되었습니다. 1~2분 가량 대기하신 후에 다시 트리거 버튼을 눌러주세요.';
+    }
+    
     return NextResponse.json({
       success: false,
-      error: error.message || 'An error occurred during quiz generation.'
+      error: errMsg
     }, { status: 500 });
   }
 }

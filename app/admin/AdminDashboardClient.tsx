@@ -42,6 +42,7 @@ export default function AdminDashboardClient({ stats, quizStats }: AdminDashboar
   const [activeQuizId, setActiveQuizId] = useState<number | null>(null);
   const [loading, setLoading] = useState<number | null>(null); // 삭제 진행 상태 관리
   const [isGenerating, setIsGenerating] = useState(false); // AI 생성 상태 관리
+  const [errorMsg, setErrorMsg] = useState<string | null>(null); // 에러 로그 출력용 상태
 
   // 로그아웃 처리
   const handleLogout = async () => {
@@ -57,16 +58,17 @@ export default function AdminDashboardClient({ stats, quizStats }: AdminDashboar
     }
 
     setLoading(id);
+    setErrorMsg(null);
     try {
       const res = await deleteQuiz(id);
       if (res.success) {
         alert('테스트가 성공적으로 삭제되었습니다.');
         router.refresh();
       } else {
-        alert(`삭제 실패: ${res.error}`);
+        setErrorMsg(`삭제 실패: ${res.error}`);
       }
-    } catch (err) {
-      alert('오류가 발생했습니다.');
+    } catch (err: any) {
+      setErrorMsg(`삭제 오류: ${err.message || '서버 통신 중 장애가 발생했습니다.'}`);
     } finally {
       setLoading(null);
     }
@@ -80,16 +82,17 @@ export default function AdminDashboardClient({ stats, quizStats }: AdminDashboar
     }
     
     setIsGenerating(true);
+    setErrorMsg(null);
     try {
       const res = await triggerAIGenerate();
       if (res.success) {
         alert(`성공적으로 생성 완료되었습니다! 🎉\n\n새 테스트: “ ${res.title} ”`);
         router.refresh();
       } else {
-        alert(`생성 실패: ${res.error}`);
+        setErrorMsg(`성향 테스트 생성 실패 상세 정보:\n${res.error}`);
       }
-    } catch (err) {
-      alert('AI 테스트 생성 도중 오류가 발생했습니다.');
+    } catch (err: any) {
+      setErrorMsg(`성향 테스트 생성 중 통신 오류 발생:\n${err.message || '알 수 없는 네트워크 오류'}`);
     } finally {
       setIsGenerating(false);
     }
@@ -115,6 +118,17 @@ export default function AdminDashboardClient({ stats, quizStats }: AdminDashboar
           </button>
         </div>
       </header>
+
+      {/* 에러 메시지 팝아트 복사 카드 배너 */}
+      {errorMsg && (
+        <div className={styles.errorBanner}>
+          <div className={styles.errorBannerHeader}>
+            <span className={styles.errorTitle}>⚠️ 작동 오류 리포트 (텍스트 마우스 드래그 복사 가능)</span>
+            <button onClick={() => setErrorMsg(null)} className={styles.closeErrorBtn}>✕</button>
+          </div>
+          <pre className={styles.errorText}>{errorMsg}</pre>
+        </div>
+      )}
 
       {/* KPI 지표 보드 */}
       <section className={styles.kpiGrid}>

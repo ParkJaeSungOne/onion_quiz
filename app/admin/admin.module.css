@@ -497,3 +497,73 @@
     color: #ffffff;
   }
 }
+
+/* 어드민 에러 박스 배너 (드래그 복사 가능) */
+.errorBanner {
+  background: #fee2e2;
+  border: 3px solid #000000;
+  box-shadow: 4px 4px 0px #000000;
+  border-radius: 18px;
+  padding: 20px;
+  margin-bottom: 30px;
+}
+
+.errorBannerHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  border-bottom: 2px solid #000000;
+  padding-bottom: 8px;
+}
+
+.errorTitle {
+  font-size: 13px;
+  font-weight: 900;
+  color: #dc2626;
+}
+
+.closeErrorBtn {
+  background: transparent;
+  border: none;
+  font-size: 16px;
+  font-weight: 900;
+  cursor: pointer;
+  color: #000000;
+  transition: transform 0.1s ease;
+}
+
+.closeErrorBtn:hover {
+  transform: scale(1.2);
+}
+
+.errorText {
+  white-space: pre-wrap;
+  word-break: break-all;
+  font-family: monospace;
+  font-size: 12px;
+  font-weight: 700;
+  color: #000000;
+  line-height: 1.5;
+}
+
+@media (prefers-color-scheme: dark) {
+  .errorBanner {
+    background: rgba(220, 38, 38, 0.15);
+    border-color: #ffffff;
+    box-shadow: 4px 4px 0px #ffffff;
+  }
+  .errorBannerHeader {
+    border-color: #ffffff;
+  }
+  .errorTitle {
+    color: #fca5a5;
+  }
+  .closeErrorBtn {
+    color: #ffffff;
+  }
+  .errorText {
+    color: #ffffff;
+  }
+}
+
