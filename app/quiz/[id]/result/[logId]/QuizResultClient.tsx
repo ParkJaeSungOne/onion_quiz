@@ -72,7 +72,12 @@ export default function QuizResultClient({
 
   // 카카오 SDK 로드 완료 시 초기화
   const handleKakaoLoad = () => {
-    const kakaoKey = process.env.NEXT_PUBLIC_KAKAO_CLIENT_KEY || 'e3ff81b671a9fbdf619e0bde2ceec43d';
+    // 환경변수 NEXT_PUBLIC_KAKAO_CLIENT_KEY가 비어있으면 아예 SDK 로드를 거절하여 4011 에러 방지
+    const kakaoKey = process.env.NEXT_PUBLIC_KAKAO_CLIENT_KEY;
+    if (!kakaoKey) {
+      console.warn('Kakao App Key is missing. Fallback copy link will be active.');
+      return;
+    }
 
     if (window.Kakao && !window.Kakao.isInitialized()) {
       try {
@@ -90,7 +95,8 @@ export default function QuizResultClient({
   // 카카오톡 공유 기능 기동 (결과 피드)
   const handleKakaoShare = () => {
     if (!kakaoInitialized || !window.Kakao) {
-      alert('카카오톡 공유 기능을 준비 중입니다. 잠시 후 다시 시도해 주세요.');
+      alert('아직 카카오 공유 키가 활성화되지 않아 테스트 결과 링크 복사로 대체합니다!\n\n(카카오 개발자 콘솔에서 키를 받아 Vercel에 NEXT_PUBLIC_KAKAO_CLIENT_KEY로 등록하면 카톡 공유가 자동 활성화됩니다.)');
+      handleCopyLink();
       return;
     }
 
@@ -129,7 +135,8 @@ export default function QuizResultClient({
   // 찰떡 짝꿍 소환 카톡 메시지
   const handleCompanionInvite = (companionTitle: string) => {
     if (!kakaoInitialized || !window.Kakao) {
-      alert('카카오톡 공유를 로드 중입니다.');
+      alert('카카오 공유 키가 없어 링크 복사로 대체합니다! 친구에게 붙여넣기해 주세요.');
+      handleCopyLink();
       return;
     }
     window.Kakao.Share.sendDefault({
@@ -158,7 +165,8 @@ export default function QuizResultClient({
   // 환장의 상극 저격 카톡 메시지
   const handleRivalInvite = (rivalTitle: string) => {
     if (!kakaoInitialized || !window.Kakao) {
-      alert('카카오톡 공유를 로드 중입니다.');
+      alert('카카오 공유 키가 없어 링크 복사로 대체합니다! 친구에게 붙여넣기해 주세요.');
+      handleCopyLink();
       return;
     }
     window.Kakao.Share.sendDefault({

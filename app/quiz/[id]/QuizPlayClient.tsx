@@ -57,7 +57,11 @@ export default function QuizPlayClient({ quiz }: QuizPlayClientProps) {
 
   // 카카오 SDK 로드 완료 시 초기화
   const handleKakaoLoad = () => {
-    const kakaoKey = process.env.NEXT_PUBLIC_KAKAO_CLIENT_KEY || 'e3ff81b671a9fbdf619e0bde2ceec43d';
+    const kakaoKey = process.env.NEXT_PUBLIC_KAKAO_CLIENT_KEY;
+    if (!kakaoKey) {
+      console.warn('Kakao App Key is missing on QuizPlay. Fallback copy link will be active.');
+      return;
+    }
     if (window.Kakao && !window.Kakao.isInitialized()) {
       try {
         window.Kakao.init(kakaoKey);
@@ -73,7 +77,8 @@ export default function QuizPlayClient({ quiz }: QuizPlayClientProps) {
   // 카카오톡 공유 기능 기동
   const handleKakaoShare = () => {
     if (!kakaoInitialized || !window.Kakao) {
-      alert('카카오톡 공유 기능을 준비 중입니다. 잠시 후 다시 시도해 주세요.');
+      alert('아직 카카오 공유 키가 활성화되지 않아 테스트 주소 링크 복사로 대체합니다!\n\n(카카오 개발자 콘솔에서 키를 받아 Vercel에 NEXT_PUBLIC_KAKAO_CLIENT_KEY로 등록하면 카톡 공유가 자동 활성화됩니다.)');
+      handleCopyLink();
       return;
     }
 
