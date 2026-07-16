@@ -32,7 +32,7 @@ export default async function Home() {
       <header className={styles.header}>
         <div className={styles.logoArea}>
           <OnionLogo className={styles.logoIcon} />
-          <h1 className={styles.title}>ONION QUIZ</h1>
+          <h1 className={styles.title}>ONION LAB</h1>
         </div>
         <p className={styles.subtitle}>
           양파처럼 까도 까도 새로운 나를 발견하는 성향 테스트 연구소
@@ -52,13 +52,13 @@ export default async function Home() {
         ) : quizzes.length === 0 ? (
           <div className={styles.infoCard}>
             <p className={styles.infoText}>
-              등록된 퀴즈가 아직 없습니다. 하루 한 번 AI 생성 파이프라인이 구동됩니다.
+              등록된 성향 테스트가 아직 없습니다. 하루 한 번 AI 생성 파이프라인이 구동됩니다.
             </p>
             <p className={styles.infoSubText}>
-              아래 버튼을 눌러 첫 퀴즈를 AI를 통해 즉시 생성할 수 있습니다:
+              아래 버튼을 눌러 첫 테스트를 AI를 통해 즉시 생성할 수 있습니다:
             </p>
             <a href="/api/cron/generate" className={styles.seedButton}>
-              ✨ 첫 AI 퀴즈 강제 생성하기 (수동 트리거)
+              ✨ 첫 AI 테스트 강제 생성하기 (수동 트리거)
             </a>
           </div>
         ) : (
@@ -96,8 +96,8 @@ export default async function Home() {
       </main>
 
       <footer className={styles.footer}>
-        <p>© 2026 AI Quiz Platform. All rights reserved.</p>
-        <p className={styles.footerInfo}>이 사이트는 매일 AI로 트렌디한 퀴즈를 자동 수집 및 적재합니다.</p>
+        <p>© 2026 Onion Lab (어니언 랩). All rights reserved.</p>
+        <p className={styles.footerInfo}>이 사이트는 매일 AI로 트렌디한 성향 테스트를 자동 수집 및 연구합니다.</p>
       </footer>
     </div>
   );
