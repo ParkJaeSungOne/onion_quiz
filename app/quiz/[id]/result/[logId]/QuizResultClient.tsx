@@ -107,7 +107,7 @@ export default function QuizResultClient({
       content: {
         title: `[까도까도] ${quiz.title} 결과!`,
         description: `나의 매칭 유형: “ ${matchedResult.emoji} ${matchedResult.title} ”\n양파처럼 깔수록 재미있고 매콤한 진짜 성향 테스트`,
-        imageUrl: 'https://kkado-kkado.com/icon',
+        imageUrl: 'https://kkado-kkado.com/thumbnail.png',
         link: {
           mobileWebUrl: shareUrl,
           webUrl: shareUrl,
@@ -144,7 +144,7 @@ export default function QuizResultClient({
       content: {
         title: `[까도까도] 나랑 찰떡 짝꿍이래! 💖`,
         description: `내 짝꿍 유형: “ ${companionTitle} ”\n야, 너 혹시 이 유형 아니냐? 빨랑 테스트해보고 결과 캡처해와라ㅋㅋㅋ`,
-        imageUrl: 'https://kkado-kkado.com/icon',
+        imageUrl: 'https://kkado-kkado.com/thumbnail.png',
         link: {
           mobileWebUrl: quizUrl,
           webUrl: quizUrl,
@@ -174,7 +174,7 @@ export default function QuizResultClient({
       content: {
         title: `[까도까도] 우리 파국 예정이래... 💔`,
         description: `내 환장의 상극 유형: “ ${rivalTitle} ”\n우리 상극 지수 측정해보게 얼른 와서 검사 좀 해봐라ㅋㅋㅋ`,
-        imageUrl: 'https://kkado-kkado.com/icon',
+        imageUrl: 'https://kkado-kkado.com/thumbnail.png',
         link: {
           mobileWebUrl: quizUrl,
           webUrl: quizUrl,

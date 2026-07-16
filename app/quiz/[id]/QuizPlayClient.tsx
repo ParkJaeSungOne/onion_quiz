@@ -87,7 +87,7 @@ export default function QuizPlayClient({ quiz }: QuizPlayClientProps) {
       content: {
         title: `[까도까도] ${quiz.title}`,
         description: `${quiz.description}\n양파처럼 깔수록 재미있고 매콤한 진짜 성향 테스트`,
-        imageUrl: 'https://kkado-kkado.com/icon',
+        imageUrl: 'https://kkado-kkado.com/thumbnail.png',
         link: {
           mobileWebUrl: shareUrl,
           webUrl: shareUrl,
