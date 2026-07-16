@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useRef, useState, useEffect } from 'react';
+import React, { useRef, useState } from 'react';
 import Link from 'next/link';
 import Script from 'next/script';
 import AdSlot from '@/components/AdSlot';
@@ -19,6 +19,12 @@ interface ResultData {
   maxScore: number;
   title: string;
   content: string;
+  emoji: string;
+}
+
+interface CompanionData {
+  id: string;
+  title: string;
   emoji: string;
 }
 
@@ -42,6 +48,8 @@ interface QuizResultClientProps {
   matchedResult: ResultData | null;
   sortedStats: StatItem[];
   logId: string;
+  companion: CompanionData | null;
+  rival: CompanionData | null;
 }
 
 export default function QuizResultClient({
@@ -50,6 +58,8 @@ export default function QuizResultClient({
   matchedResult,
   sortedStats,
   logId,
+  companion,
+  rival,
 }: QuizResultClientProps) {
   const cardRef = useRef<HTMLDivElement>(null);
   const [copied, setCopied] = useState(false);
@@ -62,7 +72,6 @@ export default function QuizResultClient({
 
   // 카카오 SDK 로드 완료 시 초기화
   const handleKakaoLoad = () => {
-    // 사용자의 Kakao JS App Key (환경변수가 지정되어 있으면 사용, 디폴트는 임시 개발자 데모용 키 등록)
     const kakaoKey = process.env.NEXT_PUBLIC_KAKAO_CLIENT_KEY || 'e3ff81b671a9fbdf619e0bde2ceec43d';
 
     if (window.Kakao && !window.Kakao.isInitialized()) {
@@ -78,7 +87,7 @@ export default function QuizResultClient({
     }
   };
 
-  // 카카오톡 공유 기능 기동
+  // 카카오톡 공유 기능 기동 (결과 피드)
   const handleKakaoShare = () => {
     if (!kakaoInitialized || !window.Kakao) {
       alert('카카오톡 공유 기능을 준비 중입니다. 잠시 후 다시 시도해 주세요.');
@@ -92,7 +101,7 @@ export default function QuizResultClient({
       content: {
         title: `[까도까도] ${quiz.title} 결과!`,
         description: `나의 매칭 유형: “ ${matchedResult.emoji} ${matchedResult.title} ”\n양파처럼 깔수록 재미있고 매콤한 진짜 성향 테스트`,
-        imageUrl: 'https://kkado-kkado.com/icon', // 파비콘 양파 URL 또는 대표 사이트 썸네일
+        imageUrl: 'https://kkado-kkado.com/icon',
         link: {
           mobileWebUrl: shareUrl,
           webUrl: shareUrl,
@@ -117,21 +126,76 @@ export default function QuizResultClient({
     });
   };
 
+  // 찰떡 짝꿍 소환 카톡 메시지
+  const handleCompanionInvite = (companionTitle: string) => {
+    if (!kakaoInitialized || !window.Kakao) {
+      alert('카카오톡 공유를 로드 중입니다.');
+      return;
+    }
+    window.Kakao.Share.sendDefault({
+      objectType: 'feed',
+      content: {
+        title: `[까도까도] 나랑 찰떡 짝꿍이래! 💖`,
+        description: `내 짝꿍 유형: “ ${companionTitle} ”\n야, 너 혹시 이 유형 아니냐? 빨랑 테스트해보고 결과 캡처해와라ㅋㅋㅋ`,
+        imageUrl: 'https://kkado-kkado.com/icon',
+        link: {
+          mobileWebUrl: quizUrl,
+          webUrl: quizUrl,
+        },
+      },
+      buttons: [
+        {
+          title: '궁합 테스트 하러 가기 🧅',
+          link: {
+            mobileWebUrl: quizUrl,
+            webUrl: quizUrl,
+          },
+        },
+      ],
+    });
+  };
+
+  // 환장의 상극 저격 카톡 메시지
+  const handleRivalInvite = (rivalTitle: string) => {
+    if (!kakaoInitialized || !window.Kakao) {
+      alert('카카오톡 공유를 로드 중입니다.');
+      return;
+    }
+    window.Kakao.Share.sendDefault({
+      objectType: 'feed',
+      content: {
+        title: `[까도까도] 우리 파국 예정이래... 💔`,
+        description: `내 환장의 상극 유형: “ ${rivalTitle} ”\n우리 상극 지수 측정해보게 얼른 와서 검사 좀 해봐라ㅋㅋㅋ`,
+        imageUrl: 'https://kkado-kkado.com/icon',
+        link: {
+          mobileWebUrl: quizUrl,
+          webUrl: quizUrl,
+        },
+      },
+      buttons: [
+        {
+          title: '상극 지수 측정 하기 💀',
+          link: {
+            mobileWebUrl: quizUrl,
+            webUrl: quizUrl,
+          },
+        },
+      ],
+    });
+  };
+
   // 결과 카드 이미지 다운로드 기능 (html2canvas)
   const handleDownloadImage = async () => {
     if (!cardRef.current || downloading) return;
 
     setDownloading(true);
     try {
-      // dynamic import로 SSR 에러 원천 방지
       const html2canvas = (await import('html2canvas')).default;
-
-      // 캡처 영역 스냅샷 생성
       const canvas = await html2canvas(cardRef.current, {
         useCORS: true,
         allowTaint: true,
-        backgroundColor: '#fce7f3', // 까도까도 시그니처 핑크색 배경 강제 적용
-        scale: 2, // 2배 선명하게 캡처
+        backgroundColor: '#fce7f3',
+        scale: 2,
         logging: false,
       });
 
@@ -158,7 +222,6 @@ export default function QuizResultClient({
         setTimeout(() => setCopied(false), 2000);
       });
     } else {
-      // fallback
       const el = document.createElement('textarea');
       el.value = shareUrl;
       document.body.appendChild(el);
@@ -172,7 +235,6 @@ export default function QuizResultClient({
 
   return (
     <div className={styles.container}>
-      {/* Kakao SDK 스크립트 비동기 로드 */}
       <Script
         src="https://t1.kakaocdn.net/kakao_js_sdk/2.7.2/kakao.min.js"
         onLoad={handleKakaoLoad}
@@ -184,14 +246,11 @@ export default function QuizResultClient({
         <h1 className={styles.quizTitle}>“ {quiz.title} ”</h1>
       </header>
 
-      {/* 결과 화면 상단 광고 */}
       <AdSlot type="result" />
 
       <main className={styles.main}>
         {matchedResult ? (
-          // 이미지 캡처 대상 엘리먼트 (cardRef 바인딩)
           <div ref={cardRef} className={styles.resultCard} id="result-card-area">
-            {/* 대표 캐릭터 이모지 박스 */}
             <div className={styles.characterWrapper}>
               <div className={styles.characterCircle}>
                 <span className={styles.characterEmoji}>{matchedResult.emoji}</span>
@@ -212,7 +271,53 @@ export default function QuizResultClient({
               ))}
             </p>
 
-            {/* 통계 랭킹 섹션 (자기 결과 카드 하단에 나열) */}
+            {/* 찰떡 짝꿍 & 환장의 상극 궁합 매칭 영역 (캡처 이미지에 포함되도록 카드 내부 배치) */}
+            {(companion || rival) && (
+              <div className={styles.chemistrySection}>
+                <h3 className={styles.chemistryHeading}>🧩 까도까도 환상의 케미 궁합</h3>
+                <div className={styles.chemistryGrid}>
+                  {companion && (
+                    <div className={`${styles.chemistryCard} ${styles.companionCard}`}>
+                      <span className={styles.chemBadge}>찰떡 짝꿍 💖</span>
+                      <span className={styles.chemEmoji}>{companion.emoji}</span>
+                      <h4 className={styles.chemTitle}>{companion.title}</h4>
+                      <p className={styles.chemDesc}>이 성향을 가진 내 단짝을 즉시 소환해봐요!</p>
+                      <button 
+                        onClick={(e) => {
+                          e.preventDefault();
+                          handleCompanionInvite(companion.title);
+                        }} 
+                        className={styles.chemInviteBtn}
+                      >
+                        카톡 소환 📢
+                      </button>
+                    </div>
+                  )}
+                  {rival && (
+                    <div className={`${styles.chemistryCard} ${styles.rivalCard}`}>
+                      <span className={styles.chemBadge} style={{ backgroundColor: 'var(--kitsch-pink)', color: '#ffffff' }}>
+                        환장의 상극 💔
+                      </span>
+                      <span className={styles.chemEmoji}>{rival.emoji}</span>
+                      <h4 className={styles.chemTitle}>{rival.title}</h4>
+                      <p className={styles.chemDesc}>마주치면 멸망각! 진짜 내 적인지 체크해봐요.</p>
+                      <button 
+                        onClick={(e) => {
+                          e.preventDefault();
+                          handleRivalInvite(rival.title);
+                        }} 
+                        className={styles.chemInviteBtn} 
+                        style={{ backgroundColor: 'var(--kitsch-pink)', color: '#ffffff' }}
+                      >
+                        이간질 저격 💀
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* 통계 랭킹 섹션 */}
             {sortedStats.length > 0 && (
               <div className={styles.statsSection}>
                 <h3 className={styles.statsHeading}>📊 전체 참여자 성향 분석 순위</h3>
@@ -257,11 +362,9 @@ export default function QuizResultClient({
         )}
       </main>
 
-      {/* 🚀 소셜 공유 & 이미지 저장 네오브루탈리즘 버튼 그룹 */}
       <section className={styles.shareSection}>
         <h3 className={styles.shareTitle}>📢 이 팩폭 결과 널리 까보기</h3>
         <div className={styles.shareButtonsGrid}>
-          {/* 이미지 저장 */}
           <button 
             onClick={handleDownloadImage} 
             className={styles.imageSaveBtn}
@@ -271,11 +374,9 @@ export default function QuizResultClient({
           </button>
           
           <div className={styles.socialButtonsGroup}>
-            {/* 카톡 공유 */}
             <button onClick={handleKakaoShare} className={styles.kakaoBtn}>
-              <span className={styles.kakaoIcon}>💬</span> 카카오톡 공유
+              <span className={styles.kakaoIcon}>💬</span> 카톡 공유
             </button>
-            {/* 링크 복사 */}
             <button onClick={handleCopyLink} className={styles.linkCopyBtn}>
               🔗 {copied ? '복사 완료!' : '결과 링크 복사'}
             </button>
@@ -283,10 +384,8 @@ export default function QuizResultClient({
         </div>
       </section>
 
-      {/* 결과 화면 하단 광고 */}
       <AdSlot type="result" />
 
-      {/* 다른 테스트 하러가기 버튼 */}
       <div className={styles.actionArea}>
         <Link href="/" className={styles.backButton}>
           다른 테스트 하러 가기

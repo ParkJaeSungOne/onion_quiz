@@ -60,6 +60,23 @@ export default async function QuizResultPage({ params }: ResultPageProps) {
     matchedResult = quiz.results[0]; // 예외 처리용 첫번째 결과
   }
 
+  // 4.1 짝꿍 및 상극 결과 산출 (Growth Hacking 궁합 카드 매핑)
+  let companionResult = null;
+  let rivalResult = null;
+
+  if (quiz.results.length >= 2) {
+    const myIndex = quiz.results.findIndex((r) => r.id === matchedResult?.id);
+    const totalCount = quiz.results.length;
+
+    // 찰떡 짝꿍: 내 다음 인덱스
+    const companionIdx = (myIndex + 1) % totalCount;
+    companionResult = quiz.results[companionIdx];
+
+    // 환장의 상극: 내 다다음 인덱스 (results가 2개일 때는 자기 자신으로 가드)
+    const rivalIdx = totalCount > 2 ? (myIndex + 2) % totalCount : myIndex;
+    rivalResult = quiz.results[rivalIdx];
+  }
+
   // 5. 통계 계산 (해당 퀴즈의 전체 로그 기반 결과 분포 산출)
   let sortedStats: any[] = [];
   try {
@@ -110,6 +127,18 @@ export default async function QuizResultPage({ params }: ResultPageProps) {
     emoji: matchedResult.emoji || '🧅',
   } : null;
 
+  const serializeCompanion = companionResult ? {
+    id: companionResult.id,
+    title: companionResult.title,
+    emoji: companionResult.emoji || '🧅',
+  } : null;
+
+  const serializeRival = rivalResult ? {
+    id: rivalResult.id,
+    title: rivalResult.title,
+    emoji: rivalResult.emoji || '🧅',
+  } : null;
+
   return (
     <QuizResultClient
       quiz={serializedQuiz}
@@ -117,6 +146,8 @@ export default async function QuizResultPage({ params }: ResultPageProps) {
       matchedResult={serializedMatchedResult}
       sortedStats={sortedStats}
       logId={logId}
+      companion={serializeCompanion}
+      rival={serializeRival}
     />
   );
 }

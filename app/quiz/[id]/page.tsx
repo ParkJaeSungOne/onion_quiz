@@ -1,4 +1,5 @@
 import { notFound } from 'next/navigation';
+import { Metadata } from 'next';
 import prisma from '@/lib/prisma';
 import QuizPlayClient from './QuizPlayClient';
 
@@ -9,6 +10,60 @@ interface QuizPageProps {
 // 1시간 단위 증분 정적 재생성 (ISR) 설정으로 플레이 페이지 로드 속도 향상
 export const revalidate = 3600; 
 
+/**
+ * 1. 검색엔진 최적화 (SEO) 극대화를 위한 개별 테스트 동적 메타데이터 생성기
+ */
+export async function generateMetadata({ params }: QuizPageProps): Promise<Metadata> {
+  const { id } = await params;
+  const quizId = parseInt(id, 10);
+  
+  if (isNaN(quizId)) {
+    return {};
+  }
+
+  const quiz = await prisma.quiz.findUnique({
+    where: { id: quizId },
+    select: {
+      title: true,
+      description: true,
+      category: true
+    }
+  });
+
+  if (!quiz) {
+    return {};
+  }
+
+  return {
+    title: `${quiz.title} | 까도까도 팩폭 테스트`,
+    description: `${quiz.description} - 요즘 인싸들 사이에서 유행하는 핫한 밈 ${quiz.category} 성향 테스트 까도까도.`,
+    openGraph: {
+      title: `${quiz.title} - 까도까도 (kkado-kkado.com)`,
+      description: quiz.description,
+      url: `https://kkado-kkado.com/quiz/${quizId}`,
+      siteName: '까도까도',
+      images: [
+        {
+          url: 'https://kkado-kkado.com/icon', // 파비콘 양파 🧅 이미지 활용
+          width: 256,
+          height: 256,
+          alt: quiz.title,
+        }
+      ],
+      type: 'website',
+    },
+    twitter: {
+      card: 'summary',
+      title: quiz.title,
+      description: quiz.description,
+      images: ['https://kkado-kkado.com/icon'],
+    }
+  };
+}
+
+/**
+ * 2. 테스트 시작 & 플레이 렌더러
+ */
 export default async function QuizPage({ params }: QuizPageProps) {
   const { id } = await params;
   const quizId = parseInt(id, 10);

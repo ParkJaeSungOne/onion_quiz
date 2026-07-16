@@ -440,5 +440,108 @@
   font-size: 16px;
 }
 
+/* 🧩 궁합 케미 섹션 및 카드 스타일 */
+.chemistrySection {
+  margin-top: 40px;
+  padding: 24px 0 0 0;
+  border-top: 3px dashed #000000;
+  text-align: left;
+}
+
+.chemistryHeading {
+  font-size: 15px;
+  font-weight: 900;
+  color: #000000;
+  margin-bottom: 24px;
+  text-align: center;
+}
+
+.chemistryGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 24px;
+}
+
+.chemistryCard {
+  background: #ffffff;
+  border: 3px solid #000000;
+  box-shadow: 3px 3px 0px #000000;
+  border-radius: 18px;
+  padding: 20px 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  position: relative;
+}
+
+.companionCard {
+  background-color: #fff5f5; /* 연붉은색 */
+}
+
+.rivalCard {
+  background-color: #f0fdf4; /* 연초록색 */
+}
+
+.chemBadge {
+  position: absolute;
+  top: -14px;
+  background: var(--kitsch-lime);
+  color: #000000;
+  border: 2px solid #000000;
+  box-shadow: 2px 2px 0px #000000;
+  border-radius: 8px;
+  font-size: 10px;
+  font-weight: 900;
+  padding: 2px 8px;
+}
+
+.chemEmoji {
+  font-size: 32px;
+  margin: 10px 0 6px 0;
+}
+
+.chemTitle {
+  font-size: 14px;
+  font-weight: 900;
+  color: #000000;
+  margin-bottom: 6px;
+}
+
+.chemDesc {
+  font-size: 11px;
+  font-weight: 700;
+  color: #475569;
+  line-height: 1.45;
+  margin-bottom: 14px;
+  flex-grow: 1;
+}
+
+.chemInviteBtn {
+  background: var(--kitsch-yellow);
+  color: #000000;
+  border: 2px solid #000000;
+  box-shadow: 2px 2px 0px #000000;
+  border-radius: 10px;
+  padding: 6px 16px;
+  font-size: 11px;
+  font-weight: 900;
+  cursor: pointer;
+  transition: all 0.1s ease;
+  width: 90%;
+  text-align: center;
+}
+
+.chemInviteBtn:hover {
+  transform: translate(-1px, -1px);
+  box-shadow: 3px 3px 0px #000000;
+}
+
+.chemInviteBtn:active {
+  transform: translate(1px, 1px);
+  box-shadow: 1px 1px 0px #000000;
+}
+
+
 
 
