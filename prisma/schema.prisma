@@ -1,0 +1,71 @@
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Quiz {
+  id          Int        @id @default(autoincrement()) // String UUID -> Int Autoincrement
+  title       String
+  description String
+  imageUrl    String?
+  category    String     @default("Personality")
+  createdAt   DateTime   @default(now())
+  questions   Question[]
+  results     Result[]
+  logs        QuizLog[]
+}
+
+model Question {
+  id             String   @id @default(uuid())
+  quizId         Int      // Changed from String to Int
+  quiz           Quiz     @relation(fields: [quizId], references: [id], onDelete: Cascade)
+  questionNumber Int
+  text           String
+  options        Option[]
+}
+
+model Option {
+  id         String   @id @default(uuid())
+  questionId String
+  question   Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  text       String
+  score      Int      // Weight used for matching result
+}
+
+model Result {
+  id          String   @id @default(uuid())
+  quizId      Int      // Changed from String to Int
+  quiz        Quiz     @relation(fields: [quizId], references: [id], onDelete: Cascade)
+  minScore    Int
+  maxScore    Int
+  title       String
+  content     String
+  emoji       String   @default("🧅") // Added for character representation
+  imageUrl    String?
+}
+
+model QuizLog {
+  id         String      @id @default(uuid())
+  quizId     Int         // Changed from String to Int
+  quiz       Quiz        @relation(fields: [quizId], references: [id], onDelete: Cascade)
+  ipAddress  String
+  referer    String?
+  userAgent  String?
+  totalScore Int         @default(0) // Added for caching user score for stats
+  createdAt  DateTime    @default(now())
+  answers    AnswerLog[]
+}
+
+model AnswerLog {
+  id             String   @id @default(uuid())
+  quizLogId      String
+  quizLog        QuizLog  @relation(fields: [quizLogId], references: [id], onDelete: Cascade)
+  questionNumber Int
+  selectedOption String   // Option text
+  createdAt      DateTime @default(now())
+}

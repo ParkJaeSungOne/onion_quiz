@@ -1,0 +1,177 @@
+import { NextResponse } from 'next/server';
+import { GoogleGenAI } from '@google/genai';
+import prisma from '@/lib/prisma';
+
+// API 실행 제한시간을 넉넉히 설정 (Gemini API 호출 및 처리에 시간이 걸릴 수 있음)
+export const maxDuration = 60; 
+
+export async function GET(request: Request) {
+  // 인증 키 체크 (로컬 ?secret=... 파라미터 또는 Vercel Cron Bearer 토큰 대응)
+  const { searchParams } = new URL(request.url);
+  const secret = searchParams.get('secret');
+  const authHeader = request.headers.get('authorization');
+  const bearerToken = authHeader?.startsWith('Bearer ') ? authHeader.substring(7) : null;
+  const cronSecret = process.env.CRON_SECRET;
+  
+  if (cronSecret) {
+    if (secret !== cronSecret && bearerToken !== cronSecret) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+  }
+
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey) {
+    return NextResponse.json({ error: 'GEMINI_API_KEY environment variable is not defined.' }, { status: 500 });
+  }
+
+  try {
+    // 1. 기존 퀴즈 목록 가져오기 (중복 주제 방지용)
+    const existingQuizzes = await prisma.quiz.findMany({
+      select: { title: true }
+    });
+    const existingTitles = existingQuizzes.map(q => q.title).join(', ');
+
+    // 2. Gemini API 세팅
+    const ai = new GoogleGenAI({ apiKey });
+    
+    // 프롬프트 작성 - 문제수는 8~10개 사이로 유도 (최대 10개 미만/이하 제한)
+    const prompt = `
+당신은 대한민국에서 가장 핫한 심리 테스트 및 성향 테스트 제작자입니다. 
+인터넷에서 엄청난 화제를 모을 수 있는 새롭고 매력적이며 흥미진진한 퀴즈를 하나 만들어주세요.
+
+[제작 규칙]
+1. 주제 및 내용:
+   - 다음 기존에 만들어진 퀴즈들과 전혀 겹치지 않는 완전 새로운 최신 트렌드 주제여야 합니다.
+   - 기존 퀴즈들: [ ${existingTitles || '없음'} ]
+   - 대상 독자층(20-30대)이 공감하고 소셜 미디어(SNS)에 공유하고 싶어 하는 재미있거나 뼈를 때리는 키워드로 제작해주세요 (예: '직장 꼰대력 테스트', '나의 돈 관리 성향', '연애 스타일 유형' 등).
+2. 구조 제약:
+   - 질문(questions) 개수는 **반드시 8개에서 10개 사이**여야 합니다. (10개를 절대 넘어서는 안 됩니다).
+   - 각 질문마다 선택지(options)는 정확히 4개씩 제공되어야 합니다.
+   - 각 선택지는 1점, 2점, 3점, 4점의 점수(score)를 가집니다. 4개 선택지 각각 점수가 중복되지 않고 1, 2, 3, 4가 고르게 배분되어야 합니다.
+   - 결과 유형(results)은 정확히 4가지 구간이어야 합니다.
+   - 질문 수가 N개일 때, 사용자가 얻을 수 있는 총점은 최소 N점 ~ 최대 4*N점입니다.
+     예를 들어 질문이 10개이면 최소 10점, 최대 40점이 되며, 이에 맞게 결과 구간(minScore, maxScore)을 균등 분할해야 합니다:
+     - 유형 1: 10 ~ 17점
+     - 유형 2: 18 ~ 25점
+     - 유형 3: 26 ~ 33점
+     - 유형 4: 34 ~ 40점
+     (만약 질문이 8개나 9개이면 총점 범위에 맞추어 적절하게 minScore와 maxScore를 균등 분할해 주세요.)
+3. 언어: 모든 텍스트(제목, 설명, 질문, 선택지, 결과 타이틀 및 내용)는 한국어(Korean)로 자연스럽고 위트 있게 작성해주세요.
+
+반드시 아래 JSON 스키마 구조의 유효한 JSON 포맷으로만 응답해야 합니다. 
+마크다운(\`\`\`json) 기호를 넣지 말고 오직 순수 JSON 데이터만 출력해주세요.
+
+[JSON Schema]
+{
+  "title": "퀴즈 제목 (예: '나의 숨겨진 탕진 잼 성향 테스트')",
+  "description": "퀴즈에 대한 흥미로운 소개글 (1-2줄)",
+  "category": "테스트 카테고리 (예: '성격', '연애', '직장', '소비')",
+  "questions": [
+    {
+      "questionNumber": 1,
+      "text": "질문 텍스트 (예: '갑자기 보너스가 생겼을 때 나의 행동은?')",
+      "options": [
+        { "text": "일단 저축하고 미래를 계획한다.", "score": 1 },
+        { "text": "평소 갖고 싶던 위시리스트 중 하나를 산다.", "score": 2 },
+        { "text": "친구들에게 한 턱 쏘며 기분을 낸다.", "score": 3 },
+        { "text": "장바구니에 담아둔 것을 전부 결제해버린다.", "score": 4 }
+      ]
+    }
+  ],
+  "results": [
+    {
+      "minScore": 10,
+      "maxScore": 17,
+      "title": "결과 유형 타이틀 (예: '철벽 저축형 자산가')",
+      "content": "이 유형에 대한 자세한 성향 설명 및 조언 (3-4줄)",
+      "emoji": "해당 성향 유형을 가장 잘 나타내어 소셜미디어 공유 시 시선을 끄는 단일 이모지 캐릭터 (예: '🌱', '💸', '🧘‍♂️', '👑')"
+    }
+  ]
+}
+`;
+
+    // Gemini API 호출 (최신 @google/genai 사용)
+    const response = await ai.models.generateContent({
+      model: 'gemini-2.0-flash',
+      contents: prompt,
+      config: {
+        responseMimeType: 'application/json',
+      }
+    });
+
+    const jsonText = response.text;
+    if (!jsonText) {
+      throw new Error('Gemini API returned empty content');
+    }
+
+    const quizData = JSON.parse(jsonText.trim());
+
+    // 데이터 유효성 검증
+    if (!quizData.title || !quizData.questions || !quizData.results) {
+      throw new Error('Invalid quiz format received from AI');
+    }
+
+    // 3. 트랜잭션으로 DB에 퀴즈 생성
+    const createdQuiz = await prisma.$transaction(async (tx) => {
+      // 퀴즈 마스터 저장
+      const quiz = await tx.quiz.create({
+        data: {
+          title: quizData.title,
+          description: quizData.description || '',
+          category: quizData.category || 'Personality',
+        }
+      });
+
+      // 질문 및 선택지 저장
+      for (const q of quizData.questions) {
+        const question = await tx.question.create({
+          data: {
+            quizId: quiz.id,
+            questionNumber: q.questionNumber,
+            text: q.text,
+          }
+        });
+
+        if (q.options && Array.isArray(q.options)) {
+          await tx.option.createMany({
+            data: q.options.map((opt: { text: string; score: number }) => ({
+              questionId: question.id,
+              text: opt.text,
+              score: opt.score
+            }))
+          });
+        }
+      }
+
+      // 결과 유형 저장
+      if (quizData.results && Array.isArray(quizData.results)) {
+        await tx.result.createMany({
+          data: quizData.results.map((res: { minScore: number; maxScore: number; title: string; content: string; emoji?: string }) => ({
+            quizId: quiz.id,
+            minScore: res.minScore,
+            maxScore: res.maxScore,
+            title: res.title,
+            content: res.content,
+            emoji: res.emoji || '🧅'
+          }))
+        });
+      }
+
+      return quiz;
+    });
+
+    return NextResponse.json({
+      success: true,
+      message: 'New quiz generated successfully!',
+      quizId: createdQuiz.id,
+      title: createdQuiz.title
+    });
+
+  } catch (error: any) {
+    console.error('Quiz Generation Error:', error);
+    return NextResponse.json({
+      success: false,
+      error: error.message || 'An error occurred during quiz generation.'
+    }, { status: 500 });
+  }
+}
