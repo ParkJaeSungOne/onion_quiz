@@ -8,7 +8,8 @@ interface ResultPageProps {
   params: Promise<{ id: string; logId: string }>;
 }
 
-export const revalidate = 0;
+// 1분 단위 캐싱 적용 (동시 F5 연타에 의한 DB 부하 분산 및 최적화)
+export const revalidate = 60;
 
 export default async function QuizResultPage({ params }: ResultPageProps) {
   const { id, logId } = await params;

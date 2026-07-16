@@ -5,8 +5,8 @@ import AdSlot from '@/components/AdSlot';
 import OnionLogo from '@/components/OnionLogo';
 import styles from './page.module.css';
 
-// 매번 요청 시 DB 최신 데이터를 반영하도록 설정
-export const revalidate = 0; 
+// 5분 단위 증분 정적 재생성 (ISR) 설정으로 페이지 로딩 속도 극단적 향상
+export const revalidate = 300; 
 
 interface HomePageProps {
   searchParams: Promise<{ page?: string }>;

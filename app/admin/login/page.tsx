@@ -23,10 +23,10 @@ export default function AdminLoginPage() {
         router.refresh();
       } else {
         setError(res.error || '인증에 실패했습니다.');
+        setLoading(false);
       }
     } catch (err) {
       setError('서버 통신 중 오류가 발생했습니다.');
-    } finally {
       setLoading(false);
     }
   };
@@ -47,14 +47,31 @@ export default function AdminLoginPage() {
               placeholder="••••••••"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
+              disabled={loading}
               required
             />
           </div>
 
           {error && <div className={styles.errorAlert}>⚠️ {error}</div>}
 
+          {loading && (
+            <div className={styles.progressContainer}>
+              <div className={styles.progressText}>🔐 보안 세션을 인증하는 중...</div>
+              <div className={styles.progressBarTrack}>
+                <div className={styles.progressBarFill}></div>
+              </div>
+            </div>
+          )}
+
           <button type="submit" className={styles.submitButton} disabled={loading}>
-            {loading ? '인증 확인 중...' : '시크릿 대시보드 입장 →'}
+            {loading ? (
+              <span className={styles.spinnerBtn}>
+                <span className={styles.spinnerIcon}></span>
+                보안 채널 로그인 중...
+              </span>
+            ) : (
+              '시크릿 대시보드 입장 →'
+            )}
           </button>
         </form>
       </div>

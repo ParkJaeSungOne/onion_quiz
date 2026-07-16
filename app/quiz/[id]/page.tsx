@@ -6,7 +6,8 @@ interface QuizPageProps {
   params: Promise<{ id: string }>;
 }
 
-export const revalidate = 0; 
+// 1시간 단위 증분 정적 재생성 (ISR) 설정으로 플레이 페이지 로드 속도 향상
+export const revalidate = 3600; 
 
 export default async function QuizPage({ params }: QuizPageProps) {
   const { id } = await params;
