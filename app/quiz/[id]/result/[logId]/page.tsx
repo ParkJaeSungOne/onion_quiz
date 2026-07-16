@@ -1,40 +1,46 @@
 import Link from 'next/link';
-import { notFound } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
 import prisma from '@/lib/prisma';
 import AdSlot from '@/components/AdSlot';
 import styles from './QuizResult.module.css';
 
 interface ResultPageProps {
   params: Promise<{ id: string; logId: string }>;
-  searchParams: Promise<{ score?: string }>;
 }
 
 export const revalidate = 0;
 
-export default async function QuizResultPage({ params, searchParams }: ResultPageProps) {
+export default async function QuizResultPage({ params }: ResultPageProps) {
   const { id, logId } = await params;
-  const { score: scoreStr } = await searchParams;
   
-  const score = parseInt(scoreStr || '0', 10);
   const quizId = parseInt(id, 10);
 
   if (isNaN(quizId)) {
     notFound();
   }
 
-  // 1. 사용자 점수를 QuizLog에 캐싱 기록 (통계용)
-  if (logId && logId !== 'unknown') {
-    try {
-      await prisma.quizLog.update({
-        where: { id: logId },
-        data: { totalScore: score },
-      });
-    } catch (e) {
-      console.error('Failed to update totalScore in QuizLog:', e);
-    }
+  // 1. 직접 접근 보안 통제 (unknown 이거나 비정상 접근 시 첫 화면 리다이렉트)
+  if (!logId || logId === 'unknown') {
+    redirect(`/quiz/${quizId}`);
   }
 
-  // 2. 퀴즈 및 결과 유형 조회
+  // 2. DB에서 실제 퀴즈 제출 세션 로그 조회
+  const userLog = await prisma.quizLog.findUnique({
+    where: { id: logId },
+    select: {
+      totalScore: true,
+      quizId: true
+    }
+  });
+
+  // 아직 퀴즈를 완료하지 않았거나(totalScore가 0), 비정상 세션 로그일 경우 리다이렉트 처리
+  if (!userLog || userLog.quizId !== quizId || userLog.totalScore === 0) {
+    redirect(`/quiz/${quizId}`);
+  }
+
+  const score = userLog.totalScore;
+
+  // 3. 퀴즈 및 결과 유형 조회
   const quiz = await prisma.quiz.findUnique({
     where: { id: quizId },
     include: {
@@ -46,7 +52,7 @@ export default async function QuizResultPage({ params, searchParams }: ResultPag
     notFound();
   }
 
-  // 3. 사용자의 점수 구간에 맞는 결과 매칭
+  // 4. 사용자의 점수 구간에 맞는 결과 매칭
   let matchedResult = quiz.results.find(
     (res) => score >= res.minScore && score <= res.maxScore
   );
@@ -55,11 +61,15 @@ export default async function QuizResultPage({ params, searchParams }: ResultPag
     matchedResult = quiz.results[0]; // 예외 처리용 첫번째 결과
   }
 
-  // 4. 통계 계산 (해당 퀴즈의 전체 로그 기반 결과 분포 산출)
+  // 5. 통계 계산 (해당 퀴즈의 전체 로그 기반 결과 분포 산출)
   let sortedStats: any[] = [];
   try {
+    // totalScore가 기록 완료된(null이 아닌) 실제 완료 로그만 통계에 합산
     const allLogs = await prisma.quizLog.findMany({
-      where: { quizId },
+      where: { 
+        quizId,
+        totalScore: { gt: 0 }
+      },
       select: { totalScore: true },
     });
 
@@ -67,7 +77,7 @@ export default async function QuizResultPage({ params, searchParams }: ResultPag
 
     const stats = quiz.results.map((res) => {
       const count = allLogs.filter(
-        (log) => log.totalScore >= res.minScore && log.totalScore <= res.maxScore
+        (log) => log.totalScore !== null && log.totalScore >= res.minScore && log.totalScore <= res.maxScore
       ).length;
       const percentage = Math.round((count / totalCount) * 100);
       return {

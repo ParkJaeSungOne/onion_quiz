@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { createQuizLog, logAnswer } from '@/app/actions/log';
+import { createQuizLog, logAnswer, completeQuizLog } from '@/app/actions/log';
 import QuizLoading from '@/components/QuizLoading';
 import AdSlot from '@/components/AdSlot';
 import styles from './QuizPlay.module.css';
@@ -61,11 +61,16 @@ export default function QuizPlayClient({ quiz }: QuizPlayClientProps) {
       logAnswer(quizLogId, quiz.questions[currentIdx].questionNumber, optionText);
     }
 
-    // 2. 점수 합산
-    setTotalScore((prev) => prev + score);
+    // 2. 점수 합산 및 마지막 문제 처리
+    const finalScore = totalScore + score;
+    setTotalScore(finalScore);
 
     // 3. 마지막 문제인지 체크
     if (currentIdx >= quiz.questions.length - 1) {
+      if (quizLogId) {
+        // 비동기로 최종 점수를 DB 로그에 기록
+        await completeQuizLog(quizLogId, finalScore);
+      }
       setStep('loading');
     } else {
       // 다음 문제로 넘어갈 때 부드러운 슬라이딩/페이딩 애니메이션 유도
@@ -77,14 +82,13 @@ export default function QuizPlayClient({ quiz }: QuizPlayClientProps) {
     }
   };
 
-  // 로딩(결과 분석) 완료 시 결과 페이지로 리다이렉트
+  // 로딩(결과 분석) 완료 시 결과 페이지로 리다이렉트 (점수가 감춰진 깔끔한 URL)
   const handleLoadingComplete = () => {
     if (quizLogId) {
-      // 쿼리 파라미터로 최종 점수와 세션 로그 ID를 넘겨 정확한 결과를 쿼리하게 합니다.
-      router.push(`/quiz/${quiz.id}/result/${quizLogId}?score=${totalScore + (quiz.questions[currentIdx]?.options[0]?.score || 0) - (quiz.questions[currentIdx]?.options[0]?.score || 0)}`);
+      router.push(`/quiz/${quiz.id}/result/${quizLogId}`);
     } else {
-      // 백업용 리다이렉트 (로그ID 유실 시 임시 처리)
-      router.push(`/quiz/${quiz.id}/result/unknown?score=${totalScore}`);
+      // 백업용 리다이렉트 (로그ID 유실 시 퀴즈 첫 화면으로)
+      router.push(`/quiz/${quiz.id}`);
     }
   };
 

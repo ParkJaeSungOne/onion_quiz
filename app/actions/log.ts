@@ -71,3 +71,22 @@ export async function logAnswer(
     return { success: false, error: error.message };
   }
 }
+
+/**
+ * 퀴즈 완료 시 호출되어 QuizLog에 최종 누적 점수(totalScore)를 기록합니다.
+ */
+export async function completeQuizLog(logId: string, score: number) {
+  try {
+    if (!logId || logId === 'unknown') {
+      return { success: false, error: 'Invalid logId' };
+    }
+    await prisma.quizLog.update({
+      where: { id: logId },
+      data: { totalScore: score },
+    });
+    return { success: true };
+  } catch (error: any) {
+    console.error('Failed to complete quiz log:', error);
+    return { success: false, error: error.message };
+  }
+}
