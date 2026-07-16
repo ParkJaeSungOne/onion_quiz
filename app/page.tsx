@@ -32,10 +32,10 @@ export default async function Home() {
       <header className={styles.header}>
         <div className={styles.logoArea}>
           <OnionLogo className={styles.logoIcon} />
-          <h1 className={styles.title}>ONION LAB</h1>
+          <h1 className={styles.title}>KKADO KKADO</h1>
         </div>
         <p className={styles.subtitle}>
-          양파처럼 까도 까도 새로운 나를 발견하는 성향 테스트 연구소
+          양파처럼 깔수록 재미있고 적나라한 진짜 나를 까보는 성향 테스트 연구소
         </p>
       </header>
 
@@ -96,7 +96,7 @@ export default async function Home() {
       </main>
 
       <footer className={styles.footer}>
-        <p>© 2026 Onion Lab (어니언 랩). All rights reserved.</p>
+        <p>© 2026 까도까도 (Kkado-Kkado). All rights reserved.</p>
         <p className={styles.footerInfo}>이 사이트는 매일 AI로 트렌디한 성향 테스트를 자동 수집 및 연구합니다.</p>
       </footer>
     </div>
