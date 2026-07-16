@@ -3,17 +3,18 @@ import { Quiz } from '@prisma/client';
 import prisma from '@/lib/prisma';
 import AdSlot from '@/components/AdSlot';
 import OnionLogo from '@/components/OnionLogo';
+import SearchBar from '@/components/SearchBar';
 import styles from './page.module.css';
 
-// 5분 단위 증분 정적 재생성 (ISR) 설정으로 페이지 로딩 속도 극단적 향상
-export const revalidate = 300; 
+// 매번 요청 시 DB 최신 데이터를 반영하도록 설정
+export const revalidate = 0; 
 
 interface HomePageProps {
-  searchParams: Promise<{ page?: string }>;
+  searchParams: Promise<{ page?: string; search?: string }>;
 }
 
 export default async function Home({ searchParams }: HomePageProps) {
-  const { page: pageStr } = await searchParams;
+  const { page: pageStr, search: searchStr } = await searchParams;
   const currentPage = parseInt(pageStr || '1', 10);
   const pageSize = 6; // 한 페이지당 6개 테스트 노출 (속도 최적화)
 
@@ -22,14 +23,24 @@ export default async function Home({ searchParams }: HomePageProps) {
   let totalPages = 1;
   let pageNum = 1;
 
+  // 1. 검색어 필터 조건 (Title, Description, Category 대소문자 무관 contains 쿼리)
+  const whereClause = searchStr ? {
+    OR: [
+      { title: { contains: searchStr, mode: 'insensitive' as const } },
+      { description: { contains: searchStr, mode: 'insensitive' as const } },
+      { category: { contains: searchStr, mode: 'insensitive' as const } },
+    ]
+  } : {};
+
   try {
-    const totalCount = await prisma.quiz.count();
+    const totalCount = await prisma.quiz.count({ where: whereClause });
     totalPages = Math.ceil(totalCount / pageSize) || 1;
     
     // 유효한 페이지 번호 검증 (범위 가드)
     pageNum = Math.min(Math.max(1, currentPage), totalPages);
 
     quizzes = await prisma.quiz.findMany({
+      where: whereClause,
       orderBy: { createdAt: 'desc' },
       skip: (pageNum - 1) * pageSize,
       take: pageSize,
@@ -44,6 +55,15 @@ export default async function Home({ searchParams }: HomePageProps) {
     dbError = true;
   }
 
+  // 페이징 링크 빌더 (검색어 쿼리 보존용)
+  const getPageLink = (pageNo: number) => {
+    let link = `/?page=${pageNo}`;
+    if (searchStr) {
+      link += `&search=${encodeURIComponent(searchStr)}`;
+    }
+    return link;
+  };
+
   return (
     <div className={styles.container}>
       <header className={styles.header}>
@@ -56,6 +76,9 @@ export default async function Home({ searchParams }: HomePageProps) {
         </p>
       </header>
 
+      {/* 🔍 검색 바 컴포넌트 마운트 */}
+      <SearchBar />
+
       {/* 상단 광고 슬롯 */}
       <AdSlot type="main" />
 
@@ -67,22 +90,45 @@ export default async function Home({ searchParams }: HomePageProps) {
             </p>
           </div>
         ) : quizzes.length === 0 ? (
+          // 검색 결과 혹은 등록 목록이 아예 비어있는 경우
           <div className={styles.infoCard}>
-            <p className={styles.infoText}>
-              등록된 성향 테스트가 아직 없습니다. 하루 한 번 AI 생성 파이프라인이 구동됩니다.
-            </p>
-            <p className={styles.infoSubText}>
-              아래 버튼을 눌러 첫 테스트를 AI를 통해 즉시 생성할 수 있습니다:
-            </p>
-            <a href="/api/cron/generate" className={styles.seedButton}>
-              ✨ 첫 AI 테스트 강제 생성하기 (수동 트리거)
-            </a>
+            {searchStr ? (
+              <>
+                <p className={styles.infoText}>
+                  🔍 “ <strong>{searchStr}</strong> ” 에 대한 성향 테스트 검색 결과가 없습니다.
+                </p>
+                <p className={styles.infoSubText}>
+                  다른 재미있는 검색어로 찾아보거나, 홈 화면으로 돌아가 보세요!
+                </p>
+                <Link href="/" className={styles.seedButton} style={{ display: 'inline-block', marginTop: '16px' }}>
+                  ↩ 전체 리스트 보러가기
+                </Link>
+              </>
+            ) : (
+              <>
+                <p className={styles.infoText}>
+                  등록된 성향 테스트가 아직 없습니다. 하루 한 번 AI 생성 파이프라인이 구동됩니다.
+                </p>
+                <p className={styles.infoSubText}>
+                  아래 버튼을 눌러 첫 테스트를 AI를 통해 즉시 생성할 수 있습니다:
+                </p>
+                <a href="/api/cron/generate" className={styles.seedButton}>
+                  ✨ 첫 AI 테스트 강제 생성하기 (수동 트리거)
+                </a>
+              </>
+            )}
           </div>
         ) : (
           <>
+            {/* 검색어 활성화 시 안내 문구 */}
+            {searchStr && (
+              <div className={styles.searchResultBadge}>
+                🎯 “ <strong>{searchStr}</strong> ” 관련 결과 총 {quizzes.length}건이 발견되었습니다.
+              </div>
+            )}
+
             <div className={styles.grid}>
               {quizzes.map((quiz, index) => {
-                // 테스트 카드 렌더링
                 const card = (
                   <Link key={quiz.id} href={`/quiz/${quiz.id}`} className={styles.card}>
                     <div className={styles.cardHeader}>
@@ -97,7 +143,6 @@ export default async function Home({ searchParams }: HomePageProps) {
                   </Link>
                 );
 
-                // 테스트 3개마다 중간 광고 삽입
                 if (index > 0 && index % 3 === 0) {
                   return (
                     <div key={`ad-wrapper-${quiz.id}`} className={styles.gridAdWrapper}>
@@ -111,11 +156,11 @@ export default async function Home({ searchParams }: HomePageProps) {
               })}
             </div>
 
-            {/* 네오브루탈리즘 스타일 페이징 UI */}
+            {/* 네오브루탈리즘 스타일 페이징 UI (검색 쿼리 유지형) */}
             {totalPages > 1 && (
               <div className={styles.pagination}>
                 {pageNum > 1 ? (
-                  <Link href={`/?page=${pageNum - 1}`} className={styles.pageButton}>
+                  <Link href={getPageLink(pageNum - 1)} className={styles.pageButton}>
                     ◀ 이전
                   </Link>
                 ) : (
@@ -131,14 +176,14 @@ export default async function Home({ searchParams }: HomePageProps) {
                       {p}
                     </span>
                   ) : (
-                    <Link key={p} href={`/?page=${p}`} className={styles.pageButton}>
+                    <Link key={p} href={getPageLink(p)} className={styles.pageButton}>
                       {p}
                     </Link>
                   );
                 })}
 
                 {pageNum < totalPages ? (
-                  <Link href={`/?page=${pageNum + 1}`} className={styles.pageButton}>
+                  <Link href={getPageLink(pageNum + 1)} className={styles.pageButton}>
                     다음 ▶
                   </Link>
                 ) : (

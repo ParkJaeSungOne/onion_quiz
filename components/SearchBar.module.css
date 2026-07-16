@@ -1,0 +1,132 @@
+.searchForm {
+  display: flex;
+  gap: 12px;
+  width: 100%;
+  max-width: 680px;
+  margin: 0 auto 36px auto;
+  align-items: center;
+}
+
+.searchWrapper {
+  position: relative;
+  flex: 1;
+  display: flex;
+  align-items: center;
+}
+
+.searchIcon {
+  position: absolute;
+  left: 16px;
+  font-size: 16px;
+  pointer-events: none;
+}
+
+.searchInput {
+  width: 100%;
+  background: #ffffff;
+  color: #000000;
+  border: 3px solid #000000;
+  box-shadow: 4px 4px 0px #000000;
+  padding: 14px 44px 14px 44px; /* 양옆 아이콘 패딩 */
+  font-size: 14px;
+  font-weight: 800;
+  outline: none;
+  border-radius: 16px;
+  transition: all 0.15s ease;
+}
+
+.searchInput:focus {
+  transform: translate(-1px, -1px);
+  box-shadow: 5px 5px 0px #000000;
+  border-color: var(--primary);
+}
+
+.clearButton {
+  position: absolute;
+  right: 16px;
+  background: transparent;
+  border: none;
+  font-size: 14px;
+  font-weight: 900;
+  color: #64748b;
+  cursor: pointer;
+  padding: 4px;
+  transition: transform 0.1s ease;
+}
+
+.clearButton:hover {
+  transform: scale(1.2);
+  color: #000000;
+}
+
+.searchButton {
+  background: var(--kitsch-lime);
+  color: #000000;
+  border: 3px solid #000000;
+  box-shadow: 4px 4px 0px #000000;
+  font-weight: 950;
+  font-size: 14px;
+  padding: 14px 28px;
+  border-radius: 16px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.searchButton:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: 6px 6px 0px #000000;
+}
+
+.searchButton:active {
+  transform: translate(2px, 2px);
+  box-shadow: 2px 2px 0px #000000;
+}
+
+/* Mobile Responsive */
+@media (max-width: 480px) {
+  .searchForm {
+    gap: 8px;
+    margin-bottom: 24px;
+  }
+  .searchInput {
+    padding: 12px 36px 12px 36px;
+    font-size: 12px;
+  }
+  .searchIcon {
+    left: 12px;
+  }
+  .clearButton {
+    right: 12px;
+  }
+  .searchButton {
+    padding: 12px 18px;
+    font-size: 12px;
+  }
+}
+
+/* Dark Mode */
+@media (prefers-color-scheme: dark) {
+  .searchInput {
+    background: #1f2937;
+    color: #ffffff;
+    border-color: #ffffff;
+    box-shadow: 4px 4px 0px #ffffff;
+  }
+  .searchInput:focus {
+    border-color: var(--kitsch-pink);
+  }
+  .clearButton {
+    color: #94a3b8;
+  }
+  .clearButton:hover {
+    color: #ffffff;
+  }
+  .searchButton {
+    border-color: #ffffff;
+    box-shadow: 4px 4px 0px #ffffff;
+  }
+  .searchButton:hover {
+    box-shadow: 6px 6px 0px #ffffff;
+  }
+}
