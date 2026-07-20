@@ -9,6 +9,41 @@ import styles from './page.module.css';
 // 메인 페이지 5분 캐싱 설정 (검색어가 없을 때 초고속 정적 서빙, 검색어 인입 시 동적 전환)
 export const revalidate = 300; 
 
+import { unstable_cache } from 'next/cache';
+
+// Prisma 쿼리를 캐싱하여 Supabase 통신 대기 시간을 0에 수렴하게 최적화 (5분 캐시 및 'quizzes' 태그 지정)
+const getCachedQuizzes = unstable_cache(
+  async (searchStr: string | undefined, pageNum: number, pageSize: number) => {
+    const whereClause = searchStr ? {
+      OR: [
+        { title: { contains: searchStr, mode: 'insensitive' as const } },
+        { description: { contains: searchStr, mode: 'insensitive' as const } },
+        { category: { contains: searchStr, mode: 'insensitive' as const } },
+      ]
+    } : {};
+
+    const totalCount = await prisma.quiz.count({ where: whereClause });
+    const totalPages = Math.ceil(totalCount / pageSize) || 1;
+    const validatedPage = Math.min(Math.max(1, pageNum), totalPages);
+
+    const quizzes = await prisma.quiz.findMany({
+      where: whereClause,
+      orderBy: { createdAt: 'desc' },
+      skip: (validatedPage - 1) * pageSize,
+      take: pageSize,
+      include: {
+        questions: {
+          select: { id: true }
+        }
+      }
+    });
+
+    return { quizzes, totalPages, pageNum: validatedPage };
+  },
+  ['quizzes-list-cache'],
+  { revalidate: 300, tags: ['quizzes'] }
+);
+
 interface HomePageProps {
   searchParams: Promise<{ page?: string; search?: string }>;
 }
@@ -18,38 +53,16 @@ export default async function Home({ searchParams }: HomePageProps) {
   const currentPage = parseInt(pageStr || '1', 10);
   const pageSize = 6; // 한 페이지당 6개 테스트 노출 (속도 최적화)
 
-  let quizzes: (Quiz & { questions: { id: string }[] })[] = [];
+  let quizzes: any[] = [];
   let dbError = false;
   let totalPages = 1;
   let pageNum = 1;
 
-  // 1. 검색어 필터 조건 (Title, Description, Category 대소문자 무관 contains 쿼리)
-  const whereClause = searchStr ? {
-    OR: [
-      { title: { contains: searchStr, mode: 'insensitive' as const } },
-      { description: { contains: searchStr, mode: 'insensitive' as const } },
-      { category: { contains: searchStr, mode: 'insensitive' as const } },
-    ]
-  } : {};
-
   try {
-    const totalCount = await prisma.quiz.count({ where: whereClause });
-    totalPages = Math.ceil(totalCount / pageSize) || 1;
-    
-    // 유효한 페이지 번호 검증 (범위 가드)
-    pageNum = Math.min(Math.max(1, currentPage), totalPages);
-
-    quizzes = await prisma.quiz.findMany({
-      where: whereClause,
-      orderBy: { createdAt: 'desc' },
-      skip: (pageNum - 1) * pageSize,
-      take: pageSize,
-      include: {
-        questions: {
-          select: { id: true }
-        }
-      }
-    });
+    const result = await getCachedQuizzes(searchStr, currentPage, pageSize);
+    quizzes = result.quizzes;
+    totalPages = result.totalPages;
+    pageNum = result.pageNum;
   } catch (error) {
     console.error('Database fetch error:', error);
     dbError = true;

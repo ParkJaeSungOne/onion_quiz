@@ -1,7 +1,7 @@
 'use server';
 
 import { cookies, headers } from 'next/headers';
-import { revalidatePath } from 'next/cache';
+import { revalidatePath, revalidateTag } from 'next/cache';
 import prisma from '@/lib/prisma';
 
 const SESSION_COOKIE_NAME = 'kkado_admin_session';
@@ -55,6 +55,7 @@ export async function deleteQuiz(quizId: number) {
 
     revalidatePath('/');
     revalidatePath('/admin');
+    revalidateTag('quizzes', 'default');
     return { success: true };
   } catch (error: any) {
     console.error('Failed to delete quiz:', error);
@@ -106,6 +107,7 @@ export async function triggerAIGenerate() {
 
     revalidatePath('/');
     revalidatePath('/admin');
+    revalidateTag('quizzes', 'default');
     return { success: true, title: data.title };
   } catch (error: any) {
     console.error('Failed to trigger AI generate:', error);
