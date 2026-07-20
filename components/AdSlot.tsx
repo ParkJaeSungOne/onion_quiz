@@ -57,7 +57,7 @@ export default function AdSlot({ type, slotId }: AdSlotProps) {
       {/* 2. 🚀 쿠팡 파트너스 배너 & 최저가 검색 (AdSense 승인 대기 기간 및 수익 다각화용 백업) */}
       <div className={styles.coupangBanner}>
         <a 
-          href="https://link.coupang.com/a/bS8E1p" 
+          href={process.env.NEXT_PUBLIC_COUPANG_URL || "https://link.coupang.com/a/bS8E1p"} 
           target="_blank" 
           rel="nofollow noopener noreferrer" 
           className={styles.coupangLink}
