@@ -43,6 +43,12 @@ interface VisitorStatsData {
   totalPv: number;
 }
 
+interface VisitorTrendItem {
+  date: string;
+  pv: number;
+  uv: number;
+}
+
 interface AdminDashboardClientProps {
   stats: {
     totalQuizzes: number;
@@ -51,6 +57,7 @@ interface AdminDashboardClientProps {
   };
   quizStats: QuizStat[];
   visitorStats: VisitorStatsData;
+  visitorTrend: VisitorTrendItem[];
   comments: CommentItem[];
 }
 
@@ -58,6 +65,7 @@ export default function AdminDashboardClient({
   stats, 
   quizStats, 
   visitorStats, 
+  visitorTrend,
   comments 
 }: AdminDashboardClientProps) {
   const router = useRouter();
@@ -207,6 +215,69 @@ export default function AdminDashboardClient({
         <div className={styles.kpiCard} style={{ backgroundColor: '#ffffff', color: '#000000', border: '4px solid #000000' }}>
           <div className={styles.kpiLabel}>누적 방문자 (UV / PV)</div>
           <div className={styles.kpiValue}>{visitorStats.totalUv}명 / {visitorStats.totalPv}회</div>
+        </div>
+      </section>
+
+      {/* 📊 실시간 방문자 트렌드 차트 (7일 차트) */}
+      <section className={styles.chartSection} style={{ marginTop: '40px', marginBottom: '40px' }}>
+        <div className={styles.sectionHeader}>
+          <h2 className={styles.sectionTitle}>📊 최근 7일 방문 트렌드 (UV / PV)</h2>
+          <span className={styles.totalCount}>실시간 집계</span>
+        </div>
+        <div className={styles.chartBox}>
+          {visitorTrend.length === 0 ? (
+            <p className={styles.noDataText}>트렌드를 집계하기 위한 데이터가 아직 충분하지 않습니다. (내일 첫 데이터부터 적재됩니다)</p>
+          ) : (
+            <>
+              {/* 차트 범례 */}
+              <div className={styles.chartLegend}>
+                <div className={styles.legendItem}>
+                  <span className={styles.legendColor} style={{ backgroundColor: 'var(--kitsch-pink, #f472b6)' }}></span>
+                  <span className={styles.legendText}>페이지뷰 (PV)</span>
+                </div>
+                <div className={styles.legendItem}>
+                  <span className={styles.legendColor} style={{ backgroundColor: 'var(--kitsch-cyan, #22d3ee)' }}></span>
+                  <span className={styles.legendText}>순 방문자 (UV)</span>
+                </div>
+              </div>
+
+              {/* 차트 본체 (그리드형 바 차트) */}
+              <div className={styles.chartContainer}>
+                {(() => {
+                  const maxVal = Math.max(...visitorTrend.map(d => Math.max(d.pv, d.uv, 1)));
+                  
+                  return visitorTrend.map((day) => {
+                    const pvPercent = Math.max(6, Math.round((day.pv / maxVal) * 100));
+                    const uvPercent = Math.max(6, Math.round((day.uv / maxVal) * 100));
+
+                    return (
+                      <div key={day.date} className={styles.chartColumn}>
+                        <div className={styles.barWrapper}>
+                          {/* PV 바 */}
+                          <div 
+                            className={`${styles.chartBar} ${styles.pvBar}`} 
+                            style={{ height: `${pvPercent}%` }}
+                            title={`페이지뷰: ${day.pv}회`}
+                          >
+                            <span className={styles.barValue}>{day.pv}</span>
+                          </div>
+                          {/* UV 바 */}
+                          <div 
+                            className={`${styles.chartBar} ${styles.uvBar}`} 
+                            style={{ height: `${uvPercent}%` }}
+                            title={`순방문자: ${day.uv}명`}
+                          >
+                            <span className={styles.barValue}>{day.uv}</span>
+                          </div>
+                        </div>
+                        <span className={styles.chartDate}>{day.date}</span>
+                      </div>
+                    );
+                  });
+                })()}
+              </div>
+            </>
+          )}
         </div>
       </section>
 

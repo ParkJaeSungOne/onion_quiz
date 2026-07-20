@@ -48,6 +48,17 @@ export default async function AdminDashboardPage() {
     totalPv: visitorTotals._sum.pv || 0
   };
 
+  // 최근 7일간의 방문 트렌드 조회 (차트 렌더링용)
+  const visitorTrendRaw = await prisma.visitorStats.findMany({
+    orderBy: { date: 'desc' },
+    take: 7
+  });
+  const visitorTrend = visitorTrendRaw.reverse().map(stat => ({
+    date: stat.date.substring(5), // 'MM-DD' 형태로 변환
+    pv: stat.pv,
+    uv: stat.uv
+  }));
+
   // 2.2 실시간 최근 댓글 10개 조회 (어드민 즉시 관리용)
   const recentComments = await prisma.comment.findMany({
     orderBy: { createdAt: 'desc' },
@@ -146,6 +157,7 @@ export default async function AdminDashboardPage() {
       }}
       quizStats={quizStats}
       visitorStats={visitorStats}
+      visitorTrend={visitorTrend}
       comments={serializedComments}
     />
   );

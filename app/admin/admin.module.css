@@ -723,3 +723,177 @@
   }
 }
 
+/* 📊 실시간 7일 방문 트렌드 차트 스타일 */
+.chartSection {
+  background: #ffffff;
+  border: 3px solid #000000;
+  box-shadow: 6px 6px 0px #000000;
+  border-radius: 20px;
+  padding: 24px;
+}
+
+.chartBox {
+  margin-top: 20px;
+  background: #f8fafc;
+  border: 3px solid #000000;
+  box-shadow: inset 2px 2px 5px rgba(0, 0, 0, 0.05);
+  border-radius: 16px;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.chartLegend {
+  display: flex;
+  gap: 16px;
+  justify-content: flex-end;
+  border-bottom: 2px solid #e2e8f0;
+  padding-bottom: 10px;
+}
+
+.legendItem {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.legendColor {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border: 2px solid #000000;
+  border-radius: 4px;
+}
+
+.legendText {
+  font-size: 11px;
+  font-weight: 800;
+  color: #000000;
+}
+
+.chartContainer {
+  display: flex;
+  justify-content: space-around;
+  align-items: flex-end;
+  height: 220px;
+  padding-top: 30px;
+  gap: 10px;
+  width: 100%;
+}
+
+.chartColumn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex-grow: 1;
+  max-width: 80px;
+  height: 100%;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.barWrapper {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 6px;
+  height: 180px;
+  width: 100%;
+  position: relative;
+  border-bottom: 3px solid #000000;
+  padding-bottom: 2px;
+}
+
+.chartBar {
+  width: 45%;
+  max-width: 24px;
+  border: 3px solid #000000;
+  border-bottom: none;
+  border-radius: 6px 6px 0 0;
+  position: relative;
+  transition: all 0.3s ease;
+  display: flex;
+  justify-content: center;
+}
+
+.chartBar:hover {
+  transform: scaleY(1.05);
+  filter: brightness(0.95);
+}
+
+.pvBar {
+  background-color: var(--kitsch-pink, #f472b6);
+  box-shadow: 2px 0px 0px #000000;
+}
+
+.uvBar {
+  background-color: var(--kitsch-cyan, #22d3ee);
+  box-shadow: 2px 0px 0px #000000;
+}
+
+.barValue {
+  position: absolute;
+  top: -24px;
+  font-size: 9px;
+  font-weight: 900;
+  color: #000000;
+  background: #ffffff;
+  border: 2px solid #000000;
+  padding: 1px 4px;
+  border-radius: 4px;
+  white-space: nowrap;
+  opacity: 0;
+  transform: translateY(4px);
+  transition: all 0.15s ease;
+  box-shadow: 1px 1px 0px #000000;
+}
+
+.chartBar:hover .barValue {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.chartDate {
+  font-size: 11px;
+  font-weight: 800;
+  color: #475569;
+}
+
+/* Dark Mode 대응 */
+@media (prefers-color-scheme: dark) {
+  .chartSection {
+    background: #1e293b;
+    border-color: #ffffff;
+    box-shadow: 6px 6px 0px #ffffff;
+  }
+  .chartBox {
+    background: #0f172a;
+    border-color: #ffffff;
+  }
+  .chartLegend {
+    border-color: #334155;
+  }
+  .legendColor {
+    border-color: #ffffff;
+  }
+  .legendText {
+    color: #ffffff;
+  }
+  .barWrapper {
+    border-color: #ffffff;
+  }
+  .chartBar {
+    border-color: #ffffff;
+  }
+  .chartDate {
+    color: #94a3b8;
+  }
+  .barValue {
+    background: #000000;
+    color: #ffffff;
+    border-color: #ffffff;
+    box-shadow: 1px 1px 0px #ffffff;
+  }
+}
+
