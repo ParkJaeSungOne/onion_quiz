@@ -1,5 +1,6 @@
 import React from 'react';
 import Link from 'next/link';
+import VisitorCounter from './VisitorCounter';
 import styles from './Footer.module.css';
 
 export default function Footer() {
@@ -16,6 +17,7 @@ export default function Footer() {
       <p className={styles.footerInfo}>
         본 사이트는 대중의 트렌드 분석을 위해 생성형 AI 기술을 활용해 실시간 성향 테스트 콘텐츠를 생성 및 보존합니다.
       </p>
+      <VisitorCounter />
     </footer>
   );
 }

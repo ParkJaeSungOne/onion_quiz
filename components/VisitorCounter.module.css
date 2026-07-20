@@ -1,0 +1,57 @@
+.counterBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: #ffffff;
+  border: 3px solid #000000;
+  box-shadow: 2px 2px 0px #000000;
+  padding: 6px 14px;
+  border-radius: 10px;
+  font-size: 11px;
+  font-weight: 800;
+  color: #000000;
+  margin-top: 14px;
+  max-width: fit-content;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.dot {
+  font-size: 8px;
+  animation: blink 1.5s infinite;
+}
+
+.text strong {
+  font-weight: 950;
+  color: var(--kitsch-pink, #f472b6);
+}
+
+.divider {
+  color: #e2e8f0;
+}
+
+.loaderPlaceholder {
+  font-size: 11px;
+  font-weight: 800;
+  color: #94a3b8;
+  margin-top: 14px;
+  text-align: center;
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 0.3; }
+  50% { opacity: 1; }
+}
+
+/* Dark Mode support */
+@media (prefers-color-scheme: dark) {
+  .counterBadge {
+    background: #1f2937;
+    border-color: #ffffff;
+    box-shadow: 2px 2px 0px #ffffff;
+    color: #ffffff;
+  }
+  .divider {
+    color: #475569;
+  }
+}

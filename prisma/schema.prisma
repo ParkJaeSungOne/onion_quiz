@@ -80,3 +80,11 @@ model Comment {
   password  String?  // 삭제용 비밀번호
   createdAt DateTime @default(now())
 }
+
+model VisitorStats {
+  id        String   @id @default(uuid())
+  date      String   @unique // 'YYYY-MM-DD' 포맷
+  pv        Int      @default(0) // 오늘 페이지뷰 (봇 제외)
+  uv        Int      @default(0) // 오늘 순 방문자수 (봇 제외, 24시간 쿠키 고유 식별)
+  createdAt DateTime @default(now())
+}
