@@ -19,6 +19,8 @@ export async function GET(request: Request) {
     }
   }
 
+  const subject = searchParams.get('subject') || '';
+
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) {
     return NextResponse.json({ error: 'GEMINI_API_KEY environment variable is not defined.' }, { status: 500 });
@@ -41,7 +43,7 @@ export async function GET(request: Request) {
 
 [제작 규칙]
 1. 주제 및 감성:
-   - 다음 기존에 만들어진 퀴즈들과 전혀 겹치지 않는 완전 새로운 주제여야 합니다.
+   ${subject ? `- **[중요 강제 주제] 반드시 다음 주제/키워드에 직접 연관되거나 이 내용을 심도 깊게 기획 테마로 삼아주세요: "${subject}"**\n` : ''}   - 다음 기존에 만들어진 퀴즈들과 전혀 겹치지 않는 완전 새로운 주제여야 합니다.
    - 기존 퀴즈들: [ ${existingTitles || '없음'} ]
    - **GenZ(20-30대)가 격하게 공감할 수 있는 최신 인터넷 밈(Meme)과 힙한 감성의 신선한 키워드**를 적극 활용해주세요 (예: '나의 밤티(BAM-T) 텐션 관상 테스트', 'MZ 오피스 빌런 판독기', '카카오톡 안읽씹 빌런 테스트', '도파민 좀비 측정기', '자발적 마이웨이 아싸 지수' 등).
    - 선택지(options)와 결과 피드백은 딱딱한 설명 조가 아닌, 친근하면서 위트 있는 스낵 콘텐츠 말투로 웃음을 유발할 수 있도록 작성해 주세요.

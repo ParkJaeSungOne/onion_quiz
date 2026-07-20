@@ -28,6 +28,21 @@ interface QuizStat {
   refererStats: RefererStat[];
 }
 
+interface CommentItem {
+  id: string;
+  nickname: string;
+  content: string;
+  createdAt: string;
+  quizTitle: string;
+}
+
+interface VisitorStatsData {
+  todayUv: number;
+  todayPv: number;
+  totalUv: number;
+  totalPv: number;
+}
+
 interface AdminDashboardClientProps {
   stats: {
     totalQuizzes: number;
@@ -35,14 +50,24 @@ interface AdminDashboardClientProps {
     todayPlays: number;
   };
   quizStats: QuizStat[];
+  visitorStats: VisitorStatsData;
+  comments: CommentItem[];
 }
 
-export default function AdminDashboardClient({ stats, quizStats }: AdminDashboardClientProps) {
+export default function AdminDashboardClient({ 
+  stats, 
+  quizStats, 
+  visitorStats, 
+  comments 
+}: AdminDashboardClientProps) {
   const router = useRouter();
   const [activeQuizId, setActiveQuizId] = useState<number | null>(null);
   const [loading, setLoading] = useState<number | null>(null); // 삭제 진행 상태 관리
   const [isGenerating, setIsGenerating] = useState(false); // AI 생성 상태 관리
   const [errorMsg, setErrorMsg] = useState<string | null>(null); // 에러 로그 출력용 상태
+  const [customSubject, setCustomSubject] = useState(''); // 특정 AI 퀴즈 주제 상태
+  const [commentList, setCommentList] = useState<CommentItem[]>(comments); // 댓글 상태
+  const [deletingCommentId, setDeletingCommentId] = useState<string | null>(null); // 댓글 삭제 진행 관리
 
   // 로그아웃 처리
   const handleLogout = async () => {
@@ -84,9 +109,10 @@ export default function AdminDashboardClient({ stats, quizStats }: AdminDashboar
     setIsGenerating(true);
     setErrorMsg(null);
     try {
-      const res = await triggerAIGenerate();
+      const res = await triggerAIGenerate(customSubject);
       if (res.success) {
         alert(`성공적으로 생성 완료되었습니다! 🎉\n\n새 테스트: “ ${res.title} ”`);
+        setCustomSubject(''); // 성공 후 입력창 초기화
         router.refresh();
       } else {
         setErrorMsg(`성향 테스트 생성 실패 상세 정보:\n${res.error}`);
@@ -98,6 +124,28 @@ export default function AdminDashboardClient({ stats, quizStats }: AdminDashboar
     }
   };
 
+  // 어드민 전용 즉시 댓글 삭제 처리 (비밀번호 검증 우회)
+  const handleDeleteComment = async (commentId: string) => {
+    if (!confirm('어드민 직권으로 이 댓글을 즉시 영구 삭제하시겠습니까?')) {
+      return;
+    }
+    setDeletingCommentId(commentId);
+    try {
+      const { deleteComment } = await import('@/app/actions/comment');
+      const res = await deleteComment(commentId, undefined, true); // isAdmin = true 파라미터 전송
+      if (res.success) {
+        setCommentList(prev => prev.filter(c => c.id !== commentId));
+        alert('댓글이 정상 삭제되었습니다.');
+      } else {
+        alert(res.error || '댓글 삭제 도중 오류가 발생했습니다.');
+      }
+    } catch (err: any) {
+      alert(`댓글 삭제 처리 에러: ${err.message}`);
+    } finally {
+      setDeletingCommentId(null);
+    }
+  };
+
   return (
     <div className={styles.container}>
       <header className={styles.header}>
@@ -106,12 +154,20 @@ export default function AdminDashboardClient({ stats, quizStats }: AdminDashboar
           <h1 className={styles.title}>까도까도 관리자 센터</h1>
         </div>
         <div className={styles.headerActions}>
+          <input
+            type="text"
+            value={customSubject}
+            onChange={(e) => setCustomSubject(e.target.value)}
+            placeholder="AI 키워드 지정 (예: 직장 상사, 밤샘 공부...)"
+            className={styles.subjectInput}
+            disabled={isGenerating}
+          />
           <button 
             onClick={handleTriggerGenerate} 
             className={styles.seedButton}
             disabled={isGenerating}
           >
-            {isGenerating ? '⏳ 생성 중...' : '✨ 새 AI 테스트 즉시 수동생성'}
+            {isGenerating ? '⏳ 생성 중...' : '✨ 커스텀 AI 생성'}
           </button>
           <button onClick={handleLogout} className={styles.logoutButton}>
             로그아웃 ↩
@@ -143,6 +199,14 @@ export default function AdminDashboardClient({ stats, quizStats }: AdminDashboar
         <div className={styles.kpiCard} style={{ backgroundColor: 'var(--kitsch-yellow)' }}>
           <div className={styles.kpiLabel}>오늘 신규 완료자</div>
           <div className={styles.kpiValue}>{stats.todayPlays}명</div>
+        </div>
+        <div className={styles.kpiCard} style={{ backgroundColor: 'var(--kitsch-lime)' }}>
+          <div className={styles.kpiLabel}>오늘 방문자 (UV / PV)</div>
+          <div className={styles.kpiValue}>{visitorStats.todayUv}명 / {visitorStats.todayPv}회</div>
+        </div>
+        <div className={styles.kpiCard} style={{ backgroundColor: '#ffffff', color: '#000000', border: '4px solid #000000' }}>
+          <div className={styles.kpiLabel}>누적 방문자 (UV / PV)</div>
+          <div className={styles.kpiValue}>{visitorStats.totalUv}명 / {visitorStats.totalPv}회</div>
         </div>
       </section>
 
@@ -246,6 +310,49 @@ export default function AdminDashboardClient({ stats, quizStats }: AdminDashboar
                 </div>
               );
             })}
+          </div>
+        )}
+      </section>
+
+      {/* 💬 실시간 최근 댓글 & 방명록 모더레이션 */}
+      <section className={styles.commentsSection} style={{ marginTop: '50px' }}>
+        <div className={styles.sectionHeader}>
+          <h2 className={styles.sectionTitle}>💬 최근 등록된 실시간 댓글 / 방명록 관리</h2>
+          <span className={styles.totalCount}>최근 10개 내역</span>
+        </div>
+
+        {commentList.length === 0 ? (
+          <div className={styles.emptyCard}>
+            <p className={styles.emptyText}>아직 등록된 실시간 댓글이 존재하지 않습니다.</p>
+          </div>
+        ) : (
+          <div className={styles.commentListGrid}>
+            {commentList.map((comment) => (
+              <div key={comment.id} className={styles.commentAdminCard}>
+                <div className={styles.commentAdminHeader}>
+                  <span className={styles.commentTargetBadge}>📍 {comment.quizTitle}</span>
+                  <span className={styles.commentDateText}>
+                    {new Date(comment.createdAt).toLocaleDateString('ko-KR', {
+                      month: 'numeric',
+                      day: 'numeric',
+                      hour: '2-digit',
+                      minute: '2-digit'
+                    })}
+                  </span>
+                </div>
+                <div className={styles.commentAdminContent}>
+                  <strong className={styles.commentNickname}>🧅 {comment.nickname}</strong>
+                  <p className={styles.commentBodyText}>{comment.content}</p>
+                </div>
+                <button
+                  onClick={() => handleDeleteComment(comment.id)}
+                  className={styles.commentAdminDeleteBtn}
+                  disabled={deletingCommentId === comment.id}
+                >
+                  {deletingCommentId === comment.id ? '삭제중..' : '즉시 삭제 🗑️'}
+                </button>
+              </div>
+            ))}
           </div>
         )}
       </section>

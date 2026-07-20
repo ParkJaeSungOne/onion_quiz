@@ -567,3 +567,159 @@
   }
 }
 
+/* AI 주제 입력 인풋 */
+.subjectInput {
+  padding: 8px 12px;
+  border: 3px solid #000000;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 800;
+  outline: none;
+  background: #ffffff;
+  color: #000000;
+  width: 260px;
+  box-shadow: 2px 2px 0px #000000;
+}
+
+.subjectInput:focus {
+  border-color: var(--kitsch-pink, #f472b6);
+}
+
+@media (prefers-color-scheme: dark) {
+  .subjectInput {
+    border-color: #ffffff;
+    background: #0f172a;
+    color: #ffffff;
+    box-shadow: 2px 2px 0px #ffffff;
+  }
+  .subjectInput:focus {
+    border-color: var(--kitsch-pink, #f472b6);
+  }
+}
+
+/* 어드민 댓글 관리 영역 */
+.commentListGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 16px;
+}
+
+.commentAdminCard {
+  background: #ffffff;
+  border: 3px solid #000000;
+  box-shadow: 3px 3px 0px #000000;
+  border-radius: 16px;
+  padding: 14px 18px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 12px;
+  transition: transform 0.15s ease;
+}
+
+.commentAdminCard:hover {
+  transform: translateY(-2px);
+}
+
+.commentAdminHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.commentTargetBadge {
+  font-size: 10px;
+  font-weight: 900;
+  color: #000000;
+  background: var(--kitsch-cyan, #22d3ee);
+  border: 2px solid #000000;
+  padding: 2px 6px;
+  border-radius: 6px;
+  max-width: 140px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.commentDateText {
+  font-size: 10px;
+  font-weight: 750;
+  color: #64748b;
+}
+
+.commentAdminContent {
+  font-size: 12.5px;
+  line-height: 1.4;
+}
+
+.commentNickname {
+  font-weight: 900;
+  color: #000000;
+  display: block;
+  margin-bottom: 4px;
+}
+
+.commentBodyText {
+  color: #334155;
+  font-weight: 700;
+  word-break: break-all;
+  margin: 0;
+}
+
+.commentAdminDeleteBtn {
+  width: 100%;
+  background: #fee2e2;
+  color: #dc2626;
+  border: 2px solid #000000;
+  box-shadow: 2px 2px 0px #000000;
+  border-radius: 8px;
+  padding: 6px;
+  font-size: 11px;
+  font-weight: 900;
+  cursor: pointer;
+  transition: all 0.1s ease;
+}
+
+.commentAdminDeleteBtn:hover:not(:disabled) {
+  transform: translate(-1px, -1px);
+  box-shadow: 3px 3px 0px #000000;
+  background: #fecaca;
+}
+
+.commentAdminDeleteBtn:active:not(:disabled) {
+  transform: translate(1px, 1px);
+  box-shadow: 1px 1px 0px #000000;
+}
+
+@media (prefers-color-scheme: dark) {
+  .commentAdminCard {
+    background: #1e293b;
+    border-color: #ffffff;
+    box-shadow: 3px 3px 0px #ffffff;
+  }
+  .commentTargetBadge {
+    border-color: #ffffff;
+    color: #ffffff;
+    background: #083344;
+  }
+  .commentDateText {
+    color: #94a3b8;
+  }
+  .commentNickname {
+    color: #ffffff;
+  }
+  .commentBodyText {
+    color: #cbd5e1;
+  }
+  .commentAdminDeleteBtn {
+    border-color: #ffffff;
+    box-shadow: 2px 2px 0px #ffffff;
+  }
+  .commentAdminDeleteBtn:hover:not(:disabled) {
+    box-shadow: 3px 3px 0px #ffffff;
+    background: #3f1f1f;
+  }
+}
+

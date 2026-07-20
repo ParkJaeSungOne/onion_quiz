@@ -22,13 +22,40 @@ export default async function AdminDashboardPage() {
     where: { totalScore: { gt: 0 } }
   });
   
-  // 오늘 오전 00시 기준
+  // 오늘 오전 00시 기준 (KST)
+  const todayKst = new Date(new Date().getTime() + 9 * 60 * 60 * 1000).toISOString().split('T')[0];
   const todayStart = new Date();
   todayStart.setHours(0, 0, 0, 0);
   const todayPlays = await prisma.quizLog.count({
     where: {
       createdAt: { gte: todayStart },
       totalScore: { gt: 0 }
+    }
+  });
+
+  // 2.1 실시간 방문자 통계 데이터 조회 (UV / PV)
+  const todayVisitor = await prisma.visitorStats.findUnique({
+    where: { date: todayKst }
+  });
+  const visitorTotals = await prisma.visitorStats.aggregate({
+    _sum: { pv: true, uv: true }
+  });
+
+  const visitorStats = {
+    todayUv: todayVisitor?.uv || 0,
+    todayPv: todayVisitor?.pv || 0,
+    totalUv: visitorTotals._sum.uv || 0,
+    totalPv: visitorTotals._sum.pv || 0
+  };
+
+  // 2.2 실시간 최근 댓글 10개 조회 (어드민 즉시 관리용)
+  const recentComments = await prisma.comment.findMany({
+    orderBy: { createdAt: 'desc' },
+    take: 10,
+    include: {
+      quiz: {
+        select: { title: true }
+      }
     }
   });
 
@@ -101,6 +128,15 @@ export default async function AdminDashboardPage() {
     };
   });
 
+  // 데이터를 직렬화하여 클라이언트에 맞게 변환
+  const serializedComments = recentComments.map((comment) => ({
+    id: comment.id,
+    nickname: comment.nickname,
+    content: comment.content,
+    createdAt: comment.createdAt.toISOString(),
+    quizTitle: comment.quiz?.title || '자유 방명록'
+  }));
+
   return (
     <AdminDashboardClient
       stats={{
@@ -109,6 +145,8 @@ export default async function AdminDashboardPage() {
         todayPlays
       }}
       quizStats={quizStats}
+      visitorStats={visitorStats}
+      comments={serializedComments}
     />
   );
 }

@@ -66,7 +66,7 @@ export async function deleteQuiz(quizId: number) {
 /**
  * AI 성향 테스트 생성 API 강제 트리거 Action (보안 강화)
  */
-export async function triggerAIGenerate() {
+export async function triggerAIGenerate(subject?: string) {
   try {
     const cookieStore = await cookies();
     const session = cookieStore.get(SESSION_COOKIE_NAME);
@@ -80,7 +80,10 @@ export async function triggerAIGenerate() {
     const protocol = host.startsWith('localhost') ? 'http' : 'https';
 
     const cronSecret = process.env.CRON_SECRET || '';
-    const url = `${protocol}://${host}/api/cron/generate?secret=${cronSecret}`;
+    let url = `${protocol}://${host}/api/cron/generate?secret=${cronSecret}`;
+    if (subject?.trim()) {
+      url += `&subject=${encodeURIComponent(subject.trim())}`;
+    }
 
     console.log(`Triggering AI Generator via action: ${url}`);
     
