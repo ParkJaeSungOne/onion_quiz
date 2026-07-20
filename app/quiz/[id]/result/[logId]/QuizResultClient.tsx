@@ -42,6 +42,13 @@ interface QuizData {
   category: string;
 }
 
+interface RecommendationItem {
+  id: number;
+  title: string;
+  category: string;
+  description: string;
+}
+
 interface QuizResultClientProps {
   quiz: QuizData;
   score: number;
@@ -50,6 +57,7 @@ interface QuizResultClientProps {
   logId: string;
   companion: CompanionData | null;
   rival: CompanionData | null;
+  recommendations: RecommendationItem[];
 }
 
 export default function QuizResultClient({
@@ -60,6 +68,7 @@ export default function QuizResultClient({
   logId,
   companion,
   rival,
+  recommendations,
 }: QuizResultClientProps) {
   const cardRef = useRef<HTMLDivElement>(null);
   const [copied, setCopied] = useState(false);
@@ -392,11 +401,32 @@ export default function QuizResultClient({
         </div>
       </section>
 
+      {/* 🚀 그로스 해킹: 체류시간과 추가 플레이 유입을 위한 맞춤 추천 리스트 */}
+      {recommendations && recommendations.length > 0 && (
+        <section className={styles.recommendationSection}>
+          <h3 className={styles.recommendationHeading}>🧅 다른 껍질도 까볼래? (추천 테스트)</h3>
+          <div className={styles.recommendationGrid}>
+            {recommendations.map((rec) => (
+              <Link key={rec.id} href={`/quiz/${rec.id}`} className={styles.recCard}>
+                <div className={styles.recCardHeader}>
+                  <span className={styles.recCategory}>{rec.category}</span>
+                </div>
+                <h4 className={styles.recCardTitle}>{rec.title}</h4>
+                <p className={styles.recCardDesc}>{rec.description}</p>
+                <div className={styles.recCardFooter}>
+                  <span>시작하기 →</span>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
+
       <AdSlot type="result" />
 
       <div className={styles.actionArea}>
         <Link href="/" className={styles.backButton}>
-          다른 테스트 하러 가기
+          전체 테스트 보러 가기
           <span className={styles.arrow}>↩</span>
         </Link>
       </div>

@@ -542,6 +542,140 @@
   box-shadow: 1px 1px 0px #000000;
 }
 
+/* 🚀 추천 테스트 섹션 및 카드 스타일 (네오브루탈리즘 테마) */
+.recommendationSection {
+  margin-top: 40px;
+  padding: 26px 20px;
+  border: 3px solid #000000;
+  box-shadow: 6px 6px 0px #000000;
+  border-radius: 24px;
+  background: #ffffff;
+  text-align: center;
+}
+
+.recommendationHeading {
+  font-size: 15px;
+  font-weight: 900;
+  color: #000000;
+  margin-bottom: 24px;
+  border-bottom: 2px solid #000000;
+  padding-bottom: 6px;
+  display: inline-block;
+}
+
+.recommendationGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 20px;
+}
+
+.recCard {
+  background: #ffffff;
+  border: 3px solid #000000;
+  box-shadow: 3px 3px 0px #000000;
+  border-radius: 18px;
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  text-align: left;
+  transition: all 0.15s ease;
+  cursor: pointer;
+  text-decoration: none;
+  color: inherit;
+}
+
+.recCard:hover {
+  transform: translate(-3px, -3px);
+  box-shadow: 6px 6px 0px #000000;
+}
+
+.recCard:active {
+  transform: translate(1px, 1px);
+  box-shadow: 1px 1px 0px #000000;
+}
+
+/* 추천 카드별 배경색 순환 지정 */
+.recCard:nth-child(3n+1) { background-color: #fef08a; } /* 옐로우 */
+.recCard:nth-child(3n+2) { background-color: #cffafe; } /* 시안 */
+.recCard:nth-child(3n+3) { background-color: #d9f99d; } /* 라임 */
+
+.recCardHeader {
+  margin-bottom: 10px;
+}
+
+.recCategory {
+  font-size: 10px;
+  font-weight: 800;
+  color: #000000;
+  background: #ffffff;
+  border: 2px solid #000000;
+  padding: 2px 8px;
+  border-radius: 6px;
+}
+
+.recCardTitle {
+  font-size: 14px;
+  font-weight: 900;
+  color: #000000;
+  margin-bottom: 8px;
+  line-height: 1.35;
+}
+
+.recCardDesc {
+  font-size: 11px;
+  font-weight: 700;
+  color: #475569;
+  line-height: 1.45;
+  margin-bottom: 16px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  flex-grow: 1;
+}
+
+.recCardFooter {
+  font-size: 11px;
+  font-weight: 900;
+  color: #ffffff;
+  background: #000000;
+  border: 2px solid #000000;
+  padding: 6px 12px;
+  border-radius: 8px;
+  align-self: flex-start;
+}
+
+@media (prefers-color-scheme: dark) {
+  .recommendationSection {
+    background: #111827;
+    border-color: #ffffff;
+    box-shadow: 6px 6px 0px #ffffff;
+  }
+  .recommendationHeading {
+    color: #ffffff;
+    border-color: #ffffff;
+  }
+  .recCard {
+    border-color: #ffffff;
+    box-shadow: 3px 3px 0px #ffffff;
+  }
+  .recCard:hover {
+    box-shadow: 6px 6px 0px #ffffff;
+  }
+  .recCategory {
+    background: #111827;
+    border-color: #ffffff;
+    color: #ffffff;
+  }
+  .recCardTitle {
+    color: #000000;
+  }
+  .recCardDesc {
+    color: #334155;
+  }
+}
+
+
 
 
 

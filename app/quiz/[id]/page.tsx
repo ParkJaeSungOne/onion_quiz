@@ -91,5 +91,30 @@ export default async function QuizPage({ params }: QuizPageProps) {
     notFound();
   }
 
-  return <QuizPlayClient quiz={quiz} />;
+  // 구글 검색에 리치 스니펫(질문/성향 테스트 구조화 스키마) 노출을 극대화하기 위한 JSON-LD
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'Quiz',
+    'name': quiz.title,
+    'description': quiz.description,
+    'educationalUse': 'personality test',
+    'hasPart': quiz.questions.map((q) => ({
+      '@type': 'Question',
+      'name': q.text,
+      'suggestedAnswer': q.options.map((opt) => ({
+        '@type': 'Answer',
+        'text': opt.text,
+      })),
+    })),
+  };
+
+  return (
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+      <QuizPlayClient quiz={quiz} />
+    </>
+  );
 }

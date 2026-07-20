@@ -111,6 +111,28 @@ export default async function QuizResultPage({ params }: ResultPageProps) {
     console.error('Failed to aggregate statistics:', err);
   }
 
+  // 6. 다른 성향 테스트 추천 리스트 수집 (유입 극대화 및 체류 시간 향상)
+  let recommendations: any[] = [];
+  try {
+    recommendations = await prisma.quiz.findMany({
+      where: {
+        id: { not: quizId },
+      },
+      take: 3,
+      orderBy: {
+        createdAt: 'desc',
+      },
+      select: {
+        id: true,
+        title: true,
+        category: true,
+        description: true,
+      },
+    });
+  } catch (err) {
+    console.error('Failed to fetch recommendations:', err);
+  }
+
   // 데이터 구조를 정형화하여 클라이언트 컴포넌트로 전송
   const serializedQuiz = {
     id: quiz.id,
@@ -148,6 +170,7 @@ export default async function QuizResultPage({ params }: ResultPageProps) {
       logId={logId}
       companion={serializeCompanion}
       rival={serializeRival}
+      recommendations={recommendations}
     />
   );
 }
