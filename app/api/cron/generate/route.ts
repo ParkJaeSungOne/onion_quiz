@@ -107,9 +107,13 @@ export async function GET(request: Request) {
         const isRateLimit = errMsg.includes('429') || 
                             errMsg.toLowerCase().includes('resource_exhausted') ||
                             errMsg.toLowerCase().includes('quota');
+        const isUnavailable = errMsg.includes('503') ||
+                              errMsg.toLowerCase().includes('unavailable') ||
+                              errMsg.toLowerCase().includes('high demand') ||
+                              errMsg.toLowerCase().includes('overloaded');
         
-        if (isRateLimit && i < retries - 1) {
-          console.warn(`[Gemini API] 429 Rate Limit hit. Retrying in ${delay}ms... (Attempt ${i + 1}/${retries})`);
+        if ((isRateLimit || isUnavailable) && i < retries - 1) {
+          console.warn(`[Gemini API] Transient error (429/503) hit. Retrying in ${delay}ms... (Attempt ${i + 1}/${retries})`);
           await new Promise((resolve) => setTimeout(resolve, delay));
           delay *= 2.5; // 지수 백오프 (2초 -> 5초 -> 12.5초)
         } else {
