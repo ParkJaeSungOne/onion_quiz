@@ -169,14 +169,10 @@ export default function QuizPlayClient({ quiz }: QuizPlayClientProps) {
     }
   };
 
-  // 로딩(결과 분석) 완료 시 결과 페이지로 리다이렉트 (점수가 감춰진 깔끔한 URL)
+  // 로딩(결과 분석) 완료 시 결과 페이지로 리다이렉트 (점수 파라미터를 보존하여 장애 극복)
   const handleLoadingComplete = () => {
-    if (quizLogId) {
-      router.push(`/quiz/${quiz.id}/result/${quizLogId}`);
-    } else {
-      // 백업용 리다이렉트 (로그ID 유실 시 퀴즈 첫 화면으로)
-      router.push(`/quiz/${quiz.id}`);
-    }
+    const finalLogId = quizLogId || 'guest';
+    router.push(`/quiz/${quiz.id}/result/${finalLogId}?score=${totalScore}`);
   };
 
   // 1. 커버(시작) 단계

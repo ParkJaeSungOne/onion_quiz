@@ -4,13 +4,15 @@ import QuizResultClient from './QuizResultClient';
 
 interface ResultPageProps {
   params: Promise<{ id: string; logId: string }>;
+  searchParams: Promise<{ score?: string }>;
 }
 
 // 1분 단위 캐싱 적용 (동시 F5 연타에 의한 DB 부하 분산 및 최적화)
 export const revalidate = 60;
 
-export default async function QuizResultPage({ params }: ResultPageProps) {
+export default async function QuizResultPage({ params, searchParams }: ResultPageProps) {
   const { id, logId } = await params;
+  const { score: scoreParam } = await searchParams;
   
   const quizId = parseInt(id, 10);
 
@@ -23,21 +25,36 @@ export default async function QuizResultPage({ params }: ResultPageProps) {
     redirect(`/quiz/${quizId}`);
   }
 
-  // 2. DB에서 실제 퀴즈 제출 세션 로그 조회
-  const userLog = await prisma.quizLog.findUnique({
-    where: { id: logId },
-    select: {
-      totalScore: true,
-      quizId: true
-    }
-  });
+  let score = 0;
+  let userLog = null;
 
-  // 아직 퀴즈를 완료하지 않았거나(totalScore가 0), 비정상 세션 로그일 경우 리다이렉트 처리
-  if (!userLog || userLog.quizId !== quizId || userLog.totalScore === 0) {
-    redirect(`/quiz/${quizId}`);
+  // guest 세션이 아닐 때만 DB 조회 진행
+  if (logId !== 'guest') {
+    try {
+      userLog = await prisma.quizLog.findUnique({
+        where: { id: logId },
+        select: {
+          totalScore: true,
+          quizId: true
+        }
+      });
+    } catch (err) {
+      console.error('Failed to query quiz log in result page:', err);
+    }
   }
 
-  const score = userLog.totalScore;
+  // DB 로그가 존재하고 완료된 상태라면 해당 점수 활용
+  if (userLog && userLog.quizId === quizId && userLog.totalScore > 0) {
+    score = userLog.totalScore;
+  } else if (scoreParam) {
+    // DB 조회가 비정상이거나 게스트 세션인 경우 URL의 score 파라미터를 파싱하여 복구 (Failsafe)
+    score = parseInt(scoreParam, 10);
+  }
+
+  // 여전히 점수가 0점(무효 점수)이라면 안전장치로 플레이 화면 리다이렉트
+  if (score === 0) {
+    redirect(`/quiz/${quizId}`);
+  }
 
   // 3. 퀴즈 및 결과 유형 조회
   const quiz = await prisma.quiz.findUnique({
