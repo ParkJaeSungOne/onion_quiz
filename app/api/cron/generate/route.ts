@@ -111,7 +111,7 @@ export async function GET(request: Request) {
       throw new Error('Invalid quiz format received from AI');
     }
 
-    // 3. 트랜잭션으로 DB에 퀴즈 생성
+    // 3. 트랜잭션으로 DB에 퀴즈 생성 (Supabase 원격 지연 대응을 위해 타임아웃 40초로 확장)
     const createdQuiz = await prisma.$transaction(async (tx) => {
       // 퀴즈 마스터 저장
       const quiz = await tx.quiz.create({
@@ -158,6 +158,9 @@ export async function GET(request: Request) {
       }
 
       return quiz;
+    }, {
+      maxWait: 20000, // 커넥션 획득 대기 시간 최대 20초
+      timeout: 40000  // 트랜잭션 수행 시간 최대 40초
     });
 
     return NextResponse.json({
