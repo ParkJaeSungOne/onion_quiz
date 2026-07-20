@@ -44,25 +44,32 @@ export default function AdSlot({ type, slotId }: AdSlotProps) {
     <div className={`${styles.adContainer} ${getLayoutClass()}`}>
       <div className={styles.adBadge}>SPONSORED</div>
       
-      {/* 
-        [실제 광고 삽입 가이드]
-        1. Google AdSense를 사용하는 경우:
-            아래 주석을 풀고 client와 slot 번호를 기입하십시오.
-           <ins className="adsbygoogle"
-                style={{ display: 'block' }}
-                data-ad-client="ca-pub-XXXXXXXXXXXXXXXX"
-                data-ad-slot={slotId || "XXXXXXXXXX"}
-                data-ad-format="auto"
-                data-full-width-responsive="true"></ins>
+      {/* 1. 💰 Google AdSense 광고 유닛 (도메인 승인 완료 시 자동 노출) */}
+      <div className={styles.adsenseWrapper}>
+        <ins className="adsbygoogle"
+             style={{ display: 'block', overflow: 'hidden', minHeight: '90px' }}
+             data-ad-client="ca-pub-6272041920940171"
+             data-ad-slot={slotId || "2973849182"}
+             data-ad-format="auto"
+             data-full-width-responsive="true"></ins>
+      </div>
 
-        2. 쿠팡 파트너스 배너를 사용하는 경우:
-           아래와 같이 iframe 혹은 script 형태의 파트너스 코드를 삽입하십시오.
-           <iframe src="https://coupa.ng/..." width="100%" height="90" frameborder="0" scrolling="no"></iframe>
-      */}
-
-      <div className={styles.adPlaceholderContent}>
-        <p className={styles.adPlaceholderTitle}>공감되는 퀴즈였다면?</p>
-        <p className={styles.adPlaceholderDesc}>여기에 구글 애드센스 또는 쿠팡 파트너스 광고가 노출됩니다.</p>
+      {/* 2. 🚀 쿠팡 파트너스 배너 & 최저가 검색 (AdSense 승인 대기 기간 및 수익 다각화용 백업) */}
+      <div className={styles.coupangBanner}>
+        <a 
+          href="https://link.coupang.com/a/bS8E1p" 
+          target="_blank" 
+          rel="nofollow noopener noreferrer" 
+          className={styles.coupangLink}
+        >
+          <div className={styles.coupangFlex}>
+            <span className={styles.coupangTag}>쿠팡 최저가 🚀</span>
+            <span className={styles.coupangTitle}>🧅 양파 까다가 입 심심할 때? 로켓배송 간식 득템하러 가기 →</span>
+          </div>
+        </a>
+        <div className={styles.coupangDisclaimer}>
+          * 이 포스팅은 쿠팡 파트너스 활동의 일환으로, 이에 따른 일정액의 수수료를 제공받습니다.
+        </div>
       </div>
     </div>
   );

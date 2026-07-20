@@ -52,12 +52,11 @@ interface HomePageProps {
 export default async function Home({ searchParams }: HomePageProps) {
   const { page: pageStr, search: searchStr } = await searchParams;
   const currentPage = parseInt(pageStr || '1', 10);
-  const pageSize = 6; // 한 페이지당 6개 테스트 노출 (속도 최적화)
-
   let quizzes: any[] = [];
   let dbError = false;
   let totalPages = 1;
   let pageNum = 1;
+  const pageSize = 8; // 3x3 그리드 매칭용 (8개 테스트 + 1개 광고 = 9개 격자)
 
   try {
     const result = await getCachedQuizzes(searchStr, currentPage, pageSize);
@@ -149,32 +148,41 @@ export default async function Home({ searchParams }: HomePageProps) {
             )}
 
             <div className={styles.grid}>
-              {quizzes.map((quiz, index) => {
-                const card = (
-                  <Link key={quiz.id} href={`/quiz/${quiz.id}`} className={styles.card}>
-                    <div className={styles.cardHeader}>
-                      <span className={styles.category}>{quiz.category}</span>
-                      <span className={styles.qCount}>{quiz.questions.length}문항</span>
-                    </div>
-                    <h2 className={styles.cardTitle}>{quiz.title}</h2>
-                    <p className={styles.cardDesc}>{quiz.description}</p>
-                    <div className={styles.cardFooter}>
-                      <span className={styles.playText}>테스트 시작하기 →</span>
-                    </div>
-                  </Link>
-                );
+              {(() => {
+                const gridItems: React.ReactNode[] = [];
+                
+                quizzes.forEach((quiz, index) => {
+                  // 5번째 그리드 칸(index === 4)에 네이티브 광고 유닛 배치 (3x3 정중앙 대칭)
+                  if (index === 4) {
+                    gridItems.push(
+                      <AdSlot key="main-grid-ad-center" type="main" />
+                    );
+                  }
 
-                if (index > 0 && index % 3 === 0) {
-                  return (
-                    <div key={`ad-wrapper-${quiz.id}`} className={styles.gridAdWrapper}>
-                      <AdSlot type="main" />
-                      {card}
-                    </div>
+                  gridItems.push(
+                    <Link key={quiz.id} href={`/quiz/${quiz.id}`} className={styles.card}>
+                      <div className={styles.cardHeader}>
+                        <span className={styles.category}>{quiz.category}</span>
+                        <span className={styles.qCount}>{quiz.questions.length}문항</span>
+                      </div>
+                      <h2 className={styles.cardTitle}>{quiz.title}</h2>
+                      <p className={styles.cardDesc}>{quiz.description}</p>
+                      <div className={styles.cardFooter}>
+                        <span className={styles.playText}>테스트 시작하기 →</span>
+                      </div>
+                    </Link>
+                  );
+                });
+
+                // 만약 전체 퀴즈 개수가 4개 이하라서 중앙에 광고가 삽입되지 못했다면, 맨 마지막 칸에 배치
+                if (quizzes.length < 5) {
+                  gridItems.push(
+                    <AdSlot key="main-grid-ad-end" type="main" />
                   );
                 }
 
-                return card;
-              })}
+                return gridItems;
+              })()}
             </div>
 
             {/* 네오브루탈리즘 스타일 페이징 UI (검색 쿼리 유지형) */}
