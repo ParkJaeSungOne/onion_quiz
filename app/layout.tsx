@@ -15,6 +15,12 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "까도까도 (Kkado-Kkado) - 양파처럼 까보는 나의 팩폭 성향 테스트",
   description: "양파처럼 깔수록 재미있고 적나라한 나의 본모습을 까보세요! 트렌디한 팩폭 성향 테스트 연구소 까도까도.",
+  verification: {
+    google: process.env.NEXT_PUBLIC_GOOGLE_VERIFICATION || undefined,
+    other: {
+      'naver-site-verification': process.env.NEXT_PUBLIC_NAVER_VERIFICATION || '',
+    }
+  }
 };
 
 export default function RootLayout({
