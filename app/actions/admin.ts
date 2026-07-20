@@ -84,7 +84,21 @@ export async function triggerAIGenerate() {
     console.log(`Triggering AI Generator via action: ${url}`);
     
     const response = await fetch(url, { cache: 'no-store' });
-    const data = await response.json();
+    
+    // 응답 Content-Type 확인 및 HTML/텍스트 에러 처리 가드
+    const contentType = response.headers.get('content-type') || '';
+    let data: any = {};
+    
+    if (contentType.includes('application/json')) {
+      data = await response.json();
+    } else {
+      const text = await response.text();
+      // Vercel 10초 타임아웃 또는 504 Gateway Timeout 검출 및 직관적 번역
+      if (response.status === 504 || text.includes('504') || text.includes('An error occurred')) {
+        throw new Error(`Vercel 10초 실행 시간 제한 초과 (504 Gateway Timeout)가 발생했습니다. Vercel Hobby 무료 플랜은 10초 이내에 완료되지 않으면 강제로 작동이 끊깁니다. 다시 한번 시도해 보시거나 결과 텍스트 분량을 약간 조절해야 할 수 있습니다.`);
+      }
+      throw new Error(`서버가 JSON이 아닌 텍스트를 반환했습니다 (상태 코드: ${response.status}). 상세내용: ${text.substring(0, 150)}...`);
+    }
 
     if (!response.ok || !data.success) {
       throw new Error(data.error || 'AI 테스트 생성 도중 오류가 발생했습니다.');
