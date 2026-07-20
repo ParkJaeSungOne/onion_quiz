@@ -10,20 +10,7 @@ interface QuizPageProps {
 // 1시간 단위 증분 정적 재생성 (ISR) 설정으로 플레이 페이지 로드 속도 향상
 export const revalidate = 3600; 
 
-// 빌드 시점에 기존에 존재하는 모든 퀴즈 페이지를 HTML로 미리 사전생성하여 초고속 서빙 (TTFB 단축)
-export async function generateStaticParams() {
-  try {
-    const quizzes = await prisma.quiz.findMany({
-      select: { id: true }
-    });
-    return quizzes.map((quiz) => ({
-      id: String(quiz.id)
-    }));
-  } catch (error) {
-    console.error('Failed to generate static params:', error);
-    return [];
-  }
-}
+
 /**
  * 1. 검색엔진 최적화 (SEO) 극대화를 위한 개별 테스트 동적 메타데이터 생성기
  */
