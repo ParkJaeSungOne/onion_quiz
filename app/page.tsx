@@ -93,6 +93,13 @@ export default async function Home({ searchParams }: HomePageProps) {
       {/* 🔍 검색 바 컴포넌트 마운트 */}
       <SearchBar />
 
+      {/* 📢 방명록 바로가기 배너 */}
+      <div className={styles.guestbookBanner}>
+        <Link href="/guestbook" className={styles.guestbookLink}>
+          💬 <strong>실시간 자유 방명록 Open!</strong> 다른 사람 성향 테스트 결과 구경하고 수다 떨러 가기 →
+        </Link>
+      </div>
+
       {/* 상단 광고 슬롯 */}
       <AdSlot type="main" />
 

@@ -1,0 +1,126 @@
+.container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 40px 20px;
+}
+
+.header {
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+.logoArea {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 6px;
+}
+
+.logoIcon {
+  width: 42px;
+  height: 42px;
+}
+
+.logoTextLink {
+  text-decoration: none;
+}
+
+.title {
+  font-size: 26px;
+  font-weight: 950;
+  color: #000000;
+  letter-spacing: -1px;
+}
+
+.subtitle {
+  font-size: 13px;
+  font-weight: 800;
+  color: #64748b;
+}
+
+.main {
+  width: 100%;
+}
+
+.callout {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  background: var(--kitsch-yellow, #fef08a);
+  border: 4px solid #000000;
+  box-shadow: 4px 4px 0px #000000;
+  border-radius: 20px;
+  padding: 20px;
+  margin-bottom: 30px;
+}
+
+.emoji {
+  font-size: 24px;
+}
+
+.calloutText {
+  font-size: 13px;
+  font-weight: 850;
+  color: #000000;
+  line-height: 1.5;
+}
+
+.error {
+  color: #ef4444;
+  font-weight: 900;
+  text-align: center;
+  padding: 20px;
+}
+
+.backBox {
+  margin-top: 40px;
+  text-align: center;
+}
+
+.backBtn {
+  background: var(--kitsch-lime, #a3e635);
+  color: #000000;
+  border: 3px solid #000000;
+  box-shadow: 3px 3px 0px #000000;
+  padding: 12px 24px;
+  border-radius: 14px;
+  font-weight: 900;
+  font-size: 14px;
+  cursor: pointer;
+  text-decoration: none;
+  display: inline-block;
+  transition: all 0.1s ease;
+}
+
+.backBtn:hover {
+  transform: translate(-1px, -1px);
+  box-shadow: 4px 4px 0px #000000;
+}
+
+.backBtn:active {
+  transform: translate(1px, 1px);
+  box-shadow: 1px 1px 0px #000000;
+}
+
+/* Dark Mode support */
+@media (prefers-color-scheme: dark) {
+  .title {
+    color: #ffffff;
+  }
+  .callout {
+    background: #451a03;
+    border-color: #ffffff;
+    box-shadow: 4px 4px 0px #ffffff;
+  }
+  .calloutText {
+    color: #fef08a;
+  }
+  .backBtn {
+    border-color: #ffffff;
+    box-shadow: 3px 3px 0px #ffffff;
+  }
+  .backBtn:hover {
+    box-shadow: 4px 4px 0px #ffffff;
+  }
+}

@@ -133,6 +133,23 @@ export default async function QuizResultPage({ params }: ResultPageProps) {
     console.error('Failed to fetch recommendations:', err);
   }
 
+  // 7. 특정 퀴즈에 등록된 실시간 댓글 목록 수집
+  let comments: any[] = [];
+  try {
+    comments = await prisma.comment.findMany({
+      where: { quizId },
+      orderBy: { createdAt: 'desc' },
+      select: {
+        id: true,
+        nickname: true,
+        content: true,
+        createdAt: true,
+      },
+    });
+  } catch (err) {
+    console.error('Failed to fetch comments:', err);
+  }
+
   // 데이터 구조를 정형화하여 클라이언트 컴포넌트로 전송
   const serializedQuiz = {
     id: quiz.id,
@@ -171,6 +188,7 @@ export default async function QuizResultPage({ params }: ResultPageProps) {
       companion={serializeCompanion}
       rival={serializeRival}
       recommendations={recommendations}
+      comments={comments}
     />
   );
 }

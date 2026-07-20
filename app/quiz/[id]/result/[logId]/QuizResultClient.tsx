@@ -5,6 +5,7 @@ import Link from 'next/link';
 import Script from 'next/script';
 import AdSlot from '@/components/AdSlot';
 import Footer from '@/components/Footer';
+import CommentSection from '@/components/CommentSection';
 import styles from './QuizResult.module.css';
 
 // Kakao SDK 타입 확장 선언
@@ -59,6 +60,7 @@ interface QuizResultClientProps {
   companion: CompanionData | null;
   rival: CompanionData | null;
   recommendations: RecommendationItem[];
+  comments: any[];
 }
 
 export default function QuizResultClient({
@@ -70,6 +72,7 @@ export default function QuizResultClient({
   companion,
   rival,
   recommendations,
+  comments,
 }: QuizResultClientProps) {
   const cardRef = useRef<HTMLDivElement>(null);
   const [copied, setCopied] = useState(false);
@@ -422,6 +425,8 @@ export default function QuizResultClient({
           </div>
         </section>
       )}
+      {/* 💬 실시간 퀴즈 댓글 토크방 */}
+      <CommentSection quizId={quiz.id} initialComments={comments} />
 
       <AdSlot type="result" />
 
