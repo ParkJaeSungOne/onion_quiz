@@ -9,6 +9,8 @@ interface AdSlotProps {
 }
 
 export default function AdSlot({ type, slotId }: AdSlotProps) {
+  const coupangIframeUrl = process.env.NEXT_PUBLIC_COUPANG_IFRAME_URL;
+
   useEffect(() => {
     // 애드센스 스크립트가 로드되었을 경우 광고를 푸시하는 로직
     try {
@@ -54,19 +56,33 @@ export default function AdSlot({ type, slotId }: AdSlotProps) {
              data-full-width-responsive="true"></ins>
       </div>
 
-      {/* 2. 🚀 쿠팡 파트너스 배너 & 최저가 검색 (AdSense 승인 대기 기간 및 수익 다각화용 백업) */}
+      {/* 2. 🚀 쿠팡 파트너스 배너 (AdSense 승인 대기 기간 및 수익 다각화용 백업) */}
       <div className={styles.coupangBanner}>
-        <a 
-          href={process.env.NEXT_PUBLIC_COUPANG_URL || "https://link.coupang.com/a/bS8E1p"} 
-          target="_blank" 
-          rel="nofollow noopener noreferrer" 
-          className={styles.coupangLink}
-        >
-          <div className={styles.coupangFlex}>
-            <span className={styles.coupangTag}>쿠팡 최저가 🚀</span>
-            <span className={styles.coupangTitle}>🧅 양파 까다가 입 심심할 때? 로켓배송 간식 득템하러 가기 →</span>
-          </div>
-        </a>
+        {coupangIframeUrl ? (
+          /* 사용자가 다이나믹 배너 iframe 주소를 입력한 경우 개인 맞춤형 상품 슬라이더 노출 */
+          <iframe
+            src={coupangIframeUrl}
+            width="100%"
+            height="90"
+            frameBorder="0"
+            scrolling="no"
+            referrerPolicy="unsafe-url"
+            style={{ border: 'none', borderRadius: '12px', overflow: 'hidden', width: '100%', maxWidth: '100%' }}
+          ></iframe>
+        ) : (
+          /* 미설정 시 기본 키치 스타일 고수익 간식 텍스트 배너 노출 (Fallback) */
+          <a 
+            href={process.env.NEXT_PUBLIC_COUPANG_URL || "https://link.coupang.com/a/bS8E1p"} 
+            target="_blank" 
+            rel="nofollow noopener noreferrer" 
+            className={styles.coupangLink}
+          >
+            <div className={styles.coupangFlex}>
+              <span className={styles.coupangTag}>쿠팡 최저가 🚀</span>
+              <span className={styles.coupangTitle}>🧅 양파 까다가 입 심심할 때? 로켓배송 간식 득템하러 가기 →</span>
+            </div>
+          </a>
+        )}
         <div className={styles.coupangDisclaimer}>
           * 이 포스팅은 쿠팡 파트너스 활동의 일환으로, 이에 따른 일정액의 수수료를 제공받습니다.
         </div>
