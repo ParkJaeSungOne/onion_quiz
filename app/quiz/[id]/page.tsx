@@ -45,9 +45,9 @@ export async function generateMetadata({ params }: QuizPageProps): Promise<Metad
       siteName: '까도까도',
       images: [
         {
-          url: 'https://kkado-kkado.com/icon', // 파비콘 양파 🧅 이미지 활용
-          width: 256,
-          height: 256,
+          url: 'https://kkado-kkado.com/thumbnail.png', // 고화질 512x512 양파 캐릭터 썸네일 활용
+          width: 512,
+          height: 512,
           alt: quiz.title,
         }
       ],
@@ -57,7 +57,7 @@ export async function generateMetadata({ params }: QuizPageProps): Promise<Metad
       card: 'summary',
       title: quiz.title,
       description: quiz.description,
-      images: ['https://kkado-kkado.com/icon'],
+      images: ['https://kkado-kkado.com/thumbnail.png'],
     }
   };
 }

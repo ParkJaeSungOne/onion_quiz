@@ -1,3 +1,4 @@
+import { Metadata } from 'next';
 import { notFound, redirect } from 'next/navigation';
 import prisma from '@/lib/prisma';
 import QuizResultClient from './QuizResultClient';
@@ -9,6 +10,81 @@ interface ResultPageProps {
 
 // 1분 단위 캐싱 적용 (동시 F5 연타에 의한 DB 부하 분산 및 최적화)
 export const revalidate = 60;
+
+/**
+ * 🔗 애드센스 승인 및 SNS 공유 최적화를 위한 결과 페이지 동적 메타데이터 생성기
+ */
+export async function generateMetadata({ params, searchParams }: ResultPageProps): Promise<Metadata> {
+  const { id, logId } = await params;
+  const { score: scoreParam } = await searchParams;
+  const quizId = parseInt(id, 10);
+  
+  if (isNaN(quizId)) return {};
+
+  try {
+    const quiz = await prisma.quiz.findUnique({
+      where: { id: quizId },
+      include: { results: true }
+    });
+
+    if (!quiz) return {};
+
+    let matchedTitle = '';
+    let score = 0;
+
+    if (logId !== 'guest') {
+      const userLog = await prisma.quizLog.findUnique({
+        where: { id: logId },
+        select: { totalScore: true }
+      });
+      if (userLog && userLog.totalScore > 0) {
+        score = userLog.totalScore;
+      }
+    } else if (scoreParam) {
+      score = parseInt(scoreParam, 10);
+    }
+
+    if (score > 0) {
+      const matched = quiz.results.find(res => score >= res.minScore && score <= res.maxScore);
+      if (matched) matchedTitle = matched.title;
+    }
+
+    const pageTitle = matchedTitle 
+      ? `나의 결과: [${matchedTitle}] | ${quiz.title}`
+      : `${quiz.title} 결과 리포트`;
+
+    const description = `나의 성향 분석표를 지금 까보세요! 양파처럼 까도까도 매력 넘치는 성향 테스트 연구소 까도까도.`;
+
+    return {
+      title: `${pageTitle} | 까도까도`,
+      description,
+      openGraph: {
+        title: pageTitle,
+        description,
+        url: `https://kkado-kkado.com/quiz/${quizId}/result/${logId}`,
+        siteName: '까도까도',
+        images: [
+          {
+            url: 'https://kkado-kkado.com/thumbnail.png', // 고화질 512x512 캐릭터 썸네일 활용
+            width: 512,
+            height: 512,
+            alt: pageTitle,
+          }
+        ],
+        type: 'website',
+      },
+      twitter: {
+        card: 'summary',
+        title: pageTitle,
+        description,
+        images: ['https://kkado-kkado.com/thumbnail.png'],
+      }
+    };
+  } catch (err) {
+    console.error('Failed to generate result page metadata:', err);
+    return {};
+  }
+}
 
 export default async function QuizResultPage({ params, searchParams }: ResultPageProps) {
   const { id, logId } = await params;
