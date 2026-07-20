@@ -2,9 +2,8 @@ import { PrismaClient } from '@prisma/client';
 const prisma = new PrismaClient();
 
 try {
-  console.log('Querying database...');
-  const count = await prisma.quiz.count();
-  console.log('Successfully queried DB. Quiz count:', count);
+  const quiz = await prisma.quiz.findFirst({ select: { id: true } });
+  console.log('First quiz ID:', quiz?.id);
 } catch (error) {
   console.error('Database connection failed:', error);
 } finally {

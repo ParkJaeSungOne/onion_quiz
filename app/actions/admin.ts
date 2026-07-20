@@ -107,6 +107,9 @@ export async function triggerAIGenerate() {
 
     revalidatePath('/');
     revalidatePath('/admin');
+    if (data.quizId) {
+      revalidatePath(`/quiz/${data.quizId}`);
+    }
     revalidateTag('quizzes', 'default');
     return { success: true, title: data.title };
   } catch (error: any) {
