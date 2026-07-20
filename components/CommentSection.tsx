@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useState } from 'react';
-import { createComment, deleteComment } from '@/app/actions/comment';
+import React, { useState, useEffect } from 'react';
+import { createComment, deleteComment, addCommentReaction } from '@/app/actions/comment';
 import styles from './CommentSection.module.css';
 
 interface CommentType {
@@ -10,6 +10,12 @@ interface CommentType {
   content: string;
   createdAt: Date | string;
   password?: string | null;
+  
+  // 리액션 카운터 속성 추가 (B코스 연동)
+  reactionOnion?: number;
+  reactionFire?: number;
+  reactionHeart?: number;
+  reactionLaugh?: number;
 }
 
 interface CommentSectionProps {
@@ -32,6 +38,64 @@ export default function CommentSection({ quizId, initialComments, title }: Comme
   
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
+
+  // 사용자가 클릭한 리액션 이력 추적 (중복 클릭 방지용, 로컬 스토리지 보존)
+  const [userReactions, setUserReactions] = useState<Record<string, string[]>>({});
+
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem('kkado_comment_reactions');
+      if (saved) {
+        setUserReactions(JSON.parse(saved));
+      }
+    } catch (e) {
+      console.error('Failed to parse local reactions:', e);
+    }
+  }, []);
+
+  // 리액션 버튼 탭 핸들러 (낙관적 렌더링 적용)
+  const handleReaction = async (commentId: string, type: 'onion' | 'fire' | 'heart' | 'laugh') => {
+    const currentReactions = userReactions[commentId] || [];
+    if (currentReactions.includes(type)) {
+      alert('이미 공감을 표시하셨습니다! 👍');
+      return;
+    }
+
+    // 1. UI 낙관적 즉시 가산
+    setComments(prev => prev.map(c => {
+      if (c.id === commentId) {
+        let field: 'reactionOnion' | 'reactionFire' | 'reactionHeart' | 'reactionLaugh' = 'reactionOnion';
+        if (type === 'onion') field = 'reactionOnion';
+        else if (type === 'fire') field = 'reactionFire';
+        else if (type === 'heart') field = 'reactionHeart';
+        else if (type === 'laugh') field = 'reactionLaugh';
+
+        return {
+          ...c,
+          [field]: (Number(c[field]) || 0) + 1
+        };
+      }
+      return c;
+    }));
+
+    // 2. 로컬 스토리지에 중복 차단용 이력 기록
+    const updated = {
+      ...userReactions,
+      [commentId]: [...currentReactions, type]
+    };
+    setUserReactions(updated);
+    try {
+      localStorage.setItem('kkado_comment_reactions', JSON.stringify(updated));
+    } catch (e) {
+      console.error('Failed to save reactions to localStorage:', e);
+    }
+
+    // 3. 백그라운드 서버 액션 호출
+    const res = await addCommentReaction(commentId, type);
+    if (!res.success) {
+      console.error('Server failed to record reaction:', res.error);
+    }
+  };
 
   // 삭제 모달 상태 관리
   const [deletingId, setDeletingId] = useState<string | null>(null);
@@ -186,6 +250,38 @@ export default function CommentSection({ quizId, initialComments, title }: Comme
                 </div>
               </div>
               <p className={styles.content}>{comment.content}</p>
+
+              {/* 🧅 실시간 4종 이모지 리액션 단추 패널 (B코스 연동) */}
+              <div className={styles.reactionsWrapper}>
+                <button
+                  onClick={() => handleReaction(comment.id, 'onion')}
+                  className={`${styles.reactionBtn} ${(userReactions[comment.id] || []).includes('onion') ? styles.activeReaction : ''}`}
+                  title="양파 드립 🧅"
+                >
+                  🧅 <span className={styles.reactionCount}>{comment.reactionOnion || 0}</span>
+                </button>
+                <button
+                  onClick={() => handleReaction(comment.id, 'fire')}
+                  className={`${styles.reactionBtn} ${(userReactions[comment.id] || []).includes('fire') ? styles.activeReaction : ''}`}
+                  title="도파민 폭발 🔥"
+                >
+                  🔥 <span className={styles.reactionCount}>{comment.reactionFire || 0}</span>
+                </button>
+                <button
+                  onClick={() => handleReaction(comment.id, 'heart')}
+                  className={`${styles.reactionBtn} ${(userReactions[comment.id] || []).includes('heart') ? styles.activeReaction : ''}`}
+                  title="완전 개추 ❤️"
+                >
+                  ❤️ <span className={styles.reactionCount}>{comment.reactionHeart || 0}</span>
+                </button>
+                <button
+                  onClick={() => handleReaction(comment.id, 'laugh')}
+                  className={`${styles.reactionBtn} ${(userReactions[comment.id] || []).includes('laugh') ? styles.activeReaction : ''}`}
+                  title="배꼽 비상 😂"
+                >
+                  😂 <span className={styles.reactionCount}>{comment.reactionLaugh || 0}</span>
+                </button>
+              </div>
             </div>
           ))
         )}

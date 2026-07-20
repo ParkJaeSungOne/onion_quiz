@@ -434,3 +434,84 @@
     box-shadow: 3px 3px 0px #ffffff;
   }
 }
+
+/* 🧅 이모지 리액션 단추 영역 (B코스 연동) */
+.reactionsWrapper {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 14px;
+  padding-top: 10px;
+  border-top: 1.5px dashed rgba(0, 0, 0, 0.15);
+}
+
+.reactionBtn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: #ffffff;
+  border: 2px solid #000000;
+  box-shadow: 2px 2px 0px #000000;
+  border-radius: 8px;
+  padding: 4px 10px;
+  font-size: 11px;
+  font-weight: 800;
+  cursor: pointer;
+  color: #000000;
+  transition: all 0.1s ease;
+}
+
+.reactionBtn:hover {
+  transform: translate(-1px, -1px);
+  box-shadow: 3px 3px 0px #000000;
+  background: #f8fafc;
+}
+
+.reactionBtn:active {
+  transform: translate(1px, 1px);
+  box-shadow: 1px 1px 0px #000000;
+}
+
+.activeReaction {
+  background: var(--kitsch-lime, #a3e635) !important;
+  border-color: #000000 !important;
+  box-shadow: 2px 2px 0px #000000 !important;
+}
+
+.reactionCount {
+  font-size: 11px;
+  font-weight: 900;
+  color: #000000;
+}
+
+/* Dark Mode 대응 */
+@media (prefers-color-scheme: dark) {
+  .reactionsWrapper {
+    border-top-color: rgba(255, 255, 255, 0.15);
+  }
+  .reactionBtn {
+    background: #1e293b;
+    border-color: #ffffff;
+    box-shadow: 2px 2px 0px #ffffff;
+    color: #ffffff;
+  }
+  .reactionBtn:hover {
+    background: #334155;
+    box-shadow: 3px 3px 0px #ffffff;
+  }
+  .reactionBtn:active {
+    box-shadow: 1px 1px 0px #ffffff;
+  }
+  .activeReaction {
+    background: var(--kitsch-lime, #a3e635) !important;
+    border-color: #ffffff !important;
+    box-shadow: 2px 2px 0px #ffffff !important;
+    color: #000000 !important;
+  }
+  .activeReaction .reactionCount {
+    color: #000000 !important;
+  }
+  .reactionCount {
+    color: #ffffff;
+  }
+}

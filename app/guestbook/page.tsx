@@ -27,6 +27,10 @@ export default async function GuestbookPage() {
         nickname: true,
         content: true,
         createdAt: true,
+        reactionOnion: true,
+        reactionFire: true,
+        reactionHeart: true,
+        reactionLaugh: true,
       },
     });
   } catch (error) {

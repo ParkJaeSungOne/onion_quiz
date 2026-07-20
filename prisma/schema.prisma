@@ -79,6 +79,12 @@ model Comment {
   content   String   // 댓글 본문
   password  String?  // 삭제용 비밀번호
   createdAt DateTime @default(now())
+
+  // 실시간 이모지 리액션 집계용 누적 카운터 (B코스 연동)
+  reactionOnion  Int @default(0) // 🧅 리액션 개수
+  reactionFire   Int @default(0) // 🔥 리액션 개수
+  reactionHeart  Int @default(0) // ❤️ 리액션 개수
+  reactionLaugh  Int @default(0) // 😂 리액션 개수
 }
 
 model VisitorStats {

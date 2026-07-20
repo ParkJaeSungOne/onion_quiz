@@ -91,3 +91,45 @@ export async function deleteComment(
     return { success: false, error: '댓글 삭제 도중 오류가 발생했습니다.' };
   }
 }
+
+/**
+ * 3. 이모지 리액션 증분 처리 (B코스 연동)
+ */
+export async function addCommentReaction(
+  commentId: string,
+  reactionType: 'onion' | 'fire' | 'heart' | 'laugh'
+) {
+  try {
+    let field = '';
+    if (reactionType === 'onion') field = 'reactionOnion';
+    else if (reactionType === 'fire') field = 'reactionFire';
+    else if (reactionType === 'heart') field = 'reactionHeart';
+    else if (reactionType === 'laugh') field = 'reactionLaugh';
+    else {
+      return { success: false, error: '올바르지 않은 리액션 타입입니다.' };
+    }
+
+    const updated = await prisma.comment.update({
+      where: { id: commentId },
+      data: {
+        [field]: { increment: 1 }
+      },
+      select: {
+        quizId: true
+      }
+    });
+
+    // 경로 캐시 갱신
+    if (updated.quizId) {
+      revalidatePath(`/quiz/${updated.quizId}/result`);
+    } else {
+      revalidatePath('/guestbook');
+    }
+    revalidateTag('comments', 'default');
+
+    return { success: true };
+  } catch (error: any) {
+    console.error('Failed to add comment reaction:', error);
+    return { success: false, error: '리액션 반영 도중 오류가 발생했습니다.' };
+  }
+}

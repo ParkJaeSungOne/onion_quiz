@@ -237,6 +237,10 @@ export default async function QuizResultPage({ params, searchParams }: ResultPag
         nickname: true,
         content: true,
         createdAt: true,
+        reactionOnion: true,
+        reactionFire: true,
+        reactionHeart: true,
+        reactionLaugh: true,
       },
     });
   } catch (err) {
