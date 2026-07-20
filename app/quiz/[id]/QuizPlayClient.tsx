@@ -4,7 +4,6 @@ import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Script from 'next/script';
 import { createQuizLog, logAnswer, completeQuizLog } from '@/app/actions/log';
-import QuizLoading from '@/components/QuizLoading';
 import AdSlot from '@/components/AdSlot';
 import Footer from '@/components/Footer';
 import styles from './QuizPlay.module.css';
@@ -150,8 +149,7 @@ export default function QuizPlayClient({ quiz }: QuizPlayClientProps) {
 
     // 3. 마지막 문제인지 체크
     if (currentIdx >= quiz.questions.length - 1) {
-      // 즉시 로딩 화면으로 전환하여 딜레이 제거
-      setStep('loading');
+      const finalLogId = quizLogId || 'guest';
       
       if (quizLogId) {
         // 백그라운드에서 비동기로 최종 점수를 DB 로그에 기록
@@ -159,6 +157,9 @@ export default function QuizPlayClient({ quiz }: QuizPlayClientProps) {
           console.error('Failed to complete quiz log in background:', err);
         });
       }
+      
+      // 인위적 대기 시간 없이 즉시 결과 라우트로 이동 (Next.js Suspense 로더가 노출됨)
+      router.push(`/quiz/${quiz.id}/result/${finalLogId}?score=${finalScore}`);
     } else {
       // 다음 문제로 넘어갈 때 부드러운 슬라이딩/페이딩 애니메이션 유도
       setIsTransitioning(true);
@@ -167,12 +168,6 @@ export default function QuizPlayClient({ quiz }: QuizPlayClientProps) {
         setIsTransitioning(false);
       }, 300); // 0.3초 애니메이션 지연
     }
-  };
-
-  // 로딩(결과 분석) 완료 시 결과 페이지로 리다이렉트 (점수 파라미터를 보존하여 장애 극복)
-  const handleLoadingComplete = () => {
-    const finalLogId = quizLogId || 'guest';
-    router.push(`/quiz/${quiz.id}/result/${finalLogId}?score=${totalScore}`);
   };
 
   // 1. 커버(시작) 단계
@@ -218,14 +213,7 @@ export default function QuizPlayClient({ quiz }: QuizPlayClientProps) {
     );
   }
 
-  // 2. 결과 정산(로딩) 단계
-  if (step === 'loading') {
-    return (
-      <div className={styles.container}>
-        <QuizLoading onComplete={handleLoadingComplete} />
-      </div>
-    );
-  }
+
 
   // 3. 질문 진행 단계
   const currentQuestion = quiz.questions[currentIdx];
