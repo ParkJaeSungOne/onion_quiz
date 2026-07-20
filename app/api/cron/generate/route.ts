@@ -88,16 +88,37 @@ export async function GET(request: Request) {
   ]
 }
 `;
+    let response;
+    let retries = 3;
+    let delay = 2000; // 2초 대기부터 시작
 
-    const response = await ai.models.generateContent({
-      model: 'gemini-2.0-flash',
-      contents: prompt,
-      config: {
-        responseMimeType: 'application/json',
+    for (let i = 0; i < retries; i++) {
+      try {
+        response = await ai.models.generateContent({
+          model: 'gemini-2.0-flash',
+          contents: prompt,
+          config: {
+            responseMimeType: 'application/json',
+          }
+        });
+        break; // 성공 시 루프 탈출
+      } catch (err: any) {
+        const errMsg = err.message || '';
+        const isRateLimit = errMsg.includes('429') || 
+                            errMsg.toLowerCase().includes('resource_exhausted') ||
+                            errMsg.toLowerCase().includes('quota');
+        
+        if (isRateLimit && i < retries - 1) {
+          console.warn(`[Gemini API] 429 Rate Limit hit. Retrying in ${delay}ms... (Attempt ${i + 1}/${retries})`);
+          await new Promise((resolve) => setTimeout(resolve, delay));
+          delay *= 2.5; // 지수 백오프 (2초 -> 5초 -> 12.5초)
+        } else {
+          throw err; // 다른 에러이거나 재시도 횟수 소진 시 최종 에러 투척
+        }
       }
-    });
+    }
 
-    const jsonText = response.text;
+    const jsonText = response?.text;
     if (!jsonText) {
       throw new Error('Gemini API returned empty content');
     }
