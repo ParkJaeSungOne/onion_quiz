@@ -6,6 +6,7 @@ import Script from 'next/script';
 import { createQuizLog, logAnswer, completeQuizLog } from '@/app/actions/log';
 import QuizLoading from '@/components/QuizLoading';
 import AdSlot from '@/components/AdSlot';
+import Footer from '@/components/Footer';
 import styles from './QuizPlay.module.css';
 
 // Kakao SDK 타입 확장 선언
@@ -212,6 +213,7 @@ export default function QuizPlayClient({ quiz }: QuizPlayClientProps) {
           </div>
         </div>
         <AdSlot type="quiz" />
+        <Footer />
       </div>
     );
   }

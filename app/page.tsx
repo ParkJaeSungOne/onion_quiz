@@ -4,6 +4,7 @@ import prisma from '@/lib/prisma';
 import AdSlot from '@/components/AdSlot';
 import OnionLogo from '@/components/OnionLogo';
 import SearchBar from '@/components/SearchBar';
+import Footer from '@/components/Footer';
 import styles from './page.module.css';
 
 // 메인 페이지 5분 캐싱 설정 (검색어가 없을 때 초고속 정적 서빙, 검색어 인입 시 동적 전환)
@@ -210,10 +211,7 @@ export default async function Home({ searchParams }: HomePageProps) {
         )}
       </main>
 
-      <footer className={styles.footer}>
-        <p>© 2026 까도까도 (Kkado-Kkado). All rights reserved.</p>
-        <p className={styles.footerInfo}>이 사이트는 매일 AI로 트렌디한 성향 테스트를 자동 수집 및 연구합니다.</p>
-      </footer>
+      <Footer />
     </div>
   );
 }

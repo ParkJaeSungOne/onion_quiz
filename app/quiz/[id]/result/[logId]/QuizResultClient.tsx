@@ -4,6 +4,7 @@ import React, { useRef, useState } from 'react';
 import Link from 'next/link';
 import Script from 'next/script';
 import AdSlot from '@/components/AdSlot';
+import Footer from '@/components/Footer';
 import styles from './QuizResult.module.css';
 
 // Kakao SDK 타입 확장 선언
@@ -430,6 +431,7 @@ export default function QuizResultClient({
           <span className={styles.arrow}>↩</span>
         </Link>
       </div>
+      <Footer />
     </div>
   );
 }
