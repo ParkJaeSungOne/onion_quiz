@@ -110,56 +110,34 @@ export async function GET(request: Request) {
       throw new Error('Invalid quiz format received from AI');
     }
 
-    // 3. 트랜잭션으로 DB에 퀴즈 생성 (Supabase 원격 지연 대응을 위해 타임아웃 40초로 확장)
-    const createdQuiz = await prisma.$transaction(async (tx) => {
-      // 퀴즈 마스터 저장
-      const quiz = await tx.quiz.create({
-        data: {
-          title: quizData.title,
-          description: quizData.description || '',
-          category: quizData.category || 'Personality',
-        }
-      });
-
-      // 질문 및 선택지 저장
-      for (const q of quizData.questions) {
-        const question = await tx.question.create({
-          data: {
-            quizId: quiz.id,
+    // 3. 중첩 쓰기(Nested Write) 기법으로 단 1회의 DB 요청만으로 퀴즈, 질문, 선택지, 결과를 통째로 원샷 저장
+    const createdQuiz = await prisma.quiz.create({
+      data: {
+        title: quizData.title,
+        description: quizData.description || '',
+        category: quizData.category || 'Personality',
+        questions: {
+          create: quizData.questions.map((q: any) => ({
             questionNumber: q.questionNumber,
             text: q.text,
-          }
-        });
-
-        if (q.options && Array.isArray(q.options)) {
-          await tx.option.createMany({
-            data: q.options.map((opt: { text: string; score: number }) => ({
-              questionId: question.id,
-              text: opt.text,
-              score: opt.score
-            }))
-          });
-        }
-      }
-
-      // 결과 유형 저장
-      if (quizData.results && Array.isArray(quizData.results)) {
-        await tx.result.createMany({
-          data: quizData.results.map((res: { minScore: number; maxScore: number; title: string; content: string; emoji?: string }) => ({
-            quizId: quiz.id,
+            options: {
+              create: q.options.map((opt: any) => ({
+                text: opt.text,
+                score: opt.score
+              }))
+            }
+          }))
+        },
+        results: {
+          create: quizData.results.map((res: any) => ({
             minScore: res.minScore,
             maxScore: res.maxScore,
             title: res.title,
             content: res.content,
             emoji: res.emoji || '🧅'
           }))
-        });
+        }
       }
-
-      return quiz;
-    }, {
-      maxWait: 20000, // 커넥션 획득 대기 시간 최대 20초
-      timeout: 40000  // 트랜잭션 수행 시간 최대 40초
     });
 
     return NextResponse.json({
