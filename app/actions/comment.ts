@@ -20,7 +20,7 @@ export async function createComment(
       return { success: false, error: '댓글 내용을 입력해 주세요.' };
     }
 
-    await prisma.comment.create({
+    const comment = await prisma.comment.create({
       data: {
         quizId,
         nickname: cleanNickname,
@@ -38,7 +38,16 @@ export async function createComment(
     }
     revalidateTag('comments', 'default');
 
-    return { success: true };
+    return { 
+      success: true, 
+      comment: {
+        id: comment.id,
+        nickname: comment.nickname,
+        content: comment.content,
+        createdAt: comment.createdAt.toISOString(),
+        password: comment.password ? 'has-password' : null
+      }
+    };
   } catch (error: any) {
     console.error('Failed to create comment:', error);
     return { success: false, error: '댓글 작성 도중 서버 장애가 발생했습니다.' };

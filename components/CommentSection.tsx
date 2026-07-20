@@ -119,14 +119,18 @@ export default function CommentSection({ quizId, initialComments, title }: Comme
     const finalNickname = nickname.trim() || '익명의 양파';
     const result = await createComment(quizId, finalNickname, content, password);
 
-    if (result.success) {
-      // 등록 성공 시 로컬 상태 업데이트
+    if (result.success && result.comment) {
+      // 등록 성공 시 DB에서 생성한 진짜 UUID와 작성일자로 상태 동기화
       const newComment: CommentType = {
-        id: Math.random().toString(), // 임시 ID
-        nickname: finalNickname,
-        content: content.trim(),
-        createdAt: new Date().toISOString(),
-        password: password ? 'has-password' : null // 패스워드가 있음을 표기
+        id: result.comment.id,
+        nickname: result.comment.nickname,
+        content: result.comment.content,
+        createdAt: result.comment.createdAt,
+        password: result.comment.password,
+        reactionOnion: 0,
+        reactionFire: 0,
+        reactionHeart: 0,
+        reactionLaugh: 0
       };
       
       // 최신 댓글이 가장 위에 오도록 정렬
