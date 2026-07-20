@@ -3,13 +3,13 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 const apiKey = process.env.GEMINI_API_KEY;
-console.log('Using API key:', apiKey);
+console.log('Using API key:', apiKey ? 'Loaded' : 'Missing');
 
 const ai = new GoogleGenAI({ apiKey });
 
 try {
   const response = await ai.models.generateContent({
-    model: 'gemini-2.0-flash',
+    model: 'gemini-2.5-flash',
     contents: 'Hi, hello',
   });
   console.log('Response text:', response.text);
