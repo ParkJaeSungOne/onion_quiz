@@ -9,7 +9,7 @@ const ai = new GoogleGenAI({ apiKey });
 
 try {
   const response = await ai.models.generateContent({
-    model: 'gemini-3.5-flash',
+    model: 'gemini-2.0-flash',
     contents: 'Hi, hello',
   });
   console.log('Response text:', response.text);
