@@ -150,11 +150,15 @@ export default function QuizPlayClient({ quiz }: QuizPlayClientProps) {
 
     // 3. 마지막 문제인지 체크
     if (currentIdx >= quiz.questions.length - 1) {
-      if (quizLogId) {
-        // 비동기로 최종 점수를 DB 로그에 기록
-        await completeQuizLog(quizLogId, finalScore);
-      }
+      // 즉시 로딩 화면으로 전환하여 딜레이 제거
       setStep('loading');
+      
+      if (quizLogId) {
+        // 백그라운드에서 비동기로 최종 점수를 DB 로그에 기록
+        completeQuizLog(quizLogId, finalScore).catch((err) => {
+          console.error('Failed to complete quiz log in background:', err);
+        });
+      }
     } else {
       // 다음 문제로 넘어갈 때 부드러운 슬라이딩/페이딩 애니메이션 유도
       setIsTransitioning(true);
