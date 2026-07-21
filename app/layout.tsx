@@ -38,6 +38,12 @@ export const metadata: Metadata = {
     description: "양파처럼 깔수록 재미있고 적나라한 나의 본모습을 까보세요! 트렌디한 팩폭 성향 테스트 연구소 까도까도.",
     images: ["https://kkado-kkado.com/thumbnail.png"],
   },
+  manifest: '/manifest.json',
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'default',
+    title: '까도까도',
+  },
   verification: {
     google: process.env.NEXT_PUBLIC_GOOGLE_VERIFICATION || undefined,
     other: {
@@ -61,6 +67,25 @@ export default function RootLayout({
           crossOrigin="anonymous"
           strategy="afterInteractive"
         />
+        {/* 🕶️ 테마 플리커 차단 스크립트 (hydration 이전 body 테마 강제 동기화) */}
+        <script dangerouslySetInnerHTML={{
+          __html: `
+            (function() {
+              try {
+                var theme = localStorage.getItem('theme');
+                if (theme) {
+                  document.documentElement.setAttribute('data-theme', theme);
+                  document.body.setAttribute('data-theme', theme);
+                } else {
+                  var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+                  var defaultTheme = prefersDark ? 'dark' : 'light';
+                  document.documentElement.setAttribute('data-theme', defaultTheme);
+                  document.body.setAttribute('data-theme', defaultTheme);
+                }
+              } catch (e) {}
+            })();
+          `
+        }} />
       </head>
       <body className={`${geistSans.variable} ${geistMono.variable}`}>
         <AnalyticsTracker />

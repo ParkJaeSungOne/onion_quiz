@@ -5,6 +5,8 @@ import AdSlot from '@/components/AdSlot';
 import OnionLogo from '@/components/OnionLogo';
 import SearchBar from '@/components/SearchBar';
 import Footer from '@/components/Footer';
+import ThemeToggle from '@/components/ThemeToggle';
+import PwaInstallBanner from '@/components/PwaInstallBanner';
 import styles from './page.module.css';
 
 // 메인 페이지 5분 캐싱 설정 (검색어가 없을 때 초고속 정적 서빙, 검색어 인입 시 동적 전환)
@@ -79,7 +81,10 @@ export default async function Home({ searchParams }: HomePageProps) {
 
   return (
     <div className={styles.container}>
-      <header className={styles.header}>
+      <header className={styles.header} style={{ position: 'relative' }}>
+        <div style={{ position: 'absolute', top: '16px', right: '16px' }}>
+          <ThemeToggle />
+        </div>
         <div className={styles.logoArea}>
           <OnionLogo className={styles.logoIcon} />
           <h1 className={styles.title}>KKADO KKADO</h1>
@@ -227,6 +232,7 @@ export default async function Home({ searchParams }: HomePageProps) {
       </main>
 
       <Footer />
+      <PwaInstallBanner />
     </div>
   );
 }

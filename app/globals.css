@@ -50,3 +50,27 @@ a {
 button {
   font-family: inherit;
 }
+
+/* 🕶️ 사이버펑크 네온 다크모드 테마 변수 */
+[data-theme='dark'] {
+  --bg-color: #0f172a; /* 어두운 슬레이트 (slate-900) */
+  --fg-color: #f8fafc; /* 밝은 텍스트 (slate-50) */
+  
+  --primary: #f472b6; /* 네온 핑크 */
+  --primary-bg: #1e1b4b; /* 딥 네이비 */
+  
+  --kitsch-yellow: #ca8a04; /* 네온 옐로우 */
+  --kitsch-lime: #4ade80; /* 네온 그린 */
+  --kitsch-pink: #ec4899; /* 마젠타 핑크 */
+  --kitsch-cyan: #22d3ee; /* 네온 사이언 */
+  
+  /* 사이버네틱 글로우가 들어간 네온 하드 쉐도우 */
+  --brutal-shadow: 4px 4px 10px rgba(244, 114, 182, 0.45), 4px 4px 0px #000000;
+  --brutal-shadow-hover: 8px 8px 16px rgba(34, 211, 238, 0.6), 8px 8px 0px #000000;
+  --brutal-shadow-active: 2px 2px 4px rgba(244, 114, 182, 0.3), 2px 2px 0px #000000;
+}
+
+body[data-theme='dark'] {
+  background-image: radial-gradient(rgba(255, 255, 255, 0.05) 1.5px, transparent 1.5px);
+  background-color: var(--bg-color);
+}

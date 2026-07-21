@@ -1,0 +1,18 @@
+{
+  "name": "까도까도 성향테스트 연구소",
+  "short_name": "까도까도",
+  "description": "양파처럼 까보는 나의 팩폭 성향 테스트",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#fce7f3",
+  "theme_color": "#d946ef",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/thumbnail.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

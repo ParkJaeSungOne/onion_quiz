@@ -7,6 +7,7 @@ import AdSlot from '@/components/AdSlot';
 import Footer from '@/components/Footer';
 import CommentSection from '@/components/CommentSection';
 import { incrementShareCount } from '@/app/actions/share';
+import { generateLiveRoast } from '@/app/actions/liveRoast';
 import styles from './QuizResult.module.css';
 
 // Kakao SDK 타입 확장 선언
@@ -79,6 +80,30 @@ export default function QuizResultClient({
   const [copied, setCopied] = useState(false);
   const [kakaoInitialized, setKakaoInitialized] = useState(false);
   const [downloading, setDownloading] = useState(false);
+
+  // 🔮 실시간 AI 팩폭 진단용 상태 및 핸들러 추가
+  const [roastLoading, setRoastLoading] = useState(false);
+  const [roastResult, setRoastResult] = useState<string | null>(null);
+  const [roastError, setRoastError] = useState<string | null>(null);
+
+  const handleRequestLiveRoast = async () => {
+    if (roastLoading) return;
+    setRoastError(null);
+    setRoastResult(null);
+    setRoastLoading(true);
+    try {
+      const res = await generateLiveRoast(logId);
+      if (res.success && res.roast) {
+        setRoastResult(res.roast);
+      } else {
+        setRoastError(res.error || 'AI 팩폭 진단을 생성하는데 실패했습니다.');
+      }
+    } catch (err: any) {
+      setRoastError(err.message || '네트워크 오류가 발생했습니다.');
+    } finally {
+      setRoastLoading(false);
+    }
+  };
 
   // 로컬/도메인 공유용 URL 산출
   const shareUrl = typeof window !== 'undefined' ? `${window.location.origin}/quiz/${quiz.id}/result/${logId}` : '';
@@ -390,6 +415,114 @@ export default function QuizResultClient({
                 </div>
               </div>
             )}
+            {/* 🔮 1:1 실시간 AI 팩폭 분석기 */}
+            <div style={{
+              marginTop: '32px',
+              border: '4px solid #000000',
+              borderRadius: '20px',
+              padding: '24px',
+              background: '#f5d0fe', // 마젠타 계열 연보라
+              boxShadow: '5px 5px 0px #000000',
+              color: '#000000',
+              textAlign: 'center'
+            }}>
+              <h3 style={{ margin: '0 0 8px 0', fontSize: '17px', fontWeight: 900, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                🔮 1:1 초개인화 AI 팩폭 분석
+              </h3>
+              <p style={{ margin: '0 0 20px 0', fontSize: '13px', fontWeight: 700, color: '#374151', lineHeight: 1.4 }}>
+                유저님이 선택하신 질문 답변 데이터를 실시간 해킹하여,<br />
+                Gemini AI가 세상에 단 하나뿐인 개인 로스팅 팩폭을 날립니다!
+              </p>
+
+              {!roastResult && (
+                <button
+                  onClick={handleRequestLiveRoast}
+                  disabled={roastLoading}
+                  style={{
+                    padding: '14px 28px',
+                    fontSize: '14px',
+                    fontWeight: 900,
+                    backgroundColor: '#d946ef', 
+                    color: '#ffffff',
+                    border: '3px solid #000000',
+                    borderRadius: '12px',
+                    boxShadow: '3px 3px 0px #000000',
+                    cursor: 'pointer',
+                    width: '100%',
+                    maxWidth: '320px',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '8px'
+                  }}
+                >
+                  {roastLoading ? '⏳ 나의 답변 해킹 분석 중...' : '🔥 실시간 AI 개인 팩폭 받기'}
+                </button>
+              )}
+
+              {roastError && (
+                <div style={{ marginTop: '16px', background: '#fee2e2', border: '2px solid #ef4444', borderRadius: '10px', padding: '12px', fontSize: '12px', color: '#991b1b', fontWeight: 700 }}>
+                  ⚠️ {roastError}
+                </div>
+              )}
+
+              {roastResult && (
+                <div style={{
+                  marginTop: '16px',
+                  background: '#ffffff',
+                  border: '3px solid #000000',
+                  borderRadius: '14px',
+                  padding: '20px',
+                  textAlign: 'left',
+                  boxShadow: '3px 3px 0px #000000',
+                  position: 'relative'
+                }}>
+                  <span style={{
+                    position: 'absolute',
+                    top: '-12px',
+                    right: '16px',
+                    background: '#ecfdf5',
+                    border: '2px solid #000000',
+                    padding: '2px 8px',
+                    borderRadius: '6px',
+                    fontSize: '10px',
+                    fontWeight: 900,
+                    color: '#065f46'
+                  }}>
+                    LIVE 분석 완료 ✅
+                  </span>
+                  <p style={{
+                    margin: 0,
+                    fontSize: '13.5px',
+                    fontWeight: 800,
+                    lineHeight: 1.6,
+                    color: '#111827',
+                    whiteSpace: 'pre-line'
+                  }}>
+                    {roastResult}
+                  </p>
+                  <div style={{ marginTop: '14px', borderTop: '1px dashed #e5e7eb', paddingTop: '10px', display: 'flex', justifyContent: 'flex-end' }}>
+                    <button
+                      onClick={() => {
+                        navigator.clipboard.writeText(roastResult);
+                        alert('실시간 팩폭 분석 결과가 복사되었습니다! 캡처하거나 붙여넣어 공유해보세요 📸');
+                      }}
+                      style={{
+                        background: '#f3f4f6',
+                        border: '2px solid #000000',
+                        borderRadius: '6px',
+                        padding: '4px 10px',
+                        fontSize: '11px',
+                        fontWeight: 900,
+                        cursor: 'pointer'
+                      }}
+                    >
+                      📋 텍스트 복사하기
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         ) : (
           <div className={styles.resultCard}>
