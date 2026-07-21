@@ -11,19 +11,19 @@ export default function ThemeToggle() {
     const savedTheme = localStorage.getItem('theme') as 'light' | 'dark' | null;
     if (savedTheme) {
       setTheme(savedTheme);
-      document.body.setAttribute('data-theme', savedTheme);
+      document.documentElement.setAttribute('data-theme', savedTheme);
     } else {
-      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-      const defaultTheme = prefersDark ? 'dark' : 'light';
+      // 기본값은 시스템 다크모드 여부와 관계없이 무조건 오리지널 키치 테마('light')로 고정
+      const defaultTheme = 'light';
       setTheme(defaultTheme);
-      document.body.setAttribute('data-theme', defaultTheme);
+      document.documentElement.setAttribute('data-theme', defaultTheme);
     }
   }, []);
 
   const toggleTheme = () => {
     const nextTheme = theme === 'light' ? 'dark' : 'light';
     setTheme(nextTheme);
-    document.body.setAttribute('data-theme', nextTheme);
+    document.documentElement.setAttribute('data-theme', nextTheme);
     localStorage.setItem('theme', nextTheme);
   };
 

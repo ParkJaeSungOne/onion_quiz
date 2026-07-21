@@ -68,7 +68,7 @@ export default function RootLayout({
           crossOrigin="anonymous"
           strategy="afterInteractive"
         />
-        {/* 🕶️ 테마 플리커 차단 스크립트 (hydration 이전 body 테마 강제 동기화) */}
+        {/* 🕶️ 테마 플리커 차단 스크립트 (hydration 이전 html 테마 강제 동기화) */}
         <script dangerouslySetInnerHTML={{
           __html: `
             (function() {
@@ -76,12 +76,9 @@ export default function RootLayout({
                 var theme = localStorage.getItem('theme');
                 if (theme) {
                   document.documentElement.setAttribute('data-theme', theme);
-                  document.body.setAttribute('data-theme', theme);
                 } else {
-                  var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-                  var defaultTheme = prefersDark ? 'dark' : 'light';
-                  document.documentElement.setAttribute('data-theme', defaultTheme);
-                  document.body.setAttribute('data-theme', defaultTheme);
+                  // 기본 테마값은 오리지널 키치 테마('light')로 강제 고정
+                  document.documentElement.setAttribute('data-theme', 'light');
                 }
               } catch (e) {}
             })();

@@ -70,7 +70,7 @@ button {
   --brutal-shadow-active: 2px 2px 4px rgba(244, 114, 182, 0.3), 2px 2px 0px #000000;
 }
 
-body[data-theme='dark'] {
+[data-theme='dark'] body {
   background-image: radial-gradient(rgba(255, 255, 255, 0.05) 1.5px, transparent 1.5px);
   background-color: var(--bg-color);
 }
