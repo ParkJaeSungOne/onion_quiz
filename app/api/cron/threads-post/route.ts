@@ -96,83 +96,33 @@ export async function GET(request: Request) {
     console.log(`[Cron Threads Autoposter] Selected template #${target.num} ("${target.title}") for day of month ${day}.`);
 
     // 3. 본문 포스트 생성
-    const containerRes = await fetch(`https://graph.threads.net/v1.0/me/threads`, {
+    // 3. 본문 포스트 즉시 발행 (auto_publish_text 사용)
+    const containerRes = await fetch(`https://graph.threads.net/v1.0/me/threads?media_type=TEXT&text=${encodeURIComponent(target.text)}&auto_publish_text=true&access_token=${token}`, {
       method: 'POST',
       headers: { 
-        'Content-Type': 'application/json',
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
-      },
-      body: JSON.stringify({
-        media_type: 'TEXT',
-        text: target.text,
-        access_token: token
-      })
+      }
     });
     const containerData = await containerRes.json();
     if (containerData.error) {
       throw new Error(`Container creation error: ${JSON.stringify(containerData.error)}`);
     }
 
-    const creationId = containerData.id;
+    const parentPostId = containerData.id;
 
-    // 4. 본문 게시물 최종 발행
-    const publishRes = await fetch(`https://graph.threads.net/v1.0/me/threads_publish`, {
-      method: 'POST',
-      headers: { 
-        'Content-Type': 'application/json',
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
-      },
-      body: JSON.stringify({
-        creation_id: creationId,
-        access_token: token
-      })
-    });
-    const publishData = await publishRes.json();
-    if (publishData.error) {
-      throw new Error(`Publish error: ${JSON.stringify(publishData.error)}`);
-    }
-
-    const parentPostId = publishData.id;
-
-    // 5. 2초 딜레이 대기 (API 속도 제어 가드)
+    // 4. 2초 딜레이 대기 (API 속도 제어 가드)
     await new Promise((resolve) => setTimeout(resolve, 2000));
 
-    // 6. 댓글 링크 컨테이너 생성
-    const replyContainerRes = await fetch(`https://graph.threads.net/v1.0/me/threads`, {
+    // 5. 댓글 링크 즉시 발행 (auto_publish_text 사용)
+    const replyContainerRes = await fetch(`https://graph.threads.net/v1.0/me/threads?media_type=TEXT&text=${encodeURIComponent(target.reply)}&reply_to_id=${parentPostId}&auto_publish_text=true&access_token=${token}`, {
       method: 'POST',
       headers: { 
-        'Content-Type': 'application/json',
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
-      },
-      body: JSON.stringify({
-        media_type: 'TEXT',
-        text: target.reply,
-        reply_to_id: parentPostId,
-        access_token: token
-      })
+      }
     });
     const replyContainerData = await replyContainerRes.json();
     if (replyContainerData.error) {
       throw new Error(`Reply container creation error: ${JSON.stringify(replyContainerData.error)}`);
-    }
-
-    const replyCreationId = replyContainerData.id;
-
-    // 7. 댓글 최종 발행
-    const replyPublishRes = await fetch(`https://graph.threads.net/v1.0/me/threads_publish`, {
-      method: 'POST',
-      headers: { 
-        'Content-Type': 'application/json',
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
-      },
-      body: JSON.stringify({
-        creation_id: replyCreationId,
-        access_token: token
-      })
-    });
-    const replyPublishData = await replyPublishRes.json();
-    if (replyPublishData.error) {
-      throw new Error(`Reply publish error: ${JSON.stringify(replyPublishData.error)}`);
     }
 
     return NextResponse.json({

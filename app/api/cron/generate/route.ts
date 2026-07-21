@@ -235,57 +235,38 @@ export async function GET(request: Request) {
         const postText = `📢 [따끈따끈 성향테스트 신작 개봉! 🧅]\n\n이번에 새로 기획되어 출시된 따끈따끈한 성향 테스트를 소개합니다!\n\n🎯 주제: "${safeTitle}"\n\n👉 "${safeDesc}"\n\n내가 과연 어떤 유형일지, 남들은 어떻게 나올지 지금 바로 팩폭 테스트를 까보세요! ㅋㅋㅋ\n\n👇 테스트 플레이 링크는 댓글에 남겨둘게!`;
         const replyText = `✨ [신작 플레이] "${safeTitle}" 플레이하러 가기! 👇\nhttps://kkado-kkado.com/quiz/${createdQuiz.id}`;
 
-        // 1. 본문 생성
+        // 1. 본문 즉시 발행 (auto_publish_text 사용으로 2단계 호출을 1단계로 단축)
         const cData = await safeFetchJson(
           `https://graph.threads.net/v1.0/me/threads`,
           {
             media_type: 'TEXT',
             text: postText,
+            auto_publish_text: 'true',
             access_token: threadsToken
           }
         );
         
         if (cData.id) {
-          const creationId = cData.id;
+          const parentPostId = cData.id;
+          threadsResult = `본문 발행 완료 (Post ID: ${parentPostId})`;
           
-          // 2. 본문 발행
-          const pData = await safeFetchJson(
-            `https://graph.threads.net/v1.0/me/threads_publish`,
+          // 2. 2초 대기 후 댓글 링크 즉시 발행 (auto_publish_text 사용)
+          await new Promise((resolve) => setTimeout(resolve, 2000));
+          
+          const rData = await safeFetchJson(
+            `https://graph.threads.net/v1.0/me/threads`,
             {
-              creation_id: creationId,
+              media_type: 'TEXT',
+              text: replyText,
+              reply_to_id: parentPostId,
+              auto_publish_text: 'true',
               access_token: threadsToken
             }
           );
           
-          if (pData.id) {
-            const parentPostId = pData.id;
-            threadsResult = `본문 발행 완료 (Post ID: ${parentPostId})`;
-            
-            // 3. 2초 대기 후 댓글 링크 발행
-            await new Promise((resolve) => setTimeout(resolve, 2000));
-            
-            const rData = await safeFetchJson(
-              `https://graph.threads.net/v1.0/me/threads`,
-              {
-                media_type: 'TEXT',
-                text: replyText,
-                reply_to_id: parentPostId,
-                access_token: threadsToken
-              }
-            );
-            
-            if (rData.id) {
-              const rPublishData = await safeFetchJson(
-                `https://graph.threads.net/v1.0/me/threads_publish`,
-                {
-                  creation_id: rData.id,
-                  access_token: threadsToken
-                }
-              );
-              
-              threadsResult = `본문 + 유입 링크 댓글 전체 발행 성공 (Post ID: ${parentPostId})`;
-              console.log(`[Threads Auto-Poster] Successfully autoposted new quiz #${createdQuiz.id} to Threads!`);
-            }
+          if (rData.id) {
+            threadsResult = `본문 + 유입 링크 댓글 전체 발행 성공 (Post ID: ${parentPostId})`;
+            console.log(`[Threads Auto-Poster] Successfully autoposted new quiz #${createdQuiz.id} to Threads!`);
           }
         }
       } catch (threadsErr: any) {

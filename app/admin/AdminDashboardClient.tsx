@@ -111,7 +111,7 @@ export default function AdminDashboardClient({
   const [exchangeLoading, setExchangeLoading] = useState(false);
   const [exchangeResult, setExchangeResult] = useState<string | null>(null);
   const [exchangeError, setExchangeError] = useState<string | null>(null);
-  const [isTokenToolOpen, setIsTokenToolOpen] = useState(false);
+  const [isTokenToolOpen, setIsTokenToolOpen] = useState(true);
 
   // 로그아웃 처리
   const handleLogout = async () => {
