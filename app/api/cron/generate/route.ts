@@ -192,9 +192,17 @@ export async function GET(request: Request) {
 
     if (threadsToken) {
       try {
-        console.log(`[Threads Auto-Poster] Publishing new quiz #${createdQuiz.id} to Threads...`);
-        const postText = `📢 [따끈따끈 성향테스트 신작 개봉! 🧅]\n\n이번에 새로 기획되어 출시된 따끈따끈한 성향 테스트를 소개합니다!\n\n🎯 주제: "${createdQuiz.title}"\n\n👉 "${createdQuiz.description}"\n\n내가 과연 어떤 유형일지, 남들은 어떻게 나올지 지금 바로 팩폭 테스트를 까보세요! ㅋㅋㅋ\n\n👇 테스트 플레이 링크는 댓글에 남겨둘게!`;
-        const replyText = `✨ [신작 플레이] "${createdQuiz.title}" 플레이하러 가기! 👇\nhttps://kkado-kkado.com/quiz/${createdQuiz.id}`;
+        // ⚠️ 메타 스레드 API는 본문 500자 제한이 매우 엄격하며 초과 시 HTTP 500 에러를 뿜습니다.
+        // 이를 방지하기 위해 생성된 제목과 설명을 안전 구간으로 강제 자르기 처리합니다.
+        const safeTitle = createdQuiz.title.length > 50 
+          ? createdQuiz.title.substring(0, 47) + '...'
+          : createdQuiz.title;
+        const safeDesc = createdQuiz.description.length > 200
+          ? createdQuiz.description.substring(0, 197) + '...'
+          : createdQuiz.description;
+
+        const postText = `📢 [따끈따끈 성향테스트 신작 개봉! 🧅]\n\n이번에 새로 기획되어 출시된 따끈따끈한 성향 테스트를 소개합니다!\n\n🎯 주제: "${safeTitle}"\n\n👉 "${safeDesc}"\n\n내가 과연 어떤 유형일지, 남들은 어떻게 나올지 지금 바로 팩폭 테스트를 까보세요! ㅋㅋㅋ\n\n👇 테스트 플레이 링크는 댓글에 남겨둘게!`;
+        const replyText = `✨ [신작 플레이] "${safeTitle}" 플레이하러 가기! 👇\nhttps://kkado-kkado.com/quiz/${createdQuiz.id}`;
 
         // 1. 본문 생성
         const cData = await safeFetchJson(
@@ -251,7 +259,7 @@ export async function GET(request: Request) {
         }
       } catch (threadsErr: any) {
         console.error('[Threads Auto-Poster Error] Failed to publish quiz to Threads:', threadsErr);
-        threadsResult = `실패: ${threadsErr.message || threadsErr}`;
+        threadsResult = `실패: ${threadsErr.message || threadsErr} [토큰 길이: ${threadsToken ? threadsToken.length : 0}자]`;
       }
     } else {
       threadsResult = '스킵됨 (THREADS_ACCESS_TOKEN 환경변수 설정 없음)';
