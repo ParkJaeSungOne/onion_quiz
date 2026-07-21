@@ -166,7 +166,6 @@ export async function GET(request: Request) {
 
     // 4. [신규 기능] AI 퀴즈 생성 성공 시 Threads 채널 즉시 자동 포스팅 및 유입 링크 생성 (오토파일럿)
     const threadsToken = process.env.THREADS_ACCESS_TOKEN;
-    const threadsUserIdClean = (process.env.THREADS_USER_ID || 'me').replace('@', '').trim();
     let threadsResult = 'Not attempted (No token)';
 
     // 안전한 API 호출 및 응답 해석용 로컬 헬퍼
@@ -199,7 +198,7 @@ export async function GET(request: Request) {
 
         // 1. 본문 생성
         const cData = await safeFetchJson(
-          `https://graph.threads.net/v1.0/${threadsUserIdClean}/threads`,
+          `https://graph.threads.net/v1.0/me/threads`,
           {
             media_type: 'TEXT',
             text: postText,
@@ -212,7 +211,7 @@ export async function GET(request: Request) {
           
           // 2. 본문 발행
           const pData = await safeFetchJson(
-            `https://graph.threads.net/v1.0/${threadsUserIdClean}/threads_publish`,
+            `https://graph.threads.net/v1.0/me/threads_publish`,
             {
               creation_id: creationId,
               access_token: threadsToken
@@ -227,7 +226,7 @@ export async function GET(request: Request) {
             await new Promise((resolve) => setTimeout(resolve, 2000));
             
             const rData = await safeFetchJson(
-              `https://graph.threads.net/v1.0/${threadsUserIdClean}/threads`,
+              `https://graph.threads.net/v1.0/me/threads`,
               {
                 media_type: 'TEXT',
                 text: replyText,
@@ -238,7 +237,7 @@ export async function GET(request: Request) {
             
             if (rData.id) {
               const rPublishData = await safeFetchJson(
-                `https://graph.threads.net/v1.0/${threadsUserIdClean}/threads_publish`,
+                `https://graph.threads.net/v1.0/me/threads_publish`,
                 {
                   creation_id: rData.id,
                   access_token: threadsToken

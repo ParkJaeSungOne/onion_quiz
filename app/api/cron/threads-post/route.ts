@@ -96,7 +96,7 @@ export async function GET(request: Request) {
     console.log(`[Cron Threads Autoposter] Selected template #${target.num} ("${target.title}") for day of month ${day}.`);
 
     // 3. 본문 포스트 생성
-    const containerRes = await fetch(`https://graph.threads.net/v1.0/${userId}/threads`, {
+    const containerRes = await fetch(`https://graph.threads.net/v1.0/me/threads`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -113,7 +113,7 @@ export async function GET(request: Request) {
     const creationId = containerData.id;
 
     // 4. 본문 게시물 최종 발행
-    const publishRes = await fetch(`https://graph.threads.net/v1.0/${userId}/threads_publish`, {
+    const publishRes = await fetch(`https://graph.threads.net/v1.0/me/threads_publish`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -132,7 +132,7 @@ export async function GET(request: Request) {
     await new Promise((resolve) => setTimeout(resolve, 2000));
 
     // 6. 댓글 링크 컨테이너 생성
-    const replyContainerRes = await fetch(`https://graph.threads.net/v1.0/${userId}/threads`, {
+    const replyContainerRes = await fetch(`https://graph.threads.net/v1.0/me/threads`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -150,7 +150,7 @@ export async function GET(request: Request) {
     const replyCreationId = replyContainerData.id;
 
     // 7. 댓글 최종 발행
-    const replyPublishRes = await fetch(`https://graph.threads.net/v1.0/${userId}/threads_publish`, {
+    const replyPublishRes = await fetch(`https://graph.threads.net/v1.0/me/threads_publish`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
