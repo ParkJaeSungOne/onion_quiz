@@ -20,6 +20,27 @@ export async function GET(request: Request) {
   }
 
   const subject = searchParams.get('subject') || '';
+  const questionCountParam = searchParams.get('questionCount');
+  const qCount = questionCountParam ? parseInt(questionCountParam, 10) : 7;
+  const safeQCount = isNaN(qCount) || qCount < 4 || qCount > 15 ? 7 : qCount;
+
+  // 결과 유형 4개의 수학적 점수 범위를 동적으로 계산합니다.
+  const minPossible = safeQCount;
+  const maxPossible = safeQCount * 4;
+  const rangeSpan = maxPossible - minPossible;
+  const step = rangeSpan / 4;
+
+  const r1_min = minPossible;
+  const r1_max = Math.floor(minPossible + step);
+
+  const r2_min = r1_max + 1;
+  const r2_max = Math.floor(minPossible + 2 * step);
+
+  const r3_min = r2_max + 1;
+  const r3_max = Math.floor(minPossible + 3 * step);
+
+  const r4_min = r3_max + 1;
+  const r4_max = maxPossible;
 
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) {
@@ -36,7 +57,7 @@ export async function GET(request: Request) {
     // 2. Gemini API 세팅
     const ai = new GoogleGenAI({ apiKey });
     
-    // 프롬프트 작성 - 문제수는 8~10개 사이로 유도 (최대 10개 미만/이하 제한)
+    // 프롬프트 작성 - 문제수는 동적으로 설정
     const prompt = `
 당신은 대한민국에서 가장 인스타그램, 트위터(X), 틱톡 등 SNS에서 핫하게 바이럴을 일으킬 수 있는 트렌디한 심리/성향 테스트 제작자입니다. 
 양파(Onion)처럼 까도 까도 매력이 나오는 재미있고 드립력 넘치며 뼈를 때리는 퀴즈를 기획해주세요.
@@ -48,13 +69,13 @@ export async function GET(request: Request) {
    - **GenZ(20-30대)가 격하게 공감할 수 있는 최신 인터넷 밈(Meme)과 힙한 감성의 신선한 키워드**를 적극 활용해주세요 (예: '나의 밤티(BAM-T) 텐션 관상 테스트', 'MZ 오피스 빌런 판독기', '카카오톡 안읽씹 빌런 테스트', '도파민 좀비 측정기', '자발적 마이웨이 아싸 지수' 등).
    - 선택지(options)와 결과 피드백은 딱딱한 설명 조가 아닌, 친근하면서 위트 있는 스낵 콘텐츠 말투로 웃음을 유발할 수 있도록 작성해 주세요.
 2. 구조 제약:
-   - 질문(questions) 개수는 **반드시 정확히 7개**여야 합니다. (이 범위를 지켜 7개로 고정 기획해 주세요. 10초 타임아웃을 피하기 위해 7개가 절대 권장됩니다).
+   - 질문(questions) 개수는 **반드시 정확히 ${safeQCount}개**여야 합니다. (이 범위를 지켜 ${safeQCount}개로 고정 기획해 주세요).
    - 각 질문마다 선택지(options)는 정확히 4개씩 제공되어야 합니다.
    - 각 선택지는 1점, 2점, 3점, 4점의 점수(score)를 가집니다. 4개 선택지 각각 점수가 중복되지 않고 1, 2, 3, 4가 고르게 배분되어야 합니다.
    - 결과 유형(results)은 정확히 4가지 구간이어야 합니다.
-   - 질문 수가 7개이므로, 사용자가 얻을 수 있는 총점은 최소 7점 ~ 최대 28점입니다.
+   - 질문 수가 ${safeQCount}개이므로, 사용자가 얻을 수 있는 총점은 최소 ${minPossible}점 ~ 최대 ${maxPossible}점입니다.
      결과 구간(minScore, maxScore)을 다음과 같이 수학적 빈틈 없이 정확히 분할해 주세요:
-     - 7~12점 / 13~17점 / 18~22점 / 23~28점
+     - ${r1_min}~${r1_max}점 / ${r2_min}~${r2_max}점 / ${r3_min}~${r3_max}점 / ${r4_min}~${r4_max}점
 3. 언어: 모든 텍스트(제목, 설명, 질문, 선택지, 결과 타이틀 및 내용)는 한국어(Korean)로 자연스럽고 위트 있게 작성해주세요.
 
 반드시 아래 JSON 스키마 구조의 유효한 JSON 포맷으로만 응답해야 합니다. 

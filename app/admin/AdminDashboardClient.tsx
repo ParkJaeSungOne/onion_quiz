@@ -23,6 +23,7 @@ interface QuizStat {
   id: number;
   title: string;
   category: string;
+  questionsCount: number; // 문항수 속성 추가
   playCount: number;
   resultsDistribution: ResultStat[];
   refererStats: RefererStat[];
@@ -102,6 +103,7 @@ export default function AdminDashboardClient({
   const [commentList, setCommentList] = useState<CommentItem[]>(comments); // 댓글 상태
   const [deletingCommentId, setDeletingCommentId] = useState<string | null>(null); // 댓글 삭제 진행 관리
   const [generationResult, setGenerationResult] = useState<{ title: string; threadsResult: string } | null>(null); // 생성 결과 보관 상태
+  const [questionCount, setQuestionCount] = useState<number>(7); // AI 문항수 선택 상태 (기본값 7)
 
   // 로그아웃 처리
   const handleLogout = async () => {
@@ -136,7 +138,7 @@ export default function AdminDashboardClient({
   // AI 성향 테스트 수동 생성 요청
   const handleTriggerGenerate = async () => {
     if (isGenerating) return;
-    if (!confirm('Gemini AI를 가동하여 새로운 6~10문항 트렌드 성향 테스트를 1개 강제 생성하시겠습니까?\n\n약 5초~10초 정도 소요됩니다.')) {
+    if (!confirm(`Gemini AI를 가동하여 새로운 ${questionCount}문항 트렌드 성향 테스트를 1개 강제 생성하시겠습니까?\n\n약 5초~15초 정도 소요됩니다.`)) {
       return;
     }
     
@@ -144,7 +146,7 @@ export default function AdminDashboardClient({
     setErrorMsg(null);
     setGenerationResult(null);
     try {
-      const res = await triggerAIGenerate(customSubject);
+      const res = await triggerAIGenerate(customSubject, questionCount);
       if (res.success) {
         setGenerationResult({
           title: res.title || '알 수 없음',
@@ -200,6 +202,32 @@ export default function AdminDashboardClient({
             className={styles.subjectInput}
             disabled={isGenerating}
           />
+          <select
+            value={questionCount}
+            onChange={(e) => setQuestionCount(Number(e.target.value))}
+            className={styles.questionCountSelect}
+            disabled={isGenerating}
+            style={{
+              padding: '10px 14px',
+              fontSize: '14px',
+              fontWeight: 800,
+              border: '4px solid #000000',
+              borderRadius: '10px',
+              backgroundColor: '#ffffff',
+              boxShadow: '2px 2px 0px #000000',
+              cursor: 'pointer',
+              color: '#000000',
+              outline: 'none'
+            }}
+          >
+            <option value={5}>5문항</option>
+            <option value={6}>6문항</option>
+            <option value={7}>7문항 (추천)</option>
+            <option value={8}>8문항</option>
+            <option value={9}>9문항</option>
+            <option value={10}>10문항</option>
+            <option value={12}>12문항</option>
+          </select>
           <button 
             onClick={handleTriggerGenerate} 
             className={styles.seedButton}
@@ -356,6 +384,9 @@ export default function AdminDashboardClient({
                       onClick={() => setActiveQuizId(isOpen ? null : quiz.id)}
                     >
                       <span className={styles.categoryBadge}>{quiz.category}</span>
+                      <span style={{ fontSize: '10px', color: '#ffffff', fontWeight: 900, border: '2px solid #000000', padding: '2px 6px', borderRadius: '6px', background: '#ec4899', whiteSpace: 'nowrap', boxShadow: '1px 1px 0px #000000' }}>
+                        📝 {quiz.questionsCount || 0}문항
+                      </span>
                       <span className={styles.dateBadge} style={{ fontSize: '10px', color: '#64748b', fontWeight: 800, border: '2px solid #000000', padding: '2px 6px', borderRadius: '6px', background: '#f8fafc', whiteSpace: 'nowrap' }}>
                         📅 {new Date(quiz.createdAt).toLocaleDateString('ko-KR', {
                           month: 'numeric',

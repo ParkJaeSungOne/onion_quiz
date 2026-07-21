@@ -87,6 +87,9 @@ export default async function AdminDashboardPage({ searchParams }: AdminDashboar
     take: pageSize,
     include: {
       results: true,
+      _count: {
+        select: { questions: true }
+      },
       logs: {
         where: { totalScore: { gt: 0 } },
         select: { totalScore: true, referer: true }
@@ -145,6 +148,7 @@ export default async function AdminDashboardPage({ searchParams }: AdminDashboar
       id: quiz.id,
       title: quiz.title,
       category: quiz.category,
+      questionsCount: quiz._count.questions,
       playCount,
       resultsDistribution,
       refererStats,
