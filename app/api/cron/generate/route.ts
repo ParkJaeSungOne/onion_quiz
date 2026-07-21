@@ -179,13 +179,30 @@ export async function GET(request: Request) {
           }))
         },
         results: {
-          create: quizData.results.map((res: any, idx: number) => {
-            let imageUrl = '/images/char-1.jpg'; // 1구간 기본값 (broke/crying)
-            if (idx === 1) {
-              imageUrl = '/images/char-3.jpg'; // 2구간 (lazy onion)
-            } else if (idx >= 2) {
-              imageUrl = '/images/char-2.jpg'; // 3, 4구간 (zombie onion)
+          create: quizData.results.map((res: any) => {
+            const text = (res.title + ' ' + res.content + ' ' + (res.emoji || '')).toLowerCase();
+            let imageUrl = '/images/char-lazy.jpg'; // default
+            
+            if (text.includes('💸') || text.includes('돈') || text.includes('거지') || text.includes('지름') || text.includes('탕진') || text.includes('쇼핑') || text.includes('소비') || text.includes('적자')) {
+              imageUrl = '/images/char-broke.jpg';
+            } else if (text.includes('📱') || text.includes('도파민') || text.includes('좀비') || text.includes('중독') || text.includes('릴스') || text.includes('쇼츠') || text.includes('알고리즘')) {
+              imageUrl = '/images/char-zombie.jpg';
+            } else if (text.includes('🛌') || text.includes('침대') || text.includes('눕') || text.includes('게으름') || text.includes('귀차니즘') || text.includes('백수')) {
+              imageUrl = '/images/char-lazy.jpg';
+            } else if (text.includes('💖') || text.includes('❤️') || text.includes('사랑') || text.includes('연애') || text.includes('소개팅') || text.includes('썸') || text.includes('커플')) {
+              imageUrl = '/images/char-love.jpg';
+            } else if (text.includes('😡') || text.includes('화') || text.includes('분노') || text.includes('진상') || text.includes('빌런') || text.includes('금쪽')) {
+              imageUrl = '/images/char-angry.jpg';
+            } else if (text.includes('🍔') || text.includes('식욕') || text.includes('음식') || text.includes('먹') || text.includes('다이어트') || text.includes('돼지') || text.includes('야식')) {
+              imageUrl = '/images/char-food.jpg';
+            } else if (text.includes('🥺') || text.includes('소심') || text.includes('유리멘탈') || text.includes('개복치') || text.includes('상처') || text.includes('눈치')) {
+              imageUrl = '/images/char-shy.jpg';
+            } else if (text.includes('👑') || text.includes('대장') || text.includes('보스') || text.includes('킹') || text.includes('자신감') || text.includes('리더')) {
+              imageUrl = '/images/char-king.jpg';
+            } else if (text.includes('💼') || text.includes('회사') || text.includes('공부') || text.includes('업무') || text.includes('라떼') || text.includes('야근') || text.includes('피곤')) {
+              imageUrl = '/images/char-work.jpg';
             }
+            
             return {
               minScore: res.minScore,
               maxScore: res.maxScore,
