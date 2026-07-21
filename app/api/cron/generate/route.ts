@@ -165,7 +165,8 @@ export async function GET(request: Request) {
     });
 
     // 4. [신규 기능] AI 퀴즈 생성 성공 시 Threads 채널 즉시 자동 포스팅 및 유입 링크 생성 (오토파일럿)
-    const threadsToken = process.env.THREADS_ACCESS_TOKEN;
+    const threadsTokenRaw = process.env.THREADS_ACCESS_TOKEN || '';
+    const threadsToken = threadsTokenRaw.replace(/["']/g, '').trim();
     let threadsResult = 'Not attempted (No token)';
 
     // 안전한 API 호출 및 응답 해석용 로컬 헬퍼
@@ -259,7 +260,7 @@ export async function GET(request: Request) {
         }
       } catch (threadsErr: any) {
         console.error('[Threads Auto-Poster Error] Failed to publish quiz to Threads:', threadsErr);
-        threadsResult = `실패: ${threadsErr.message || threadsErr} [토큰 길이: ${threadsToken ? threadsToken.length : 0}자]`;
+        threadsResult = `실패: ${threadsErr.message || threadsErr} [토큰 원본: ${threadsTokenRaw.length}자 ➡️ 자동정제후: ${threadsToken.length}자]`;
       }
     } else {
       threadsResult = '스킵됨 (THREADS_ACCESS_TOKEN 환경변수 설정 없음)';

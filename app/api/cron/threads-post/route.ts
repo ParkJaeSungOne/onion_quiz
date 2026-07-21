@@ -79,8 +79,8 @@ export async function GET(request: Request) {
     }
   }
 
-  const token = process.env.THREADS_ACCESS_TOKEN;
-  const userId = process.env.THREADS_USER_ID || 'me';
+  const tokenRaw = process.env.THREADS_ACCESS_TOKEN || '';
+  const token = tokenRaw.replace(/["']/g, '').trim();
 
   if (!token) {
     return NextResponse.json({ error: 'THREADS_ACCESS_TOKEN environment variable is not defined.' }, { status: 500 });
