@@ -189,6 +189,31 @@ export default async function AdminDashboardPage({ searchParams }: AdminDashboar
     createdAt: log.createdAt.toISOString()
   }));
 
+  // 3.1 가장 플레이 수가 많은 인기 테스트 Top 3 집계
+  const allQuizzesForTop = await prisma.quiz.findMany({
+    select: {
+      id: true,
+      title: true,
+      category: true,
+      createdAt: true,
+      logs: {
+        where: { totalScore: { gt: 0 } },
+        select: { id: true }
+      }
+    }
+  });
+
+  const topQuizzes = allQuizzesForTop
+    .map(q => ({
+      id: q.id,
+      title: q.title,
+      category: q.category,
+      playCount: q.logs.length,
+      createdAt: q.createdAt.toISOString()
+    }))
+    .sort((a, b) => b.playCount - a.playCount)
+    .slice(0, 3);
+
   return (
     <AdminDashboardClient
       stats={{
@@ -203,6 +228,7 @@ export default async function AdminDashboardPage({ searchParams }: AdminDashboar
       visitorLogs={serializedVisitorLogs}
       currentPage={validatedPage}
       totalPages={totalPages}
+      topQuizzes={topQuizzes}
     />
   );
 }
