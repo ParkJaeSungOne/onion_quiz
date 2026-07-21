@@ -148,6 +148,26 @@ export default async function AdminDashboardPage() {
     quizTitle: comment.quiz?.title || '자유 방명록'
   }));
 
+  // 2.3 최근 상세 실시간 방문자 로그 50개 조회
+  const visitorLogsRaw = await prisma.visitorLog.findMany({
+    orderBy: { createdAt: 'desc' },
+    take: 50
+  });
+
+  const serializedVisitorLogs = visitorLogsRaw.map((log) => ({
+    id: log.id,
+    ip: log.ip,
+    device: log.device,
+    os: log.os,
+    browser: log.browser,
+    referrer: log.referrer,
+    country: log.country || 'Unknown',
+    city: log.city || 'Unknown',
+    pagePath: log.pagePath,
+    staySeconds: log.staySeconds || 0,
+    createdAt: log.createdAt.toISOString()
+  }));
+
   return (
     <AdminDashboardClient
       stats={{
@@ -159,6 +179,7 @@ export default async function AdminDashboardPage() {
       visitorStats={visitorStats}
       visitorTrend={visitorTrend}
       comments={serializedComments}
+      visitorLogs={serializedVisitorLogs}
     />
   );
 }

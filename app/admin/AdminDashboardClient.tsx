@@ -49,6 +49,20 @@ interface VisitorTrendItem {
   uv: number;
 }
 
+interface VisitorLogItem {
+  id: string;
+  ip: string;
+  device: string;
+  os: string;
+  browser: string;
+  referrer: string;
+  country: string;
+  city: string;
+  pagePath: string;
+  staySeconds: number;
+  createdAt: string;
+}
+
 interface AdminDashboardClientProps {
   stats: {
     totalQuizzes: number;
@@ -59,6 +73,7 @@ interface AdminDashboardClientProps {
   visitorStats: VisitorStatsData;
   visitorTrend: VisitorTrendItem[];
   comments: CommentItem[];
+  visitorLogs: VisitorLogItem[];
 }
 
 export default function AdminDashboardClient({ 
@@ -66,7 +81,8 @@ export default function AdminDashboardClient({
   quizStats, 
   visitorStats, 
   visitorTrend,
-  comments 
+  comments,
+  visitorLogs
 }: AdminDashboardClientProps) {
   const router = useRouter();
   const [activeQuizId, setActiveQuizId] = useState<number | null>(null);
@@ -424,6 +440,132 @@ export default function AdminDashboardClient({
                 </button>
               </div>
             ))}
+          </div>
+        )}
+      </section>
+
+      {/* 👥 실시간 상세 방문 유입 로그 (최근 50건) */}
+      <section className={styles.visitorLogsSection} style={{ marginTop: '50px', marginBottom: '60px' }}>
+        <div className={styles.sectionHeader}>
+          <h2 className={styles.sectionTitle}>👥 실시간 상세 방문 유입 로그</h2>
+          <span className={styles.totalCount}>최근 50건 내역</span>
+        </div>
+
+        {visitorLogs.length === 0 ? (
+          <div className={styles.emptyCard}>
+            <p className={styles.emptyText}>아직 수집된 방문 로그가 없습니다.</p>
+          </div>
+        ) : (
+          <div className={styles.tableWrapper}>
+            <table className={styles.logsTable}>
+              <thead>
+                <tr>
+                  <th>시간</th>
+                  <th>위치</th>
+                  <th>기기/OS/브라우저</th>
+                  <th>유입 경로 (Referrer)</th>
+                  <th>조회 페이지</th>
+                  <th>체류 시간</th>
+                  <th>IP 주소</th>
+                </tr>
+              </thead>
+              <tbody>
+                {visitorLogs.map((log) => {
+                  // IP 마스킹 (개인정보 보호 및 보안 준수형)
+                  const maskIp = (ipAddr: string) => {
+                    if (!ipAddr) return 'unknown';
+                    if (ipAddr.includes(':')) return 'IPv6 Access';
+                    const parts = ipAddr.split('.');
+                    if (parts.length === 4) {
+                      return `${parts[0]}.${parts[1]}.***.***`;
+                    }
+                    return ipAddr;
+                  };
+
+                  // 유입처 가독성 개선 매핑
+                  const getPrettyReferrer = (ref: string) => {
+                    const refLower = ref.toLowerCase();
+                    if (refLower === 'direct') return '🚪 직접 유입 (Direct)';
+                    if (refLower.includes('kakaotalk')) return '💬 카카오톡';
+                    if (refLower.includes('instagram')) return '📸 인스타그램';
+                    if (refLower.includes('threads')) return '🌀 스레드';
+                    if (refLower.includes('facebook')) return '👥 페이스북';
+                    if (refLower.includes('google')) return '🔍 구글 검색';
+                    if (refLower.includes('naver')) return '🔍 네이버';
+                    try {
+                      const url = new URL(ref);
+                      return `🔗 ${url.hostname}`;
+                    } catch {
+                      return ref;
+                    }
+                  };
+
+                  // 기기별 이모지
+                  const getDeviceEmoji = (dev: string) => {
+                    if (dev === 'Mobile') return '📱';
+                    if (dev === 'Tablet') return '平板';
+                    if (dev === 'Bot') return '🤖';
+                    return '💻';
+                  };
+
+                  // 체류 시간 단위 변환
+                  const formatStayTime = (sec: number) => {
+                    if (!sec || sec === 0) return '0초 (즉시 이탈)';
+                    if (sec < 60) return `${sec}초`;
+                    const min = Math.floor(sec / 60);
+                    const remainSec = sec % 60;
+                    return `${min}분 ${remainSec}초`;
+                  };
+
+                  const logTime = new Date(log.createdAt).toLocaleTimeString('ko-KR', {
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    second: '2-digit',
+                    hour12: false
+                  });
+
+                  const logDate = new Date(log.createdAt).toLocaleDateString('ko-KR', {
+                    month: 'numeric',
+                    day: 'numeric'
+                  });
+
+                  return (
+                    <tr key={log.id}>
+                      <td className={styles.timeTd}>
+                        <span className={styles.logDate}>{logDate}</span>
+                        <span className={styles.logTime}>{logTime}</span>
+                      </td>
+                      <td className={styles.locTd}>
+                        <span>{log.country === 'KR' ? '🇰🇷' : '🌐'}</span>
+                        <span className={styles.cityName}>{log.city}</span>
+                      </td>
+                      <td className={styles.clientTd}>
+                        <span className={styles.deviceSpan} title={log.device}>
+                          {getDeviceEmoji(log.device)}
+                        </span>
+                        <span className={styles.clientDetails}>
+                          {log.os} / {log.browser}
+                        </span>
+                      </td>
+                      <td className={styles.refTd} title={log.referrer}>
+                        {getPrettyReferrer(log.referrer)}
+                      </td>
+                      <td className={styles.pathTd} title={log.pagePath}>
+                        <code>{log.pagePath}</code>
+                      </td>
+                      <td className={styles.stayTd}>
+                        <span className={log.staySeconds > 15 ? styles.activeStay : styles.shortStay}>
+                          {formatStayTime(log.staySeconds)}
+                        </span>
+                      </td>
+                      <td className={styles.ipTd}>
+                        <code>{maskIp(log.ip)}</code>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
           </div>
         )}
       </section>

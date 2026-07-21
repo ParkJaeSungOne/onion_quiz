@@ -94,3 +94,18 @@ model VisitorStats {
   uv        Int      @default(0) // 오늘 순 방문자수 (봇 제외, 24시간 쿠키 고유 식별)
   createdAt DateTime @default(now())
 }
+
+model VisitorLog {
+  id          String   @id @default(uuid())
+  ip          String   // IP 주소
+  userAgent   String   // User-Agent 헤더 정보
+  device      String   // 기기 분류 (Mobile, Desktop, Tablet, Bot)
+  os          String   // 운영체제 (iOS, Android, Windows, macOS 등)
+  browser     String   // 브라우저명 (Safari, Chrome, KakaoTalk, Instagram, Threads 등)
+  referrer    String   // 유입처 경로 URL (http://... 또는 direct)
+  country     String?  // 유입 국가 (예: KR, US)
+  city        String?  // 유입 도시 (예: Seoul)
+  pagePath    String   // 접속한 페이지 경로 (예: /, /quiz/3)
+  staySeconds Int?     @default(0) // 유저 체류 시간 (초 단위)
+  createdAt   DateTime @default(now())
+}

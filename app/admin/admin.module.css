@@ -897,3 +897,176 @@
   }
 }
 
+/* 👥 실시간 상세 방문 로그 테이블 */
+.visitorLogsSection {
+  background: #ffffff;
+  border: 3px solid #000000;
+  box-shadow: 6px 6px 0px #000000;
+  border-radius: 20px;
+  padding: 24px;
+}
+
+.tableWrapper {
+  margin-top: 20px;
+  overflow-x: auto;
+  border: 3px solid #000000;
+  box-shadow: 4px 4px 0px #000000;
+  border-radius: 12px;
+  background: #ffffff;
+}
+
+.logsTable {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  font-family: inherit;
+}
+
+.logsTable th {
+  background: var(--kitsch-lime, #a3e635);
+  color: #000000;
+  font-weight: 950;
+  font-size: 12px;
+  padding: 12px 16px;
+  border-bottom: 3px solid #000000;
+  border-right: 2px solid #000000;
+  white-space: nowrap;
+}
+
+.logsTable th:last-child {
+  border-right: none;
+}
+
+.logsTable td {
+  padding: 12px 16px;
+  font-size: 12px;
+  font-weight: 700;
+  border-bottom: 2px solid #000000;
+  border-right: 2px solid #000000;
+  color: #000000;
+  vertical-align: middle;
+}
+
+.logsTable tr:last-child td {
+  border-bottom: none;
+}
+
+.logsTable td:last-child {
+  border-right: none;
+}
+
+.timeTd {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  white-space: nowrap;
+}
+
+.logDate {
+  font-size: 10px;
+  color: #64748b;
+  font-weight: 800;
+}
+
+.logTime {
+  font-size: 12px;
+  font-weight: 900;
+  color: #000000;
+}
+
+.cityName {
+  margin-left: 6px;
+  font-weight: 800;
+}
+
+.deviceSpan {
+  font-size: 14px;
+}
+
+.clientTd {
+  white-space: nowrap;
+}
+
+.clientDetails {
+  font-size: 10.5px;
+  color: #475569;
+  margin-left: 6px;
+  font-weight: 850;
+}
+
+.refTd {
+  font-weight: 850;
+  max-width: 150px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pathTd code {
+  background: #f1f5f9;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-family: var(--font-geist-mono), monospace;
+  color: #000000;
+}
+
+.stayTd {
+  font-family: var(--font-geist-mono), monospace;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+.activeStay {
+  color: #16a34a;
+}
+
+.shortStay {
+  color: #ef4444;
+}
+
+.ipTd code {
+  font-family: var(--font-geist-mono), monospace;
+  color: #64748b;
+}
+
+/* Dark Mode 대응 */
+@media (prefers-color-scheme: dark) {
+  .visitorLogsSection {
+    background: #1e293b;
+    border-color: #ffffff;
+    box-shadow: 6px 6px 0px #ffffff;
+  }
+  .tableWrapper {
+    border-color: #ffffff;
+    box-shadow: 4px 4px 0px #ffffff;
+    background: #0f172a;
+  }
+  .logsTable th {
+    border-bottom-color: #ffffff;
+    border-right-color: #ffffff;
+    background: var(--kitsch-lime, #a3e635);
+  }
+  .logsTable td {
+    border-bottom-color: #ffffff;
+    border-right-color: #ffffff;
+    color: #ffffff;
+  }
+  .logTime {
+    color: #ffffff;
+  }
+  .logDate {
+    color: #94a3b8;
+  }
+  .clientDetails {
+    color: #cbd5e1;
+  }
+  .pathTd code {
+    background: #1e293b;
+    color: #ffffff;
+  }
+  .ipTd code {
+    color: #94a3b8;
+  }
+}
+
