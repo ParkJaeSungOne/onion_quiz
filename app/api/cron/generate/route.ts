@@ -179,13 +179,22 @@ export async function GET(request: Request) {
           }))
         },
         results: {
-          create: quizData.results.map((res: any) => ({
-            minScore: res.minScore,
-            maxScore: res.maxScore,
-            title: res.title,
-            content: res.content,
-            emoji: res.emoji || '🧅'
-          }))
+          create: quizData.results.map((res: any, idx: number) => {
+            let imageUrl = '/images/char-1.jpg'; // 1구간 기본값 (broke/crying)
+            if (idx === 1) {
+              imageUrl = '/images/char-3.jpg'; // 2구간 (lazy onion)
+            } else if (idx >= 2) {
+              imageUrl = '/images/char-2.jpg'; // 3, 4구간 (zombie onion)
+            }
+            return {
+              minScore: res.minScore,
+              maxScore: res.maxScore,
+              title: res.title,
+              content: res.content,
+              emoji: res.emoji || '🧅',
+              imageUrl: imageUrl
+            };
+          })
         }
       }
     });

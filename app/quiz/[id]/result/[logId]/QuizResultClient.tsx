@@ -24,6 +24,7 @@ interface ResultData {
   title: string;
   content: string;
   emoji: string;
+  imageUrl?: string | null;
 }
 
 interface CompanionData {
@@ -313,9 +314,28 @@ export default function QuizResultClient({
         {matchedResult ? (
           <div ref={cardRef} className={styles.resultCard} id="result-card-area">
             <div className={styles.characterWrapper}>
-              <div className={styles.characterCircle}>
-                <span className={styles.characterEmoji}>{matchedResult.emoji}</span>
-              </div>
+              {matchedResult.imageUrl ? (
+                <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+                  <img 
+                    src={matchedResult.imageUrl} 
+                    alt={matchedResult.title}
+                    style={{
+                      width: '130px',
+                      height: '130px',
+                      objectFit: 'contain',
+                      border: '3px solid #000000',
+                      borderRadius: '20px',
+                      background: '#ffffff',
+                      boxShadow: '4px 4px 0px #000000',
+                      padding: '10px'
+                    }}
+                  />
+                </div>
+              ) : (
+                <div className={styles.characterCircle}>
+                  <span className={styles.characterEmoji}>{matchedResult.emoji}</span>
+                </div>
+              )}
             </div>
 
             <div className={styles.scoreText}>

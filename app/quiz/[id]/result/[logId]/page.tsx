@@ -261,6 +261,7 @@ export default async function QuizResultPage({ params, searchParams }: ResultPag
     title: matchedResult.title,
     content: matchedResult.content,
     emoji: matchedResult.emoji || '🧅',
+    imageUrl: matchedResult.imageUrl,
   } : null;
 
   const serializeCompanion = companionResult ? {
