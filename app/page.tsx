@@ -81,10 +81,7 @@ export default async function Home({ searchParams }: HomePageProps) {
 
   return (
     <div className={styles.container}>
-      <header className={styles.header} style={{ position: 'relative' }}>
-        <div style={{ position: 'absolute', top: '16px', right: '16px' }}>
-          <ThemeToggle />
-        </div>
+      <header className={styles.header}>
         <div className={styles.logoArea}>
           <OnionLogo className={styles.logoIcon} />
           <h1 className={styles.title}>KKADO KKADO</h1>

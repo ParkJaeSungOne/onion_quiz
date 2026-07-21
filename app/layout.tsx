@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import Script from "next/script";
 import "./globals.css";
 import AnalyticsTracker from "@/components/AnalyticsTracker";
+import ThemeToggle from "@/components/ThemeToggle";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -88,6 +89,10 @@ export default function RootLayout({
         }} />
       </head>
       <body className={`${geistSans.variable} ${geistMono.variable}`}>
+        {/* 🕶️ 전역 플로팅 테마 스위치 (Home, Play, Result 등 모든 페이지에서 상시 노출) */}
+        <div style={{ position: 'fixed', top: '16px', right: '16px', zIndex: 99999 }}>
+          <ThemeToggle />
+        </div>
         <AnalyticsTracker />
         {children}
       </body>
