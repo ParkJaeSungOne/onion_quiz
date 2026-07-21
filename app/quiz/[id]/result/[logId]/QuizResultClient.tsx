@@ -6,6 +6,7 @@ import Script from 'next/script';
 import AdSlot from '@/components/AdSlot';
 import Footer from '@/components/Footer';
 import CommentSection from '@/components/CommentSection';
+import { incrementShareCount } from '@/app/actions/share';
 import styles from './QuizResult.module.css';
 
 // Kakao SDK 타입 확장 선언
@@ -115,6 +116,9 @@ export default function QuizResultClient({
 
     if (!matchedResult) return;
 
+    // 📈 결과 공유 카운트 증가
+    incrementShareCount(quiz.id, 'result_kakao');
+
     window.Kakao.Share.sendDefault({
       objectType: 'feed',
       content: {
@@ -152,6 +156,10 @@ export default function QuizResultClient({
       handleCopyLink();
       return;
     }
+
+    // 📈 짝꿍 매칭 공유 카운트 증가
+    incrementShareCount(quiz.id, 'result_kakao');
+
     window.Kakao.Share.sendDefault({
       objectType: 'feed',
       content: {
@@ -182,6 +190,10 @@ export default function QuizResultClient({
       handleCopyLink();
       return;
     }
+
+    // 📈 상극 매칭 공유 카운트 증가
+    incrementShareCount(quiz.id, 'result_kakao');
+
     window.Kakao.Share.sendDefault({
       objectType: 'feed',
       content: {
@@ -237,6 +249,9 @@ export default function QuizResultClient({
 
   // 링크 클립보드 복사
   const handleCopyLink = () => {
+    // 📈 결과 링크 복사 카운트 증가
+    incrementShareCount(quiz.id, 'result_link');
+
     if (typeof navigator !== 'undefined' && navigator.clipboard) {
       navigator.clipboard.writeText(shareUrl).then(() => {
         setCopied(true);

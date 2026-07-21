@@ -148,7 +148,11 @@ export default async function AdminDashboardPage({ searchParams }: AdminDashboar
       playCount,
       resultsDistribution,
       refererStats,
-      createdAt: quiz.createdAt.toISOString() // 생성 일자 필드 추가!
+      createdAt: quiz.createdAt.toISOString(),
+      shareKakaoCount: quiz.shareKakaoCount,
+      shareLinkCount: quiz.shareLinkCount,
+      shareResultKakaoCount: quiz.shareResultKakaoCount,
+      shareResultLinkCount: quiz.shareResultLinkCount
     };
   });
 

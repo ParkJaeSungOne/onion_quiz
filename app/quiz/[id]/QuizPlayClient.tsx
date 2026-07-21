@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Script from 'next/script';
 import { createQuizLog, logAnswer, completeQuizLog } from '@/app/actions/log';
+import { incrementShareCount } from '@/app/actions/share';
 import AdSlot from '@/components/AdSlot';
 import Footer from '@/components/Footer';
 import styles from './QuizPlay.module.css';
@@ -82,6 +83,9 @@ export default function QuizPlayClient({ quiz }: QuizPlayClientProps) {
       return;
     }
 
+    // 📈 공유 수 증가 호출
+    incrementShareCount(quiz.id, 'kakao');
+
     window.Kakao.Share.sendDefault({
       objectType: 'feed',
       content: {
@@ -107,6 +111,9 @@ export default function QuizPlayClient({ quiz }: QuizPlayClientProps) {
 
   // 링크 클립보드 복사
   const handleCopyLink = () => {
+    // 📈 공유 수 증가 호출
+    incrementShareCount(quiz.id, 'link');
+
     if (typeof navigator !== 'undefined' && navigator.clipboard) {
       navigator.clipboard.writeText(shareUrl).then(() => {
         setCopied(true);

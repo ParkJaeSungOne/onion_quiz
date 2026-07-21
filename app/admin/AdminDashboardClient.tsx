@@ -27,6 +27,10 @@ interface QuizStat {
   resultsDistribution: ResultStat[];
   refererStats: RefererStat[];
   createdAt: string; // 생성일자 추가
+  shareKakaoCount: number;
+  shareLinkCount: number;
+  shareResultKakaoCount: number;
+  shareResultLinkCount: number;
 }
 
 interface CommentItem {
@@ -404,6 +408,75 @@ export default function AdminDashboardClient({
                               ))}
                             </div>
                           )}
+                        </div>
+
+                        {/* 📈 공유 전환 및 클릭 분석 */}
+                        <div className={styles.detailBox} style={{ backgroundColor: '#ffffff', gridColumn: '1 / -1', border: '3px solid #000000', boxShadow: '4px 4px 0px #000000' }}>
+                          <h4 className={styles.boxTitle} style={{ margin: '0 0 14px 0', borderBottom: '2px solid #000000', paddingBottom: '6px', fontWeight: 900, fontSize: '14px', color: '#000000' }}>
+                            📈 SNS 공유 채널 및 유입 전환 분석
+                          </h4>
+                          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px', marginTop: '12px' }}>
+                            {/* 퀴즈 대기실 공유 */}
+                            <div style={{ border: '2px solid #000000', borderRadius: '12px', padding: '12px', background: '#fef08a', boxShadow: '3px 3px 0px #000000' }}>
+                              <h5 style={{ fontWeight: 900, margin: '0 0 8px 0', fontSize: '13px', color: '#000000' }}>📣 퀴즈 시작 대기실 공유</h5>
+                              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', fontSize: '12px', fontWeight: 700, color: '#000000' }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                                  <span>💬 카카오톡 공유:</span>
+                                  <span style={{ color: '#d97706' }}>{quiz.shareKakaoCount}회</span>
+                                </div>
+                                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                                  <span>🔗 일반 링크 복사:</span>
+                                  <span style={{ color: '#2563eb' }}>{quiz.shareLinkCount}회</span>
+                                </div>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1px solid #000', paddingTop: '4px', marginTop: '4px', fontSize: '13px' }}>
+                                  <span>대기실 합계:</span>
+                                  <span>{quiz.shareKakaoCount + quiz.shareLinkCount}회</span>
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* 결과 리포트 공유 */}
+                            <div style={{ border: '2px solid #000000', borderRadius: '12px', padding: '12px', background: '#fbcfe8', boxShadow: '3px 3px 0px #000000' }}>
+                              <h5 style={{ fontWeight: 900, margin: '0 0 8px 0', fontSize: '13px', color: '#000000' }}>🏆 결과 리포트 페이지 공유</h5>
+                              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', fontSize: '12px', fontWeight: 700, color: '#000000' }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                                  <span>💬 카톡/궁합 공유:</span>
+                                  <span style={{ color: '#db2777' }}>{quiz.shareResultKakaoCount}회</span>
+                                </div>
+                                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                                  <span>🔗 결과 링크 복사:</span>
+                                  <span style={{ color: '#2563eb' }}>{quiz.shareResultLinkCount}회</span>
+                                </div>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1px solid #000', paddingTop: '4px', marginTop: '4px', fontSize: '13px' }}>
+                                  <span>결과 합계:</span>
+                                  <span>{quiz.shareResultKakaoCount + quiz.shareResultLinkCount}회</span>
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* 공유 전환율 분석 */}
+                            <div style={{ border: '2px solid #000000', borderRadius: '12px', padding: '12px', background: '#cffafe', boxShadow: '3px 3px 0px #000000' }}>
+                              <h5 style={{ fontWeight: 900, margin: '0 0 8px 0', fontSize: '13px', color: '#000000' }}>📊 공유 바이럴 전파 지수</h5>
+                              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', fontSize: '12px', fontWeight: 700, color: '#000000' }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                                  <span>총 공유 횟수:</span>
+                                  <span>{quiz.shareKakaoCount + quiz.shareLinkCount + quiz.shareResultKakaoCount + quiz.shareResultLinkCount}회</span>
+                                </div>
+                                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                                  <span>플레이 대비 지수:</span>
+                                  <span style={{ color: '#059669', fontWeight: 900 }}>
+                                    {quiz.playCount > 0 
+                                      ? `${(((quiz.shareKakaoCount + quiz.shareLinkCount + quiz.shareResultKakaoCount + quiz.shareResultLinkCount) / quiz.playCount) * 100).toFixed(1)}%`
+                                      : '0.0%'
+                                    }
+                                  </span>
+                                </div>
+                                <div style={{ fontSize: '10px', color: '#64748b', marginTop: '4px', lineHeight: 1.3, fontWeight: 500 }}>
+                                  * 전체 참여 유저 중 SNS 공유 버튼을 클릭해 소문을 퍼뜨린 적극적 유저 비율입니다.
+                                </div>
+                              </div>
+                            </div>
+                          </div>
                         </div>
                       </div>
                     </div>

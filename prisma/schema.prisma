@@ -19,6 +19,12 @@ model Quiz {
   results     Result[]
   logs        QuizLog[]
   comments    Comment[]
+
+  // 📈 공유 전환 분석용 카운터 필드
+  shareKakaoCount       Int @default(0) // 카카오톡 퀴즈 대기실 공유 횟수
+  shareLinkCount        Int @default(0) // 링크 복사 퀴즈 대기실 공유 횟수
+  shareResultKakaoCount Int @default(0) // 카카오톡 결과 리포트 공유 횟수
+  shareResultLinkCount  Int @default(0) // 링크 복사 결과 리포트 공유 횟수
 }
 
 model Question {
