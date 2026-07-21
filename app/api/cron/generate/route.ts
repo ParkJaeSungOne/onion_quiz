@@ -164,6 +164,82 @@ export async function GET(request: Request) {
       }
     });
 
+    // 4. [신규 기능] AI 퀴즈 생성 성공 시 Threads 채널 즉시 자동 포스팅 및 유입 링크 생성 (오토파일럿)
+    const threadsToken = process.env.THREADS_ACCESS_TOKEN;
+    const threadsUserId = process.env.THREADS_USER_ID || 'me';
+
+    if (threadsToken) {
+      try {
+        console.log(`[Threads Auto-Poster] Publishing new quiz #${createdQuiz.id} to Threads...`);
+        const postText = `📢 [따끈따끈 성향테스트 신작 개봉! 🧅]\n\n이번에 새로 기획되어 출시된 따끈따끈한 성향 테스트를 소개합니다!\n\n🎯 주제: "${createdQuiz.title}"\n\n👉 "${createdQuiz.description}"\n\n내가 과연 어떤 유형일지, 남들은 어떻게 나올지 지금 바로 팩폭 테스트를 까보세요! ㅋㅋㅋ\n\n👇 테스트 플레이 링크는 댓글에 남겨둘게!`;
+        const replyText = `✨ [신작 플레이] "${createdQuiz.title}" 플레이하러 가기! 👇\nhttps://kkado-kkado.com/quiz/${createdQuiz.id}`;
+
+        // 1. 본문 생성
+        const cRes = await fetch(`https://graph.threads.net/v1.0/${threadsUserId}/threads`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            media_type: 'TEXT',
+            text: postText,
+            access_token: threadsToken
+          })
+        });
+        const cData = await cRes.json();
+        
+        if (!cData.error && cData.id) {
+          const creationId = cData.id;
+          
+          // 2. 본문 발행
+          const pRes = await fetch(`https://graph.threads.net/v1.0/${threadsUserId}/threads_publish`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              creation_id: creationId,
+              access_token: threadsToken
+            })
+          });
+          const pData = await pRes.json();
+          
+          if (!pData.error && pData.id) {
+            const parentPostId = pData.id;
+            
+            // 3. 2초 대기 후 댓글 링크 발행
+            await new Promise((resolve) => setTimeout(resolve, 2000));
+            
+            const rRes = await fetch(`https://graph.threads.net/v1.0/${threadsUserId}/threads`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                media_type: 'TEXT',
+                text: replyText,
+                reply_to_id: parentPostId,
+                access_token: threadsToken
+              })
+            });
+            const rData = await rRes.json();
+            
+            if (!rData.error && rData.id) {
+              const rPublishRes = await fetch(`https://graph.threads.net/v1.0/${threadsUserId}/threads_publish`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  creation_id: rData.id,
+                  access_token: threadsToken
+                })
+              });
+              await rPublishRes.json();
+              console.log(`[Threads Auto-Poster] Successfully autoposted new quiz #${createdQuiz.id} to Threads!`);
+            }
+          }
+        }
+      } catch (threadsErr) {
+        console.error('[Threads Auto-Poster Error] Failed to publish quiz to Threads:', threadsErr);
+        // 생성 자체는 이미 성공했으므로 에러를 삼켜서 퀴즈 생성 완료 응답을 보장
+      }
+    } else {
+      console.log(`[Threads Auto-Poster] THREADS_ACCESS_TOKEN is not configured. Skipping Threads auto-post for new quiz.`);
+    }
+
     return NextResponse.json({
       success: true,
       message: 'New quiz generated successfully!',
