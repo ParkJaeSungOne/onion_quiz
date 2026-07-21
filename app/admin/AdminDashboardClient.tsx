@@ -144,7 +144,7 @@ export default function AdminDashboardClient({
     try {
       const res = await triggerAIGenerate(customSubject);
       if (res.success) {
-        alert(`성공적으로 생성 완료되었습니다! 🎉\n\n새 테스트: “ ${res.title} ”`);
+        alert(`성공적으로 생성 완료되었습니다! 🎉\n\n새 테스트: “ ${res.title} ”\n\n📢 스레드 자동발행 결과: \n${(res as any).threadsResult || '데이터 없음'}`);
         setCustomSubject(''); // 성공 후 입력창 초기화
         router.refresh();
       } else {

@@ -167,6 +167,7 @@ export async function GET(request: Request) {
     // 4. [신규 기능] AI 퀴즈 생성 성공 시 Threads 채널 즉시 자동 포스팅 및 유입 링크 생성 (오토파일럿)
     const threadsToken = process.env.THREADS_ACCESS_TOKEN;
     const threadsUserId = process.env.THREADS_USER_ID || 'me';
+    let threadsResult = 'Not attempted (No token)';
 
     if (threadsToken) {
       try {
@@ -186,7 +187,11 @@ export async function GET(request: Request) {
         });
         const cData = await cRes.json();
         
-        if (!cData.error && cData.id) {
+        if (cData.error) {
+          throw new Error(`본문 컨테이너 생성 에러: ${JSON.stringify(cData.error)}`);
+        }
+        
+        if (cData.id) {
           const creationId = cData.id;
           
           // 2. 본문 발행
@@ -200,8 +205,13 @@ export async function GET(request: Request) {
           });
           const pData = await pRes.json();
           
-          if (!pData.error && pData.id) {
+          if (pData.error) {
+            throw new Error(`본문 발행 에러: ${JSON.stringify(pData.error)}`);
+          }
+          
+          if (pData.id) {
             const parentPostId = pData.id;
+            threadsResult = `본문 발행 완료 (Post ID: ${parentPostId})`;
             
             // 3. 2초 대기 후 댓글 링크 발행
             await new Promise((resolve) => setTimeout(resolve, 2000));
@@ -218,7 +228,11 @@ export async function GET(request: Request) {
             });
             const rData = await rRes.json();
             
-            if (!rData.error && rData.id) {
+            if (rData.error) {
+              throw new Error(`댓글 컨테이너 생성 에러: ${JSON.stringify(rData.error)}`);
+            }
+            
+            if (rData.id) {
               const rPublishRes = await fetch(`https://graph.threads.net/v1.0/${threadsUserId}/threads_publish`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -227,16 +241,23 @@ export async function GET(request: Request) {
                   access_token: threadsToken
                 })
               });
-              await rPublishRes.json();
+              const rPublishData = await rPublishRes.json();
+              
+              if (rPublishData.error) {
+                throw new Error(`댓글 발행 에러: ${JSON.stringify(rPublishData.error)}`);
+              }
+              
+              threadsResult = `본문 + 유입 링크 댓글 전체 발행 성공 (Post ID: ${parentPostId})`;
               console.log(`[Threads Auto-Poster] Successfully autoposted new quiz #${createdQuiz.id} to Threads!`);
             }
           }
         }
-      } catch (threadsErr) {
+      } catch (threadsErr: any) {
         console.error('[Threads Auto-Poster Error] Failed to publish quiz to Threads:', threadsErr);
-        // 생성 자체는 이미 성공했으므로 에러를 삼켜서 퀴즈 생성 완료 응답을 보장
+        threadsResult = `실패: ${threadsErr.message || threadsErr}`;
       }
     } else {
+      threadsResult = '스킵됨 (THREADS_ACCESS_TOKEN 환경변수 설정 없음)';
       console.log(`[Threads Auto-Poster] THREADS_ACCESS_TOKEN is not configured. Skipping Threads auto-post for new quiz.`);
     }
 
@@ -244,7 +265,8 @@ export async function GET(request: Request) {
       success: true,
       message: 'New quiz generated successfully!',
       quizId: createdQuiz.id,
-      title: createdQuiz.title
+      title: createdQuiz.title,
+      threadsResult: threadsResult
     });
 
   } catch (error: any) {

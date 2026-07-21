@@ -114,7 +114,7 @@ export async function triggerAIGenerate(subject?: string) {
       revalidatePath(`/quiz/${data.quizId}`);
     }
     revalidateTag('quizzes', 'default');
-    return { success: true, title: data.title };
+    return { success: true, title: data.title, threadsResult: data.threadsResult };
   } catch (error: any) {
     console.error('Failed to trigger AI generate:', error);
     return { success: false, error: error.message };
