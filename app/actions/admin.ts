@@ -123,3 +123,50 @@ export async function triggerAIGenerate(subject?: string, questionCount?: number
     return { success: false, error: error.message };
   }
 }
+
+/**
+ * 스레드 단기 토큰(1시간)을 60일 장기 토큰으로 안전하게 교환
+ */
+export async function exchangeThreadsToken(shortToken: string, appSecret: string) {
+  try {
+    const cookieStore = await cookies();
+    const session = cookieStore.get(SESSION_COOKIE_NAME);
+    if (!session || session.value !== 'authenticated') {
+      throw new Error('Unauthorized');
+    }
+
+    if (!shortToken.trim() || !appSecret.trim()) {
+      throw new Error('단기 토큰과 앱 시크릿 코드를 모두 입력해 주세요.');
+    }
+
+    const url = `https://graph.threads.net/access_token?grant_type=th_exchange_token&client_secret=${appSecret.trim()}&access_token=${shortToken.trim()}`;
+    console.log('Exchanging Threads short token for long token...');
+    
+    const res = await fetch(url, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+      }
+    });
+    const text = await res.text();
+    
+    let data: any = {};
+    try {
+      data = JSON.parse(text);
+    } catch (e) {
+      throw new Error(`메타 서버 응답 해석 실패 (HTTP ${res.status}): ${text}`);
+    }
+
+    if (data.error) {
+      throw new Error(data.error.message || JSON.stringify(data.error));
+    }
+
+    return { 
+      success: true, 
+      longLivedToken: data.access_token, 
+      expiresIn: data.expires_in 
+    };
+  } catch (error: any) {
+    console.error('Failed to exchange Threads token:', error);
+    return { success: false, error: error.message };
+  }
+}

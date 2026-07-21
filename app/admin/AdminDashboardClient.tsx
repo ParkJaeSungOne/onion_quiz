@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { logoutAdmin, deleteQuiz, triggerAIGenerate } from '@/app/actions/admin';
+import { logoutAdmin, deleteQuiz, triggerAIGenerate, exchangeThreadsToken } from '@/app/actions/admin';
 import styles from './admin.module.css';
 
 interface RefererStat {
@@ -105,6 +105,14 @@ export default function AdminDashboardClient({
   const [generationResult, setGenerationResult] = useState<{ title: string; threadsResult: string } | null>(null); // 생성 결과 보관 상태
   const [questionCount, setQuestionCount] = useState<number>(7); // AI 문항수 선택 상태 (기본값 7)
 
+  // 🔑 60일 장기 토큰 교환 도구용 상태 추가
+  const [shortToken, setShortToken] = useState('');
+  const [appSecret, setAppSecret] = useState('');
+  const [exchangeLoading, setExchangeLoading] = useState(false);
+  const [exchangeResult, setExchangeResult] = useState<string | null>(null);
+  const [exchangeError, setExchangeError] = useState<string | null>(null);
+  const [isTokenToolOpen, setIsTokenToolOpen] = useState(false);
+
   // 로그아웃 처리
   const handleLogout = async () => {
     await logoutAdmin();
@@ -161,6 +169,27 @@ export default function AdminDashboardClient({
       setErrorMsg(`성향 테스트 생성 중 통신 오류 발생:\n${err.message || '알 수 없는 네트워크 오류'}`);
     } finally {
       setIsGenerating(false);
+    }
+  };
+
+  // 🔑 스레드 단기 토큰을 60일 장기 토큰으로 갱신 요청
+  const handleExchangeToken = async () => {
+    if (exchangeLoading) return;
+    setExchangeError(null);
+    setExchangeResult(null);
+    setExchangeLoading(true);
+    try {
+      const res = await exchangeThreadsToken(shortToken, appSecret);
+      if (res.success && res.longLivedToken) {
+        setExchangeResult(res.longLivedToken);
+        alert('축하합니다! 60일 장기 토큰 발급에 성공했습니다. 🎉 아래 결과 창에서 토큰을 복사하여 Vercel에 반영하세요!');
+      } else {
+        setExchangeError(res.error || '토큰 갱신 과정에 오류가 발생했습니다.');
+      }
+    } catch (err: any) {
+      setExchangeError(err.message || '네트워크 오류가 발생했습니다.');
+    } finally {
+      setExchangeLoading(false);
     }
   };
 
@@ -270,6 +299,91 @@ export default function AdminDashboardClient({
           </div>
         </div>
       )}
+
+      {/* 🔑 스레드 60일 장기 토큰 갱신 도구 */}
+      <div style={{ border: '3px solid #000000', borderRadius: '18px', padding: '20px', background: '#e0f2fe', boxShadow: '5px 5px 0px #000000', marginBottom: '32px', color: '#000000' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer' }} onClick={() => setIsTokenToolOpen(!isTokenToolOpen)}>
+          <span style={{ fontSize: '15px', fontWeight: 900 }}>🔑 스레드 60일 장기 토큰 갱신 도구 (만료 해결 가이드) {isTokenToolOpen ? '▲' : '▼'}</span>
+          <span style={{ fontSize: '11px', fontWeight: 800, background: '#fef08a', border: '2px solid #000000', padding: '2px 8px', borderRadius: '6px' }}>
+            {isTokenToolOpen ? '설명 접기' : '도구 열기 🔄'}
+          </span>
+        </div>
+        
+        {isTokenToolOpen && (
+          <div style={{ marginTop: '16px', borderTop: '2px dashed #000000', paddingTop: '16px' }}>
+            <p style={{ margin: '0 0 16px 0', fontSize: '13px', fontWeight: 700, lineHeight: 1.6, color: '#334155' }}>
+              💡 <strong>60일 연장 토큰 발급 방법:</strong><br />
+              1. 먼저 <a href="https://developers.facebook.com/tools/explorer/" target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'underline', color: '#2563eb', fontWeight: 800 }}>Meta Graph API Explorer</a>에 접속하여 <strong>앱을 선택</strong>하고, 우측 User or Page dropdown에서 <strong>[Threads User Token]</strong> 혹은 <strong>[Get User Access Token]</strong>을 선택해 권한(<code style={{ background: '#cbd5e1', padding: '2px 4px', borderRadius: '4px' }}>threads_basic</code>, <code style={{ background: '#cbd5e1', padding: '2px 4px', borderRadius: '4px' }}>threads_content_publish</code>)을 체크한 뒤 단기 임시 토큰(1시간 유효)을 생성하여 아래에 붙여넣으세요.<br />
+              2. Meta 개발자 센터 <strong>[앱 설정 &rarr; 기본 설정]</strong>에서 본인의 <strong>앱 시크릿 코드 (App Secret)</strong>를 확인해 아래에 입력하세요.<br />
+              3. 갱신 버튼을 누르면 60일 동안 유효한 토큰이 즉시 발급됩니다!
+            </p>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '16px' }}>
+              <div>
+                <label style={{ display: 'block', fontSize: '12px', fontWeight: 900, marginBottom: '4px' }}>1. 단기 임시 토큰 (1시간 유효):</label>
+                <input
+                  type="text"
+                  value={shortToken}
+                  onChange={(e) => setShortToken(e.target.value)}
+                  placeholder="Meta Explorer에서 복사한 EAAW..."
+                  style={{ width: '100%', padding: '10px', fontSize: '13px', border: '3px solid #000000', borderRadius: '10px', fontWeight: 700 }}
+                />
+              </div>
+              <div>
+                <label style={{ display: 'block', fontSize: '12px', fontWeight: 900, marginBottom: '4px' }}>2. 앱 시크릿 코드 (App Secret):</label>
+                <input
+                  type="password"
+                  value={appSecret}
+                  onChange={(e) => setAppSecret(e.target.value)}
+                  placeholder="앱 기본 설정의 32자리 시크릿 코드"
+                  style={{ width: '100%', padding: '10px', fontSize: '13px', border: '3px solid #000000', borderRadius: '10px', fontWeight: 700 }}
+                />
+              </div>
+            </div>
+
+            <button
+              onClick={handleExchangeToken}
+              disabled={exchangeLoading}
+              style={{
+                width: '100%',
+                padding: '12px',
+                fontSize: '14px',
+                fontWeight: 900,
+                backgroundColor: '#f472b6',
+                color: '#ffffff',
+                border: '3px solid #000000',
+                borderRadius: '10px',
+                boxShadow: '3px 3px 0px #000000',
+                cursor: 'pointer',
+                marginBottom: '16px'
+              }}
+            >
+              {exchangeLoading ? '⏳ 연장 토큰 발급 중...' : '🔄 60일 장기 토큰으로 연장하기'}
+            </button>
+
+            {exchangeError && (
+              <div style={{ background: '#fee2e2', border: '2px solid #ef4444', borderRadius: '8px', padding: '12px', fontSize: '12px', color: '#991b1b', fontWeight: 700, wordBreak: 'break-all', marginBottom: '16px' }}>
+                ❌ <strong>발급 실패 상세 오류:</strong> {exchangeError}
+              </div>
+            )}
+
+            {exchangeResult && (
+              <div style={{ background: '#ecfdf5', border: '3px solid #10b981', borderRadius: '10px', padding: '16px', color: '#065f46' }}>
+                <h4 style={{ margin: '0 0 8px 0', fontWeight: 900 }}>🎉 60일 장기 토큰 발급 성공! (아래 텍스트를 터치해서 전부 복사하세요):</h4>
+                <textarea
+                  readOnly
+                  value={exchangeResult}
+                  onClick={(e) => (e.target as HTMLTextAreaElement).select()}
+                  style={{ width: '100%', height: '80px', padding: '10px', fontSize: '12px', fontFamily: 'monospace', border: '2px solid #000000', borderRadius: '8px', fontWeight: 700, resize: 'none', backgroundColor: '#ffffff' }}
+                />
+                <p style={{ margin: '8px 0 0 0', fontSize: '11px', fontWeight: 700, color: '#047857' }}>
+                  💡 위 텍스트 상자를 터치하면 자동으로 전체 선택됩니다. 복사하신 뒤 Vercel의 <code>THREADS_ACCESS_TOKEN</code> 환경변수에 넣고 <strong>Redeploy(재배포)</strong> 하시면 즉동 완료!
+                </p>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
 
       {/* KPI 지표 보드 */}
       <section className={styles.kpiGrid}>
