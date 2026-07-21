@@ -1,26 +1,26 @@
 import { ImageResponse } from 'next/og';
 
-// 파비콘 이미지 규격 정의 (32x32)
+// 애플 터치 아이콘 규격 정의 (180x180)
 export const size = {
-  width: 32,
-  height: 32,
+  width: 180,
+  height: 180,
 };
 export const contentType = 'image/png';
 
-export default function Icon() {
+export default function AppleIcon() {
   return new ImageResponse(
     (
       <div
         style={{
-          fontSize: 22,
+          fontSize: 120,
           background: '#fef08a', // 네오브루탈리즘 옐로우 배경
           width: '100%',
           height: '100%',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          borderRadius: '25%', // 라운딩
-          border: '2px solid #000000', // 검정 테두리
+          borderRadius: 40, // 스마트폰 앱 형태의 라운딩
+          border: '10px solid #000000', // 두꺼운 검정 테두리
         }}
       >
         🧅
