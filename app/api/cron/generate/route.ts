@@ -169,15 +169,16 @@ export async function GET(request: Request) {
     const threadsToken = threadsTokenRaw.replace(/["']/g, '').trim();
     let threadsResult = 'Not attempted (No token)';
 
-    // 안전한 API 호출 및 응답 해석용 로컬 헬퍼
-    const safeFetchJson = async (url: string, body: any) => {
-      const res = await fetch(url, {
+    // 안전한 API 호출 및 응답 해석용 로컬 헬퍼 (URL Query Parameter 방식 사용)
+    const safeFetchJson = async (url: string, params: Record<string, string>) => {
+      const queryStr = new URLSearchParams(params).toString();
+      const targetUrl = `${url}?${queryStr}`;
+      
+      const res = await fetch(targetUrl, {
         method: 'POST',
         headers: { 
-          'Content-Type': 'application/json',
           'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
-        },
-        body: JSON.stringify(body)
+        }
       });
       const text = await res.text();
       try {
@@ -187,10 +188,10 @@ export async function GET(request: Request) {
         }
         return data;
       } catch (err: any) {
-        if (err.message.includes('에러') || err.message.includes('오류')) {
+        if (err.message.includes('에러') || err.message.includes('오류') || err.message.includes('Meta API')) {
           throw err;
         }
-        throw new Error(`Meta API가 비정상 응답을 반환했습니다 (HTTP ${res.status}). 내용: ${text.substring(0, 120)}...`);
+        throw new Error(`Meta API가 비정상 응답을 반환했습니다 (HTTP ${res.status}). 내용: ${text}`);
       }
     };
 
