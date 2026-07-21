@@ -166,8 +166,30 @@ export async function GET(request: Request) {
 
     // 4. [신규 기능] AI 퀴즈 생성 성공 시 Threads 채널 즉시 자동 포스팅 및 유입 링크 생성 (오토파일럿)
     const threadsToken = process.env.THREADS_ACCESS_TOKEN;
-    const threadsUserId = process.env.THREADS_USER_ID || 'me';
+    const threadsUserIdClean = (process.env.THREADS_USER_ID || 'me').replace('@', '').trim();
     let threadsResult = 'Not attempted (No token)';
+
+    // 안전한 API 호출 및 응답 해석용 로컬 헬퍼
+    const safeFetchJson = async (url: string, body: any) => {
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+      });
+      const text = await res.text();
+      try {
+        const data = JSON.parse(text);
+        if (data.error) {
+          throw new Error(data.error.message || JSON.stringify(data.error));
+        }
+        return data;
+      } catch (err: any) {
+        if (err.message.includes('에러') || err.message.includes('오류')) {
+          throw err;
+        }
+        throw new Error(`Meta API가 비정상 응답을 반환했습니다 (HTTP ${res.status}). 내용: ${text.substring(0, 120)}...`);
+      }
+    };
 
     if (threadsToken) {
       try {
@@ -176,38 +198,26 @@ export async function GET(request: Request) {
         const replyText = `✨ [신작 플레이] "${createdQuiz.title}" 플레이하러 가기! 👇\nhttps://kkado-kkado.com/quiz/${createdQuiz.id}`;
 
         // 1. 본문 생성
-        const cRes = await fetch(`https://graph.threads.net/v1.0/${threadsUserId}/threads`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
+        const cData = await safeFetchJson(
+          `https://graph.threads.net/v1.0/${threadsUserIdClean}/threads`,
+          {
             media_type: 'TEXT',
             text: postText,
             access_token: threadsToken
-          })
-        });
-        const cData = await cRes.json();
-        
-        if (cData.error) {
-          throw new Error(`본문 컨테이너 생성 에러: ${JSON.stringify(cData.error)}`);
-        }
+          }
+        );
         
         if (cData.id) {
           const creationId = cData.id;
           
           // 2. 본문 발행
-          const pRes = await fetch(`https://graph.threads.net/v1.0/${threadsUserId}/threads_publish`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
+          const pData = await safeFetchJson(
+            `https://graph.threads.net/v1.0/${threadsUserIdClean}/threads_publish`,
+            {
               creation_id: creationId,
               access_token: threadsToken
-            })
-          });
-          const pData = await pRes.json();
-          
-          if (pData.error) {
-            throw new Error(`본문 발행 에러: ${JSON.stringify(pData.error)}`);
-          }
+            }
+          );
           
           if (pData.id) {
             const parentPostId = pData.id;
@@ -216,36 +226,24 @@ export async function GET(request: Request) {
             // 3. 2초 대기 후 댓글 링크 발행
             await new Promise((resolve) => setTimeout(resolve, 2000));
             
-            const rRes = await fetch(`https://graph.threads.net/v1.0/${threadsUserId}/threads`, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
+            const rData = await safeFetchJson(
+              `https://graph.threads.net/v1.0/${threadsUserIdClean}/threads`,
+              {
                 media_type: 'TEXT',
                 text: replyText,
                 reply_to_id: parentPostId,
                 access_token: threadsToken
-              })
-            });
-            const rData = await rRes.json();
-            
-            if (rData.error) {
-              throw new Error(`댓글 컨테이너 생성 에러: ${JSON.stringify(rData.error)}`);
-            }
+              }
+            );
             
             if (rData.id) {
-              const rPublishRes = await fetch(`https://graph.threads.net/v1.0/${threadsUserId}/threads_publish`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
+              const rPublishData = await safeFetchJson(
+                `https://graph.threads.net/v1.0/${threadsUserIdClean}/threads_publish`,
+                {
                   creation_id: rData.id,
                   access_token: threadsToken
-                })
-              });
-              const rPublishData = await rPublishRes.json();
-              
-              if (rPublishData.error) {
-                throw new Error(`댓글 발행 에러: ${JSON.stringify(rPublishData.error)}`);
-              }
+                }
+              );
               
               threadsResult = `본문 + 유입 링크 댓글 전체 발행 성공 (Post ID: ${parentPostId})`;
               console.log(`[Threads Auto-Poster] Successfully autoposted new quiz #${createdQuiz.id} to Threads!`);
