@@ -26,6 +26,7 @@ interface QuizStat {
   playCount: number;
   resultsDistribution: ResultStat[];
   refererStats: RefererStat[];
+  createdAt: string; // 생성일자 추가
 }
 
 interface CommentItem {
@@ -74,6 +75,8 @@ interface AdminDashboardClientProps {
   visitorTrend: VisitorTrendItem[];
   comments: CommentItem[];
   visitorLogs: VisitorLogItem[];
+  currentPage: number;
+  totalPages: number;
 }
 
 export default function AdminDashboardClient({ 
@@ -82,7 +85,9 @@ export default function AdminDashboardClient({
   visitorStats, 
   visitorTrend,
   comments,
-  visitorLogs
+  visitorLogs,
+  currentPage,
+  totalPages
 }: AdminDashboardClientProps) {
   const router = useRouter();
   const [activeQuizId, setActiveQuizId] = useState<number | null>(null);
@@ -323,6 +328,15 @@ export default function AdminDashboardClient({
                       onClick={() => setActiveQuizId(isOpen ? null : quiz.id)}
                     >
                       <span className={styles.categoryBadge}>{quiz.category}</span>
+                      <span className={styles.dateBadge} style={{ fontSize: '10px', color: '#64748b', fontWeight: 800, border: '2px solid #000000', padding: '2px 6px', borderRadius: '6px', background: '#f8fafc', whiteSpace: 'nowrap' }}>
+                        📅 {new Date(quiz.createdAt).toLocaleDateString('ko-KR', {
+                          month: 'numeric',
+                          day: 'numeric',
+                          hour: '2-digit',
+                          minute: '2-digit',
+                          hour12: false
+                        })}
+                      </span>
                       <h3 className={styles.quizTitleText}>{quiz.title}</h3>
                       <span className={styles.playCountBadge}>🔥 {quiz.playCount}명 참여</span>
                       <span className={styles.accordionArrow}>{isOpen ? '▲' : '▼'}</span>
@@ -397,6 +411,46 @@ export default function AdminDashboardClient({
                 </div>
               );
             })}
+          </div>
+        )}
+
+        {/* 퀴즈 목록 페이징 UI */}
+        {totalPages > 1 && (
+          <div className={styles.pagination} style={{ marginTop: '28px', display: 'flex', justifyContent: 'center', gap: '8px' }}>
+            {currentPage > 1 ? (
+              <button 
+                onClick={() => router.push(`/admin?page=${currentPage - 1}`)} 
+                className={styles.pageButton}
+              >
+                ◀ 이전
+              </button>
+            ) : (
+              <span className={`${styles.pageButton} ${styles.disabled}`}>◀ 이전</span>
+            )}
+
+            {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => {
+              const isCurrent = p === currentPage;
+              return (
+                <button
+                  key={p}
+                  onClick={() => router.push(`/admin?page=${p}`)}
+                  className={`${styles.pageButton} ${isCurrent ? styles.activePage : ''}`}
+                >
+                  {p}
+                </button>
+              );
+            })}
+
+            {currentPage < totalPages ? (
+              <button 
+                onClick={() => router.push(`/admin?page=${currentPage + 1}`)} 
+                className={styles.pageButton}
+              >
+                다음 ▶
+              </button>
+            ) : (
+              <span className={`${styles.pageButton} ${styles.disabled}`}>다음 ▶</span>
+            )}
           </div>
         )}
       </section>

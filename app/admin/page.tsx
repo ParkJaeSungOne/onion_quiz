@@ -7,7 +7,15 @@ const SESSION_COOKIE_NAME = 'kkado_admin_session';
 
 export const revalidate = 0;
 
-export default async function AdminDashboardPage() {
+interface AdminDashboardPageProps {
+  searchParams: Promise<{ page?: string }>;
+}
+
+export default async function AdminDashboardPage({ searchParams }: AdminDashboardPageProps) {
+  const { page: pageStr } = await searchParams;
+  const currentPage = parseInt(pageStr || '1', 10);
+  const pageSize = 10; // 한 페이지에 퀴즈 10개씩 페이징
+
   // 1. 보안 인증 세션 검사 (쿠키 검증)
   const cookieStore = await cookies();
   const session = cookieStore.get(SESSION_COOKIE_NAME);
@@ -18,6 +26,8 @@ export default async function AdminDashboardPage() {
 
   // 2. 대시보드 지표(KPI) 연산
   const totalQuizzes = await prisma.quiz.count();
+  const totalPages = Math.ceil(totalQuizzes / pageSize) || 1;
+  const validatedPage = Math.min(Math.max(1, currentPage), totalPages);
   const totalPlays = await prisma.quizLog.count({
     where: { totalScore: { gt: 0 } }
   });
@@ -70,9 +80,11 @@ export default async function AdminDashboardPage() {
     }
   });
 
-  // 3. 테스트 목록 및 테스트별 성향 통계 수집
+  // 3. 테스트 목록 및 테스트별 성향 통계 수집 (페이징 세팅 추가)
   const quizzes = await prisma.quiz.findMany({
     orderBy: { createdAt: 'desc' },
+    skip: (validatedPage - 1) * pageSize,
+    take: pageSize,
     include: {
       results: true,
       logs: {
@@ -135,7 +147,8 @@ export default async function AdminDashboardPage() {
       category: quiz.category,
       playCount,
       resultsDistribution,
-      refererStats
+      refererStats,
+      createdAt: quiz.createdAt.toISOString() // 생성 일자 필드 추가!
     };
   });
 
@@ -180,6 +193,8 @@ export default async function AdminDashboardPage() {
       visitorTrend={visitorTrend}
       comments={serializedComments}
       visitorLogs={serializedVisitorLogs}
+      currentPage={validatedPage}
+      totalPages={totalPages}
     />
   );
 }

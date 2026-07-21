@@ -1070,3 +1070,74 @@
   }
 }
 
+/* 어드민 페이징 스타일 */
+.pagination {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 28px;
+}
+
+.pageButton {
+  background: #ffffff;
+  border: 3px solid #000000;
+  box-shadow: 2px 2px 0px #000000;
+  border-radius: 10px;
+  padding: 6px 14px;
+  font-size: 12px;
+  font-weight: 800;
+  cursor: pointer;
+  color: #000000;
+  transition: all 0.1s ease;
+}
+
+.pageButton:hover:not(.disabled) {
+  transform: translate(-1px, -1px);
+  box-shadow: 3px 3px 0px #000000;
+  background: #f8fafc;
+}
+
+.pageButton:active:not(.disabled) {
+  transform: translate(1px, 1px);
+  box-shadow: 1px 1px 0px #000000;
+}
+
+.activePage {
+  background: var(--kitsch-lime, #a3e635) !important;
+  box-shadow: 2px 2px 0px #000000 !important;
+}
+
+.disabled {
+  background: #f1f5f9 !important;
+  color: #94a3b8 !important;
+  border-color: #cbd5e1 !important;
+  box-shadow: none !important;
+  cursor: not-allowed;
+}
+
+/* Dark Mode */
+@media (prefers-color-scheme: dark) {
+  .pageButton {
+    background: #1e293b;
+    border-color: #ffffff;
+    box-shadow: 2px 2px 0px #ffffff;
+    color: #ffffff;
+  }
+  .pageButton:hover:not(.disabled) {
+    background: #334155;
+    box-shadow: 3px 3px 0px #ffffff;
+  }
+  .activePage {
+    background: var(--kitsch-lime, #a3e635) !important;
+    color: #000000 !important;
+    border-color: #ffffff !important;
+    box-shadow: 2px 2px 0px #ffffff !important;
+  }
+  .disabled {
+    background: #0f172a !important;
+    color: #475569 !important;
+    border-color: #334155 !important;
+    box-shadow: none !important;
+  }
+}
+
