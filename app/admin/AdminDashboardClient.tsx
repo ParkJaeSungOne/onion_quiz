@@ -101,6 +101,7 @@ export default function AdminDashboardClient({
   const [customSubject, setCustomSubject] = useState(''); // 특정 AI 퀴즈 주제 상태
   const [commentList, setCommentList] = useState<CommentItem[]>(comments); // 댓글 상태
   const [deletingCommentId, setDeletingCommentId] = useState<string | null>(null); // 댓글 삭제 진행 관리
+  const [generationResult, setGenerationResult] = useState<{ title: string; threadsResult: string } | null>(null); // 생성 결과 보관 상태
 
   // 로그아웃 처리
   const handleLogout = async () => {
@@ -141,10 +142,14 @@ export default function AdminDashboardClient({
     
     setIsGenerating(true);
     setErrorMsg(null);
+    setGenerationResult(null);
     try {
       const res = await triggerAIGenerate(customSubject);
       if (res.success) {
-        alert(`성공적으로 생성 완료되었습니다! 🎉\n\n새 테스트: “ ${res.title} ”\n\n📢 스레드 자동발행 결과: \n${(res as any).threadsResult || '데이터 없음'}`);
+        setGenerationResult({
+          title: res.title || '알 수 없음',
+          threadsResult: (res as any).threadsResult || '응답 로그가 제공되지 않았습니다.'
+        });
         setCustomSubject(''); // 성공 후 입력창 초기화
         router.refresh();
       } else {
@@ -216,6 +221,25 @@ export default function AdminDashboardClient({
             <button onClick={() => setErrorMsg(null)} className={styles.closeErrorBtn}>✕</button>
           </div>
           <pre className={styles.errorText}>{errorMsg}</pre>
+        </div>
+      )}
+
+      {/* AI 성향 테스트 생성 성공 리포트 (복사 가능 카드) */}
+      {generationResult && (
+        <div style={{ border: '3px solid #000000', borderRadius: '18px', padding: '20px', background: '#d9f99d', boxShadow: '5px 5px 0px #000000', marginBottom: '32px', color: '#000000', position: 'relative' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+            <span style={{ fontSize: '15px', fontWeight: 900, color: '#000000' }}>🎉 AI 성향 테스트 생성 및 스레드 발행 결과</span>
+            <button onClick={() => setGenerationResult(null)} style={{ background: 'transparent', border: 'none', fontSize: '18px', fontWeight: 900, cursor: 'pointer', color: '#000000' }}>✕</button>
+          </div>
+          <p style={{ margin: '0 0 12px 0', fontSize: '14px', fontWeight: 800 }}>
+            새로 등록된 퀴즈 제목: <span style={{ textDecoration: 'underline', color: '#000000' }}>{generationResult.title}</span>
+          </p>
+          <div style={{ background: '#ffffff', border: '2px solid #000000', borderRadius: '10px', padding: '12px', fontSize: '12px', wordBreak: 'break-all' }}>
+            <h4 style={{ margin: '0 0 6px 0', fontWeight: 900, color: '#000000' }}>📢 스레드 API 통신 리포트 (드래그 복사 가능):</h4>
+            <code style={{ fontFamily: 'monospace', fontWeight: 800, color: '#e11d48' }}>
+              {generationResult.threadsResult}
+            </code>
+          </div>
         </div>
       )}
 
