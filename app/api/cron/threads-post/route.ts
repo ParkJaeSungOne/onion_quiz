@@ -98,7 +98,10 @@ export async function GET(request: Request) {
     // 3. 본문 포스트 생성
     const containerRes = await fetch(`https://graph.threads.net/v1.0/me/threads`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 
+        'Content-Type': 'application/json',
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+      },
       body: JSON.stringify({
         media_type: 'TEXT',
         text: target.text,
@@ -115,7 +118,10 @@ export async function GET(request: Request) {
     // 4. 본문 게시물 최종 발행
     const publishRes = await fetch(`https://graph.threads.net/v1.0/me/threads_publish`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 
+        'Content-Type': 'application/json',
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+      },
       body: JSON.stringify({
         creation_id: creationId,
         access_token: token
@@ -134,7 +140,10 @@ export async function GET(request: Request) {
     // 6. 댓글 링크 컨테이너 생성
     const replyContainerRes = await fetch(`https://graph.threads.net/v1.0/me/threads`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 
+        'Content-Type': 'application/json',
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+      },
       body: JSON.stringify({
         media_type: 'TEXT',
         text: target.reply,
@@ -152,7 +161,10 @@ export async function GET(request: Request) {
     // 7. 댓글 최종 발행
     const replyPublishRes = await fetch(`https://graph.threads.net/v1.0/me/threads_publish`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 
+        'Content-Type': 'application/json',
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+      },
       body: JSON.stringify({
         creation_id: replyCreationId,
         access_token: token
