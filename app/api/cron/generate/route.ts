@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { GoogleGenAI } from '@google/genai';
 import prisma from '@/lib/prisma';
+import { after } from 'next/server';
 
 // API 실행 제한시간을 넉넉히 설정 (Gemini API 호출 및 처리에 시간이 걸릴 수 있음)
 export const maxDuration = 60; 
@@ -221,60 +222,65 @@ export async function GET(request: Request) {
       }
     };
 
+    threadsResult = threadsToken 
+      ? '백그라운드에서 스레드 자동 발행 진행 중 🚀 (약 3~5초 뒤 스레드에 업로드됩니다)' 
+      : '스킵됨 (THREADS_ACCESS_TOKEN 환경변수 설정 없음)';
+
     if (threadsToken) {
-      try {
-        // ⚠️ 메타 스레드 API는 본문 500자 제한이 매우 엄격하며 초과 시 HTTP 500 에러를 뿜습니다.
-        // 이를 방지하기 위해 생성된 제목과 설명을 안전 구간으로 강제 자르기 처리합니다.
-        const safeTitle = createdQuiz.title.length > 50 
-          ? createdQuiz.title.substring(0, 47) + '...'
-          : createdQuiz.title;
-        const safeDesc = createdQuiz.description.length > 200
-          ? createdQuiz.description.substring(0, 197) + '...'
-          : createdQuiz.description;
+      // 10초 타임아웃(504 Gateway Timeout) 방지를 위해 Next.js의 after() API를 사용해 백그라운드 비동기 처리 가동
+      after(async () => {
+        try {
+          console.log(`[Background Threads Auto-Poster] Publishing new quiz #${createdQuiz.id} to Threads...`);
+          // ⚠️ 메타 스레드 API는 본문 500자 제한이 매우 엄격하며 초과 시 HTTP 500 에러를 뿜습니다.
+          // 이를 방지하기 위해 생성된 제목과 설명을 안전 구간으로 강제 자르기 처리합니다.
+          const safeTitle = createdQuiz.title.length > 50 
+            ? createdQuiz.title.substring(0, 47) + '...'
+            : createdQuiz.title;
+          const safeDesc = createdQuiz.description.length > 200
+            ? createdQuiz.description.substring(0, 197) + '...'
+            : createdQuiz.description;
 
-        const postText = `📢 [따끈따끈 성향테스트 신작 개봉! 🧅]\n\n이번에 새로 기획되어 출시된 따끈따끈한 성향 테스트를 소개합니다!\n\n🎯 주제: "${safeTitle}"\n\n👉 "${safeDesc}"\n\n내가 과연 어떤 유형일지, 남들은 어떻게 나올지 지금 바로 팩폭 테스트를 까보세요! ㅋㅋㅋ\n\n👇 테스트 플레이 링크는 댓글에 남겨둘게!`;
-        const replyText = `✨ [신작 플레이] "${safeTitle}" 플레이하러 가기! 👇\nhttps://kkado-kkado.com/quiz/${createdQuiz.id}`;
+          const postText = `📢 [따끈따끈 성향테스트 신작 개봉! 🧅]\n\n이번에 새로 기획되어 출시된 따끈따끈한 성향 테스트를 소개합니다!\n\n🎯 주제: "${safeTitle}"\n\n👉 "${safeDesc}"\n\n내가 과연 어떤 유형일지, 남들은 어떻게 나올지 지금 바로 팩폭 테스트를 까보세요! ㅋㅋㅋ\n\n👇 테스트 플레이 링크는 댓글에 남겨둘게!`;
+          const replyText = `✨ [신작 플레이] "${safeTitle}" 플레이하러 가기! 👇\nhttps://kkado-kkado.com/quiz/${createdQuiz.id}`;
 
-        // 1. 본문 즉시 발행 (auto_publish_text 사용으로 2단계 호출을 1단계로 단축)
-        const cData = await safeFetchJson(
-          `https://graph.threads.net/v1.0/me/threads`,
-          {
-            media_type: 'TEXT',
-            text: postText,
-            auto_publish_text: 'true',
-            access_token: threadsToken
-          }
-        );
-        
-        if (cData.id) {
-          const parentPostId = cData.id;
-          threadsResult = `본문 발행 완료 (Post ID: ${parentPostId})`;
-          
-          // 2. 2초 대기 후 댓글 링크 즉시 발행 (auto_publish_text 사용)
-          await new Promise((resolve) => setTimeout(resolve, 2000));
-          
-          const rData = await safeFetchJson(
+          // 1. 본문 즉시 발행 (auto_publish_text 사용으로 2단계 호출을 1단계로 단축)
+          const cData = await safeFetchJson(
             `https://graph.threads.net/v1.0/me/threads`,
             {
               media_type: 'TEXT',
-              text: replyText,
-              reply_to_id: parentPostId,
+              text: postText,
               auto_publish_text: 'true',
               access_token: threadsToken
             }
           );
           
-          if (rData.id) {
-            threadsResult = `본문 + 유입 링크 댓글 전체 발행 성공 (Post ID: ${parentPostId})`;
-            console.log(`[Threads Auto-Poster] Successfully autoposted new quiz #${createdQuiz.id} to Threads!`);
+          if (cData.id) {
+            const parentPostId = cData.id;
+            console.log(`[Background Threads Auto-Poster] Parent Post Published: ${parentPostId}`);
+            
+            // 2. 2초 대기 후 댓글 링크 즉시 발행 (auto_publish_text 사용)
+            await new Promise((resolve) => setTimeout(resolve, 2000));
+            
+            const rData = await safeFetchJson(
+              `https://graph.threads.net/v1.0/me/threads`,
+              {
+                media_type: 'TEXT',
+                text: replyText,
+                reply_to_id: parentPostId,
+                auto_publish_text: 'true',
+                access_token: threadsToken
+              }
+            );
+            
+            if (rData.id) {
+              console.log(`[Background Threads Auto-Poster] Successfully autoposted new quiz #${createdQuiz.id} to Threads!`);
+            }
           }
+        } catch (threadsErr: any) {
+          console.error('[Background Threads Auto-Poster Error] Failed to publish quiz to Threads:', threadsErr);
         }
-      } catch (threadsErr: any) {
-        console.error('[Threads Auto-Poster Error] Failed to publish quiz to Threads:', threadsErr);
-        threadsResult = `실패: ${threadsErr.message || threadsErr} [토큰 원본: ${threadsTokenRaw.length}자 ➡️ 자동정제후: ${threadsToken.length}자]`;
-      }
+      });
     } else {
-      threadsResult = '스킵됨 (THREADS_ACCESS_TOKEN 환경변수 설정 없음)';
       console.log(`[Threads Auto-Poster] THREADS_ACCESS_TOKEN is not configured. Skipping Threads auto-post for new quiz.`);
     }
 
