@@ -202,17 +202,22 @@ export async function GET(request: Request) {
         }
       });
       const text = await res.text();
+      const wwwAuth = res.headers.get('www-authenticate');
       try {
-        const data = JSON.parse(text);
+        const data = JSON.parse(text || '{}');
         if (data.error) {
           throw new Error(data.error.message || JSON.stringify(data.error));
+        }
+        if (res.status !== 200 && (!text || text.trim() === '')) {
+          throw new Error(`Meta API 인증 에러. 상태코드: ${res.status}${wwwAuth ? ` [인증오류 정보: ${wwwAuth}]` : ''}`);
         }
         return data;
       } catch (err: any) {
         if (err.message.includes('에러') || err.message.includes('오류') || err.message.includes('Meta API')) {
           throw err;
         }
-        throw new Error(`Meta API가 비정상 응답을 반환했습니다 (HTTP ${res.status}). 내용: ${text}`);
+        const extraInfo = wwwAuth ? ` [인증헤더 상세: ${wwwAuth}]` : '';
+        throw new Error(`Meta API가 비정상 응답을 반환했습니다 (HTTP ${res.status}). 내용: ${text || '빈 응답'}${extraInfo}`);
       }
     };
 
