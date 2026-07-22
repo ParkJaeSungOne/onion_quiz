@@ -175,6 +175,35 @@ export default async function AdminDashboardPage({ searchParams }: AdminDashboar
     take: 50
   });
 
+  // 퀴즈 ID별 제목 매핑 사전 생성
+  const allQuizzesForMap = await prisma.quiz.findMany({
+    select: { id: true, title: true }
+  });
+  const quizTitleMap: Record<number, string> = {};
+  allQuizzesForMap.forEach(q => {
+    quizTitleMap[q.id] = q.title;
+  });
+
+  const parsePageTitle = (path: string) => {
+    if (path === '/' || path === '') return '🏠 메인 홈';
+    if (path === '/guestbook') return '💬 실시간 방명록';
+    if (path.startsWith('/admin')) return '🛡️ 관리자 대시보드';
+    
+    const quizMatch = path.match(/\/quiz\/(\d+)(?:\/result\/(.+))?/);
+    if (quizMatch) {
+      const quizIdNum = parseInt(quizMatch[1], 10);
+      const quizTitle = quizTitleMap[quizIdNum] || `테스트 #${quizIdNum}`;
+      const isResult = !!quizMatch[2];
+      
+      if (isResult) {
+        return `🏆 [결과] ${quizTitle}`;
+      }
+      return `🧩 [퀴즈] ${quizTitle}`;
+    }
+    
+    return path;
+  };
+
   const serializedVisitorLogs = visitorLogsRaw.map((log) => ({
     id: log.id,
     ip: log.ip,
@@ -182,9 +211,10 @@ export default async function AdminDashboardPage({ searchParams }: AdminDashboar
     os: log.os,
     browser: log.browser,
     referrer: log.referrer,
-    country: log.country || 'Unknown',
+    country: log.country || 'KR',
     city: log.city || 'Unknown',
     pagePath: log.pagePath,
+    pageTitle: parsePageTitle(log.pagePath),
     staySeconds: log.staySeconds || 0,
     createdAt: log.createdAt.toISOString()
   }));

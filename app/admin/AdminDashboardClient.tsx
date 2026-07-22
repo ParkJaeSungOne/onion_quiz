@@ -65,6 +65,7 @@ interface VisitorLogItem {
   country: string;
   city: string;
   pagePath: string;
+  pageTitle?: string;
   staySeconds: number;
   createdAt: string;
 }
@@ -122,6 +123,59 @@ export default function AdminDashboardClient({
   const [exchangeResult, setExchangeResult] = useState<string | null>(null);
   const [exchangeError, setExchangeError] = useState<string | null>(null);
   const [isTokenToolOpen, setIsTokenToolOpen] = useState(true);
+
+  // 👥 실시간 방문 유입 로그 검색 & 필터링 상태
+  const [logSearchQuery, setLogSearchQuery] = useState('');
+  const [logChannelFilter, setLogChannelFilter] = useState('all');
+  const [logDeviceFilter, setLogDeviceFilter] = useState('all');
+  const [maskIpToggle, setMaskIpToggle] = useState(false); // false: 전체 IP 표기 (기본값)
+  const [copiedIp, setCopiedIp] = useState<string | null>(null);
+
+  // IP 원클릭 복사
+  const handleCopyIp = (ip: string) => {
+    navigator.clipboard.writeText(ip);
+    setCopiedIp(ip);
+    setTimeout(() => setCopiedIp(null), 2000);
+  };
+
+  // 상대적 시각 계산
+  const getRelativeTime = (isoString: string) => {
+    const diffSec = Math.floor((Date.now() - new Date(isoString).getTime()) / 1000);
+    if (diffSec < 60) return '방금 전';
+    if (diffSec < 3600) return `${Math.floor(diffSec / 60)}분 전`;
+    if (diffSec < 86400) return `${Math.floor(diffSec / 3600)}시간 전`;
+    return `${Math.floor(diffSec / 86400)}일 전`;
+  };
+
+  // 유입 채널 세부 분류 매퍼
+  const getChannelInfo = (ref: string) => {
+    const r = (ref || '').toLowerCase();
+    if (r === 'direct' || !r) {
+      return { key: 'direct', label: '직접 유입', emoji: '🚪', bg: '#f1f5f9', color: '#334155', border: '#cbd5e1' };
+    }
+    if (r.includes('threads')) {
+      return { key: 'threads', label: '스레드 (Threads)', emoji: '🌀', bg: '#fce7f3', color: '#be185d', border: '#f472b6' };
+    }
+    if (r.includes('instagram')) {
+      return { key: 'instagram', label: '인스타그램', emoji: '📸', bg: '#fae8ff', color: '#86198f', border: '#e879f9' };
+    }
+    if (r.includes('kakaotalk') || r.includes('kakao')) {
+      return { key: 'kakaotalk', label: '카카오톡', emoji: '💬', bg: '#fef9c3', color: '#854d0e', border: '#fde047' };
+    }
+    if (r.includes('google') || r.includes('naver') || r.includes('daum') || r.includes('bing')) {
+      const engine = r.includes('naver') ? '네이버' : r.includes('google') ? '구글' : '검색엔진';
+      return { key: 'search', label: `${engine} 검색`, emoji: '🔍', bg: '#dcfce7', color: '#166534', border: '#86efac' };
+    }
+    if (r.includes('facebook')) {
+      return { key: 'facebook', label: '페이스북', emoji: '👥', bg: '#dbeafe', color: '#1e40af', border: '#93c5fd' };
+    }
+    try {
+      const url = new URL(ref);
+      return { key: 'other', label: url.hostname, emoji: '🔗', bg: '#e2e8f0', color: '#334155', border: '#94a3b8' };
+    } catch {
+      return { key: 'other', label: ref, emoji: '🔗', bg: '#e2e8f0', color: '#334155', border: '#94a3b8' };
+    }
+  };
 
   // 로그아웃 처리
   const handleLogout = async () => {
@@ -817,127 +871,387 @@ export default function AdminDashboardClient({
       {/* 👥 실시간 상세 방문 유입 로그 (최근 50건) */}
       <section className={styles.visitorLogsSection} style={{ marginTop: '50px', marginBottom: '60px' }}>
         <div className={styles.sectionHeader}>
-          <h2 className={styles.sectionTitle}>👥 실시간 상세 방문 유입 로그</h2>
-          <span className={styles.totalCount}>최근 50건 내역</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+            <h2 className={styles.sectionTitle}>👥 실시간 상세 방문 유입 로그</h2>
+            <span className={styles.totalCount}>최근 {visitorLogs.length}건 분석 리포트</span>
+            {copiedIp && (
+              <span style={{ 
+                background: '#dcfce7', 
+                color: '#15803d', 
+                border: '2px solid #000000', 
+                padding: '4px 10px', 
+                borderRadius: '8px', 
+                fontSize: '12px', 
+                fontWeight: '900',
+                boxShadow: '2px 2px 0px #000000',
+                animation: 'bounce 0.3s ease'
+              }}>
+                ✅ IP 복사완료: {copiedIp}
+              </span>
+            )}
+          </div>
         </div>
 
+        {/* 📊 유입 로그 요약 미니 메트릭 카드 4종 */}
+        {visitorLogs.length > 0 && (() => {
+          const totalLogs = visitorLogs.length;
+          const mobileCount = visitorLogs.filter(l => l.device === 'Mobile' || l.device === 'Tablet').length;
+          const mobilePct = Math.round((mobileCount / totalLogs) * 100);
+          
+          const snsCount = visitorLogs.filter(l => {
+            const ref = (l.referrer || '').toLowerCase();
+            return ref.includes('threads') || ref.includes('instagram') || ref.includes('kakaotalk') || ref.includes('facebook');
+          }).length;
+          const snsPct = Math.round((snsCount / totalLogs) * 100);
+
+          const totalStaySec = visitorLogs.reduce((acc, l) => acc + (l.staySeconds || 0), 0);
+          const avgStaySec = Math.round(totalStaySec / totalLogs);
+
+          const bounceCount = visitorLogs.filter(l => (l.staySeconds || 0) < 15).length;
+          const bouncePct = Math.round((bounceCount / totalLogs) * 100);
+
+          return (
+            <div style={{ 
+              display: 'grid', 
+              gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', 
+              gap: '12px', 
+              marginBottom: '20px' 
+            }}>
+              <div style={{ background: '#ffffff', border: '3px solid #000000', padding: '14px', borderRadius: '12px', boxShadow: '3px 3px 0px #000000' }}>
+                <div style={{ fontSize: '12px', fontWeight: '800', color: '#64748b' }}>📱 모바일 유입 비율</div>
+                <div style={{ fontSize: '20px', fontWeight: '900', color: '#000000', marginTop: '4px' }}>{mobilePct}% <span style={{ fontSize: '12px', color: '#0284c7' }}>({mobileCount}회)</span></div>
+              </div>
+              <div style={{ background: '#ffffff', border: '3px solid #000000', padding: '14px', borderRadius: '12px', boxShadow: '3px 3px 0px #000000' }}>
+                <div style={{ fontSize: '12px', fontWeight: '800', color: '#64748b' }}>🌀 SNS 트래픽 비율</div>
+                <div style={{ fontSize: '20px', fontWeight: '900', color: '#be185d', marginTop: '4px' }}>{snsPct}% <span style={{ fontSize: '12px', color: '#be185d' }}>(스레드/인스타/카카오)</span></div>
+              </div>
+              <div style={{ background: '#ffffff', border: '3px solid #000000', padding: '14px', borderRadius: '12px', boxShadow: '3px 3px 0px #000000' }}>
+                <div style={{ fontSize: '12px', fontWeight: '800', color: '#64748b' }}>⏱️ 평균 체류 시간</div>
+                <div style={{ fontSize: '20px', fontWeight: '900', color: '#16a34a', marginTop: '4px' }}>{avgStaySec}초 <span style={{ fontSize: '12px', color: '#15803d' }}>/ 유저당</span></div>
+              </div>
+              <div style={{ background: '#ffffff', border: '3px solid #000000', padding: '14px', borderRadius: '12px', boxShadow: '3px 3px 0px #000000' }}>
+                <div style={{ fontSize: '12px', fontWeight: '800', color: '#64748b' }}>🚪 즉시 이탈률 (15초 미만)</div>
+                <div style={{ fontSize: '20px', fontWeight: '900', color: '#dc2626', marginTop: '4px' }}>{bouncePct}% <span style={{ fontSize: '12px', color: '#b91c1c' }}>({bounceCount}회)</span></div>
+              </div>
+            </div>
+          );
+        })()}
+
+        {/* 🔍 실시간 필터 & 검색 툴바 */}
+        <div style={{ 
+          display: 'flex', 
+          flexWrap: 'wrap', 
+          gap: '12px', 
+          alignItems: 'center', 
+          justifyContent: 'space-between',
+          background: '#ffffff', 
+          border: '3px solid #000000', 
+          borderRadius: '14px', 
+          padding: '12px 16px', 
+          marginBottom: '20px',
+          boxShadow: '4px 4px 0px #000000'
+        }}>
+          {/* 채널 및 기기 필터 */}
+          <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center' }}>
+            <span style={{ fontSize: '12px', fontWeight: '900', color: '#000000' }}>유입 채널:</span>
+            <select 
+              value={logChannelFilter} 
+              onChange={(e) => setLogChannelFilter(e.target.value)}
+              style={{
+                padding: '6px 12px',
+                borderRadius: '8px',
+                border: '2px solid #000000',
+                fontSize: '12px',
+                fontWeight: '800',
+                background: '#f8fafc',
+                cursor: 'pointer'
+              }}
+            >
+              <option value="all">🌐 전체 유입 채널</option>
+              <option value="threads">🌀 스레드 (Threads)</option>
+              <option value="instagram">📸 인스타그램</option>
+              <option value="kakaotalk">💬 카카오톡</option>
+              <option value="search">🔍 검색엔진 (구글/네이버)</option>
+              <option value="direct">🚪 직접 유입</option>
+              <option value="other">🔗 기타 외부 URL</option>
+            </select>
+
+            <span style={{ fontSize: '12px', fontWeight: '900', color: '#000000', marginLeft: '6px' }}>기기:</span>
+            <select 
+              value={logDeviceFilter} 
+              onChange={(e) => setLogDeviceFilter(e.target.value)}
+              style={{
+                padding: '6px 12px',
+                borderRadius: '8px',
+                border: '2px solid #000000',
+                fontSize: '12px',
+                fontWeight: '800',
+                background: '#f8fafc',
+                cursor: 'pointer'
+              }}
+            >
+              <option value="all">📱/💻 전체 기기</option>
+              <option value="Mobile">📱 모바일/태블릿</option>
+              <option value="Desktop">💻 데스크톱</option>
+            </select>
+          </div>
+
+          {/* 검색창 및 IP 토글 */}
+          <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexGrow: 1, maxWidth: '400px' }}>
+            <input 
+              type="text" 
+              placeholder="🔍 IP, 도시, 퀴즈 제목, URL 검색..." 
+              value={logSearchQuery}
+              onChange={(e) => setLogSearchQuery(e.target.value)}
+              style={{
+                flexGrow: 1,
+                padding: '6px 12px',
+                borderRadius: '8px',
+                border: '2px solid #000000',
+                fontSize: '12px',
+                fontWeight: '700',
+                background: '#f1f5f9'
+              }}
+            />
+            <button
+              onClick={() => setMaskIpToggle(!maskIpToggle)}
+              style={{
+                padding: '6px 10px',
+                borderRadius: '8px',
+                border: '2px solid #000000',
+                fontSize: '11px',
+                fontWeight: '800',
+                background: maskIpToggle ? '#fef08a' : '#e2e8f0',
+                cursor: 'pointer',
+                whiteSpace: 'nowrap'
+              }}
+              title="IP 마스킹 여부 토글"
+            >
+              {maskIpToggle ? '🔒 IP 마스킹 중' : '🔓 IP 전체 표시'}
+            </button>
+          </div>
+        </div>
+
+        {/* 📋 로그 데이터 테이블 */}
         {visitorLogs.length === 0 ? (
           <div className={styles.emptyCard}>
             <p className={styles.emptyText}>아직 수집된 방문 로그가 없습니다.</p>
           </div>
-        ) : (
-          <div className={styles.tableWrapper}>
-            <table className={styles.logsTable}>
-              <thead>
-                <tr>
-                  <th>시간</th>
-                  <th>위치</th>
-                  <th>기기/OS/브라우저</th>
-                  <th>유입 경로 (Referrer)</th>
-                  <th>조회 페이지</th>
-                  <th>체류 시간</th>
-                  <th>IP 주소</th>
-                </tr>
-              </thead>
-              <tbody>
-                {visitorLogs.map((log) => {
-                  // IP 마스킹 (개인정보 보호 및 보안 준수형)
-                  const maskIp = (ipAddr: string) => {
-                    if (!ipAddr) return 'unknown';
-                    if (ipAddr.includes(':')) return 'IPv6 Access';
-                    const parts = ipAddr.split('.');
-                    if (parts.length === 4) {
-                      return `${parts[0]}.${parts[1]}.***.***`;
+        ) : (() => {
+          // 필터링된 방문 로그 목록 계산
+          const filteredLogs = visitorLogs.filter(log => {
+            if (logChannelFilter !== 'all') {
+              const chKey = getChannelInfo(log.referrer).key;
+              if (chKey !== logChannelFilter) return false;
+            }
+            if (logDeviceFilter !== 'all') {
+              if (logDeviceFilter === 'Mobile' && log.device !== 'Mobile' && log.device !== 'Tablet') return false;
+              if (logDeviceFilter === 'Desktop' && log.device !== 'Desktop') return false;
+            }
+            if (logSearchQuery.trim()) {
+              const q = logSearchQuery.trim().toLowerCase();
+              const matchIp = log.ip.toLowerCase().includes(q);
+              const matchCity = log.city.toLowerCase().includes(q);
+              const matchPath = log.pagePath.toLowerCase().includes(q);
+              const matchTitle = (log.pageTitle || '').toLowerCase().includes(q);
+              if (!matchIp && !matchCity && !matchPath && !matchTitle) return false;
+            }
+            return true;
+          });
+
+          if (filteredLogs.length === 0) {
+            return (
+              <div className={styles.emptyCard}>
+                <p className={styles.emptyText}>선택한 조건에 매칭되는 방문 로그가 없습니다.</p>
+              </div>
+            );
+          }
+
+          return (
+            <div className={styles.tableWrapper}>
+              <table className={styles.logsTable}>
+                <thead>
+                  <tr>
+                    <th>접속 시각</th>
+                    <th>유입 채널</th>
+                    <th>조회한 페이지 (제목 / 경로)</th>
+                    <th>기기 및 접속 환경</th>
+                    <th>체류 시간 & 행동</th>
+                    <th>위치</th>
+                    <th>접속 IP 주소</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredLogs.map((log) => {
+                    // IP 표시 (마스킹 옵션 준수)
+                    const formatIp = (ipAddr: string) => {
+                      if (!ipAddr) return 'unknown';
+                      if (maskIpToggle) {
+                        const parts = ipAddr.split('.');
+                        if (parts.length === 4) return `${parts[0]}.${parts[1]}.***.***`;
+                      }
+                      return ipAddr;
+                    };
+
+                    const channel = getChannelInfo(log.referrer);
+                    const relativeTime = getRelativeTime(log.createdAt);
+                    const logTimeExact = new Date(log.createdAt).toLocaleTimeString('ko-KR', {
+                      hour: '2-digit',
+                      minute: '2-digit',
+                      second: '2-digit',
+                      hour12: false
+                    });
+                    const logDateExact = new Date(log.createdAt).toLocaleDateString('ko-KR', {
+                      month: '2-digit',
+                      day: '2-digit'
+                    });
+
+                    // 체류 시간 배지
+                    const sec = log.staySeconds || 0;
+                    let stayBadgeBg = '#fee2e2';
+                    let stayBadgeColor = '#991b1b';
+                    let stayText = `🚪 ${sec}초 (이탈)`;
+
+                    if (sec >= 60) {
+                      stayBadgeBg = '#dcfce7';
+                      stayBadgeColor = '#166534';
+                      const min = Math.floor(sec / 60);
+                      const remSec = sec % 60;
+                      stayText = `⚡ ${min}분 ${remSec}초 (딥 플레이)`;
+                    } else if (sec >= 15) {
+                      stayBadgeBg = '#fef9c3';
+                      stayBadgeColor = '#854d0e';
+                      stayText = `⏱️ ${sec}초 (일반 뷰)`;
                     }
-                    return ipAddr;
-                  };
 
-                  // 유입처 가독성 개선 매핑
-                  const getPrettyReferrer = (ref: string) => {
-                    const refLower = ref.toLowerCase();
-                    if (refLower === 'direct') return '🚪 직접 유입 (Direct)';
-                    if (refLower.includes('kakaotalk')) return '💬 카카오톡';
-                    if (refLower.includes('instagram')) return '📸 인스타그램';
-                    if (refLower.includes('threads')) return '🌀 스레드';
-                    if (refLower.includes('facebook')) return '👥 페이스북';
-                    if (refLower.includes('google')) return '🔍 구글 검색';
-                    if (refLower.includes('naver')) return '🔍 네이버';
-                    try {
-                      const url = new URL(ref);
-                      return `🔗 ${url.hostname}`;
-                    } catch {
-                      return ref;
-                    }
-                  };
+                    return (
+                      <tr key={log.id}>
+                        {/* 1. 접속 시각 */}
+                        <td className={styles.timeTd}>
+                          <div style={{ fontWeight: '900', color: '#000000', fontSize: '13px' }}>{relativeTime}</div>
+                          <div style={{ fontSize: '11px', color: '#64748b' }}>{logDateExact} {logTimeExact}</div>
+                        </td>
 
-                  // 기기별 이모지
-                  const getDeviceEmoji = (dev: string) => {
-                    if (dev === 'Mobile') return '📱';
-                    if (dev === 'Tablet') return '平板';
-                    if (dev === 'Bot') return '🤖';
-                    return '💻';
-                  };
+                        {/* 2. 유입 채널 */}
+                        <td>
+                          <span style={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '4px',
+                            background: channel.bg,
+                            color: channel.color,
+                            border: `2px solid ${channel.border}`,
+                            padding: '4px 8px',
+                            borderRadius: '8px',
+                            fontSize: '11px',
+                            fontWeight: '900',
+                            whiteSpace: 'nowrap'
+                          }}>
+                            <span>{channel.emoji}</span>
+                            <span>{channel.label}</span>
+                          </span>
+                        </td>
 
-                  // 체류 시간 단위 변환
-                  const formatStayTime = (sec: number) => {
-                    if (!sec || sec === 0) return '0초 (즉시 이탈)';
-                    if (sec < 60) return `${sec}초`;
-                    const min = Math.floor(sec / 60);
-                    const remainSec = sec % 60;
-                    return `${min}분 ${remainSec}초`;
-                  };
+                        {/* 3. 조회 페이지 (명확한 제목 & 경로) */}
+                        <td className={styles.pathTd} style={{ maxWidth: '240px' }}>
+                          <div style={{ 
+                            fontWeight: '800', 
+                            color: '#000000', 
+                            fontSize: '13px', 
+                            marginBottom: '2px',
+                            whiteSpace: 'nowrap',
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis'
+                          }} title={log.pageTitle || log.pagePath}>
+                            {log.pageTitle || log.pagePath}
+                          </div>
+                          <div style={{ 
+                            fontSize: '10px', 
+                            color: '#64748b', 
+                            fontFamily: 'monospace',
+                            whiteSpace: 'nowrap',
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis'
+                          }} title={log.pagePath}>
+                            {log.pagePath}
+                          </div>
+                        </td>
 
-                  const logTime = new Date(log.createdAt).toLocaleTimeString('ko-KR', {
-                    hour: '2-digit',
-                    minute: '2-digit',
-                    second: '2-digit',
-                    hour12: false
-                  });
+                        {/* 4. 기기 및 환경 */}
+                        <td className={styles.clientTd}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                            <span style={{ fontSize: '14px' }}>
+                              {log.device === 'Mobile' ? '📱' : log.device === 'Tablet' ? '平板' : '💻'}
+                            </span>
+                            <span style={{ fontSize: '12px', fontWeight: '800', color: '#000000' }}>
+                              {log.device}
+                            </span>
+                          </div>
+                          <div style={{ fontSize: '11px', color: '#64748b', marginTop: '2px' }}>
+                            {log.os} / {log.browser}
+                          </div>
+                        </td>
 
-                  const logDate = new Date(log.createdAt).toLocaleDateString('ko-KR', {
-                    month: 'numeric',
-                    day: 'numeric'
-                  });
+                        {/* 5. 체류 시간 & 행동 */}
+                        <td>
+                          <span style={{
+                            display: 'inline-block',
+                            background: stayBadgeBg,
+                            color: stayBadgeColor,
+                            padding: '3px 8px',
+                            borderRadius: '6px',
+                            fontSize: '11px',
+                            fontWeight: '900',
+                            whiteSpace: 'nowrap'
+                          }}>
+                            {stayText}
+                          </span>
+                        </td>
 
-                  return (
-                    <tr key={log.id}>
-                      <td className={styles.timeTd}>
-                        <span className={styles.logDate}>{logDate}</span>
-                        <span className={styles.logTime}>{logTime}</span>
-                      </td>
-                      <td className={styles.locTd}>
-                        <span>{log.country === 'KR' ? '🇰🇷' : '🌐'}</span>
-                        <span className={styles.cityName}>{log.city}</span>
-                      </td>
-                      <td className={styles.clientTd}>
-                        <span className={styles.deviceSpan} title={log.device}>
-                          {getDeviceEmoji(log.device)}
-                        </span>
-                        <span className={styles.clientDetails}>
-                          {log.os} / {log.browser}
-                        </span>
-                      </td>
-                      <td className={styles.refTd} title={log.referrer}>
-                        {getPrettyReferrer(log.referrer)}
-                      </td>
-                      <td className={styles.pathTd} title={log.pagePath}>
-                        <code>{log.pagePath}</code>
-                      </td>
-                      <td className={styles.stayTd}>
-                        <span className={log.staySeconds > 15 ? styles.activeStay : styles.shortStay}>
-                          {formatStayTime(log.staySeconds)}
-                        </span>
-                      </td>
-                      <td className={styles.ipTd}>
-                        <code>{maskIp(log.ip)}</code>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        )}
+                        {/* 6. 위치 */}
+                        <td className={styles.locTd}>
+                          <span style={{ fontSize: '14px', marginRight: '4px' }}>{log.country === 'KR' ? '🇰🇷' : '🌐'}</span>
+                          <span style={{ fontWeight: '700', fontSize: '12px' }}>{log.city}</span>
+                        </td>
+
+                        {/* 7. IP 주소 및 복사 버튼 */}
+                        <td className={styles.ipTd}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                            <code style={{ 
+                              background: '#f1f5f9', 
+                              padding: '3px 6px', 
+                              borderRadius: '6px', 
+                              fontSize: '11px', 
+                              fontWeight: '700',
+                              color: '#1e293b'
+                            }}>
+                              {formatIp(log.ip)}
+                            </code>
+                            <button
+                              onClick={() => handleCopyIp(log.ip)}
+                              style={{
+                                border: '1px solid #cbd5e1',
+                                background: '#ffffff',
+                                borderRadius: '4px',
+                                padding: '2px 6px',
+                                fontSize: '10px',
+                                cursor: 'pointer',
+                                fontWeight: '800'
+                              }}
+                              title="IP 주소 클립보드 복사"
+                            >
+                              📋
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          );
+        })()}
       </section>
     </div>
   );
