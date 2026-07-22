@@ -375,23 +375,65 @@
   font-weight: 700;
 }
 
-/* Mobile Responsive */
-@media (max-width: 600px) {
+/* Mobile Responsive Optimization (Mobile-First 320px~768px) */
+@media (max-width: 768px) {
+  .container {
+    padding: 12px 10px !important;
+    overflow-x: hidden !important;
+  }
   .header {
-    flex-direction: column;
-    align-items: flex-start;
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 12px !important;
   }
   .headerActions {
-    width: 100%;
-    justify-content: space-between;
+    width: 100% !important;
+    flex-wrap: wrap !important;
+    justify-content: space-between !important;
+    gap: 8px !important;
+  }
+  .kpiGrid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 10px !important;
+  }
+  .kpiCard {
+    padding: 12px !important;
+  }
+  .kpiValue {
+    font-size: 18px !important;
+  }
+  .kpiLabel {
+    font-size: 11px !important;
+  }
+  .visitorLogsSection {
+    padding: 14px !important;
   }
   .quizItemHeader {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 12px;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 12px !important;
   }
   .deleteButton {
-    text-align: center;
+    text-align: center !important;
+    width: 100% !important;
+  }
+  .sectionHeader {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 8px !important;
+  }
+  .tableWrapper {
+    width: 100% !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    border-radius: 12px !important;
+  }
+  .logsTable {
+    min-width: 680px !important;
+  }
+  .logsTable th, .logsTable td {
+    padding: 8px 10px !important;
+    font-size: 11px !important;
   }
 }
 
