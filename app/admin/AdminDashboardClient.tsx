@@ -911,61 +911,36 @@ export default function AdminDashboardClient({
           const bouncePct = Math.round((bounceCount / totalLogs) * 100);
 
           return (
-            <div style={{ 
-              display: 'grid', 
-              gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', 
-              gap: '12px', 
-              marginBottom: '20px' 
-            }}>
-              <div style={{ background: '#ffffff', border: '3px solid #000000', padding: '14px', borderRadius: '12px', boxShadow: '3px 3px 0px #000000' }}>
-                <div style={{ fontSize: '12px', fontWeight: '800', color: '#64748b' }}>📱 모바일 유입 비율</div>
-                <div style={{ fontSize: '20px', fontWeight: '900', color: '#000000', marginTop: '4px' }}>{mobilePct}% <span style={{ fontSize: '12px', color: '#0284c7' }}>({mobileCount}회)</span></div>
+            <div className={styles.metricGrid}>
+              <div className={styles.metricCard}>
+                <div className={styles.metricLabel}>📱 모바일 유입 비율</div>
+                <div className={styles.metricValue}>{mobilePct}% <span className={styles.metricSub} style={{ color: '#0284c7' }}>({mobileCount}회)</span></div>
               </div>
-              <div style={{ background: '#ffffff', border: '3px solid #000000', padding: '14px', borderRadius: '12px', boxShadow: '3px 3px 0px #000000' }}>
-                <div style={{ fontSize: '12px', fontWeight: '800', color: '#64748b' }}>🌀 SNS 트래픽 비율</div>
-                <div style={{ fontSize: '20px', fontWeight: '900', color: '#be185d', marginTop: '4px' }}>{snsPct}% <span style={{ fontSize: '12px', color: '#be185d' }}>(스레드/인스타/카카오)</span></div>
+              <div className={styles.metricCard}>
+                <div className={styles.metricLabel}>🌀 SNS 트래픽 비율</div>
+                <div className={styles.metricValue} style={{ color: '#be185d' }}>{snsPct}% <span className={styles.metricSub} style={{ color: '#be185d' }}>(스레드/인스타/카카오)</span></div>
               </div>
-              <div style={{ background: '#ffffff', border: '3px solid #000000', padding: '14px', borderRadius: '12px', boxShadow: '3px 3px 0px #000000' }}>
-                <div style={{ fontSize: '12px', fontWeight: '800', color: '#64748b' }}>⏱️ 평균 체류 시간</div>
-                <div style={{ fontSize: '20px', fontWeight: '900', color: '#16a34a', marginTop: '4px' }}>{avgStaySec}초 <span style={{ fontSize: '12px', color: '#15803d' }}>/ 유저당</span></div>
+              <div className={styles.metricCard}>
+                <div className={styles.metricLabel}>⏱️ 평균 체류 시간</div>
+                <div className={styles.metricValue} style={{ color: '#16a34a' }}>{avgStaySec}초 <span className={styles.metricSub} style={{ color: '#15803d' }}>/ 유저당</span></div>
               </div>
-              <div style={{ background: '#ffffff', border: '3px solid #000000', padding: '14px', borderRadius: '12px', boxShadow: '3px 3px 0px #000000' }}>
-                <div style={{ fontSize: '12px', fontWeight: '800', color: '#64748b' }}>🚪 즉시 이탈률 (15초 미만)</div>
-                <div style={{ fontSize: '20px', fontWeight: '900', color: '#dc2626', marginTop: '4px' }}>{bouncePct}% <span style={{ fontSize: '12px', color: '#b91c1c' }}>({bounceCount}회)</span></div>
+              <div className={styles.metricCard}>
+                <div className={styles.metricLabel}>🚪 즉시 이탈률 (15초 미만)</div>
+                <div className={styles.metricValue} style={{ color: '#dc2626' }}>{bouncePct}% <span className={styles.metricSub} style={{ color: '#b91c1c' }}>({bounceCount}회)</span></div>
               </div>
             </div>
           );
         })()}
 
         {/* 🔍 실시간 필터 & 검색 툴바 */}
-        <div style={{ 
-          display: 'flex', 
-          flexWrap: 'wrap', 
-          gap: '12px', 
-          alignItems: 'center', 
-          justifyContent: 'space-between',
-          background: '#ffffff', 
-          border: '3px solid #000000', 
-          borderRadius: '14px', 
-          padding: '12px 16px', 
-          marginBottom: '20px',
-          boxShadow: '4px 4px 0px #000000'
-        }}>
+        <div className={styles.toolbarContainer}>
           {/* 채널 및 기기 필터 */}
-          <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center' }}>
-            <span style={{ fontSize: '12px', fontWeight: '900', color: '#000000' }}>유입 채널:</span>
+          <div className={styles.filterGroup}>
+            <span className={styles.filterLabel}>유입 채널:</span>
             <select 
               value={logChannelFilter} 
               onChange={(e) => setLogChannelFilter(e.target.value)}
-              style={{
-                padding: '6px 12px',
-                borderRadius: '8px',
-                border: '2px solid #000000',
-                fontSize: '12px',
-                fontWeight: '800',
-                background: '#f8fafc',
-                cursor: 'pointer'
-              }}
+              className={styles.filterSelect}
             >
               <option value="all">🌐 전체 유입 채널</option>
               <option value="threads">🌀 스레드 (Threads)</option>
@@ -976,19 +951,11 @@ export default function AdminDashboardClient({
               <option value="other">🔗 기타 외부 URL</option>
             </select>
 
-            <span style={{ fontSize: '12px', fontWeight: '900', color: '#000000', marginLeft: '6px' }}>기기:</span>
+            <span className={styles.filterLabel} style={{ marginLeft: '6px' }}>기기:</span>
             <select 
               value={logDeviceFilter} 
               onChange={(e) => setLogDeviceFilter(e.target.value)}
-              style={{
-                padding: '6px 12px',
-                borderRadius: '8px',
-                border: '2px solid #000000',
-                fontSize: '12px',
-                fontWeight: '800',
-                background: '#f8fafc',
-                cursor: 'pointer'
-              }}
+              className={styles.filterSelect}
             >
               <option value="all">📱/💻 전체 기기</option>
               <option value="Mobile">📱 모바일/태블릿</option>
@@ -997,34 +964,18 @@ export default function AdminDashboardClient({
           </div>
 
           {/* 검색창 및 IP 토글 */}
-          <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexGrow: 1, maxWidth: '400px' }}>
+          <div className={styles.searchGroup}>
             <input 
               type="text" 
               placeholder="🔍 IP, 도시, 퀴즈 제목, URL 검색..." 
               value={logSearchQuery}
               onChange={(e) => setLogSearchQuery(e.target.value)}
-              style={{
-                flexGrow: 1,
-                padding: '6px 12px',
-                borderRadius: '8px',
-                border: '2px solid #000000',
-                fontSize: '12px',
-                fontWeight: '700',
-                background: '#f1f5f9'
-              }}
+              className={styles.searchInput}
             />
             <button
               onClick={() => setMaskIpToggle(!maskIpToggle)}
-              style={{
-                padding: '6px 10px',
-                borderRadius: '8px',
-                border: '2px solid #000000',
-                fontSize: '11px',
-                fontWeight: '800',
-                background: maskIpToggle ? '#fef08a' : '#e2e8f0',
-                cursor: 'pointer',
-                whiteSpace: 'nowrap'
-              }}
+              className={styles.maskToggleBtn}
+              style={{ background: maskIpToggle ? '#fef08a' : undefined }}
               title="IP 마스킹 여부 토글"
             >
               {maskIpToggle ? '🔒 IP 마스킹 중' : '🔓 IP 전체 표시'}
@@ -1128,8 +1079,8 @@ export default function AdminDashboardClient({
                       <tr key={log.id}>
                         {/* 1. 접속 시각 */}
                         <td className={styles.timeTd}>
-                          <div style={{ fontWeight: '900', color: '#000000', fontSize: '13px' }}>{relativeTime}</div>
-                          <div style={{ fontSize: '11px', color: '#64748b' }}>{logDateExact} {logTimeExact}</div>
+                          <div style={{ fontWeight: '900', fontSize: '13px' }}>{relativeTime}</div>
+                          <div style={{ fontSize: '11px', opacity: 0.7 }}>{logDateExact} {logTimeExact}</div>
                         </td>
 
                         {/* 2. 유입 채널 */}
@@ -1154,25 +1105,10 @@ export default function AdminDashboardClient({
 
                         {/* 3. 조회 페이지 (명확한 제목 & 경로) */}
                         <td className={styles.pathTd} style={{ maxWidth: '240px' }}>
-                          <div style={{ 
-                            fontWeight: '800', 
-                            color: '#000000', 
-                            fontSize: '13px', 
-                            marginBottom: '2px',
-                            whiteSpace: 'nowrap',
-                            overflow: 'hidden',
-                            textOverflow: 'ellipsis'
-                          }} title={log.pageTitle || log.pagePath}>
+                          <div className={styles.pageTitleText} title={log.pageTitle || log.pagePath}>
                             {log.pageTitle || log.pagePath}
                           </div>
-                          <div style={{ 
-                            fontSize: '10px', 
-                            color: '#64748b', 
-                            fontFamily: 'monospace',
-                            whiteSpace: 'nowrap',
-                            overflow: 'hidden',
-                            textOverflow: 'ellipsis'
-                          }} title={log.pagePath}>
+                          <div className={styles.pageSubText} title={log.pagePath}>
                             {log.pagePath}
                           </div>
                         </td>
@@ -1183,11 +1119,11 @@ export default function AdminDashboardClient({
                             <span style={{ fontSize: '14px' }}>
                               {log.device === 'Mobile' ? '📱' : log.device === 'Tablet' ? '平板' : '💻'}
                             </span>
-                            <span style={{ fontSize: '12px', fontWeight: '800', color: '#000000' }}>
+                            <span style={{ fontSize: '12px', fontWeight: '800' }}>
                               {log.device}
                             </span>
                           </div>
-                          <div style={{ fontSize: '11px', color: '#64748b', marginTop: '2px' }}>
+                          <div className={styles.clientDetails}>
                             {log.os} / {log.browser}
                           </div>
                         </td>
@@ -1211,33 +1147,18 @@ export default function AdminDashboardClient({
                         {/* 6. 위치 */}
                         <td className={styles.locTd}>
                           <span style={{ fontSize: '14px', marginRight: '4px' }}>{log.country === 'KR' ? '🇰🇷' : '🌐'}</span>
-                          <span style={{ fontWeight: '700', fontSize: '12px' }}>{log.city}</span>
+                          <span className={styles.cityName}>{log.city}</span>
                         </td>
 
                         {/* 7. IP 주소 및 복사 버튼 */}
                         <td className={styles.ipTd}>
                           <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                            <code style={{ 
-                              background: '#f1f5f9', 
-                              padding: '3px 6px', 
-                              borderRadius: '6px', 
-                              fontSize: '11px', 
-                              fontWeight: '700',
-                              color: '#1e293b'
-                            }}>
+                            <code className={styles.ipCode}>
                               {formatIp(log.ip)}
                             </code>
                             <button
                               onClick={() => handleCopyIp(log.ip)}
-                              style={{
-                                border: '1px solid #cbd5e1',
-                                background: '#ffffff',
-                                borderRadius: '4px',
-                                padding: '2px 6px',
-                                fontSize: '10px',
-                                cursor: 'pointer',
-                                fontWeight: '800'
-                              }}
+                              className={styles.ipCopyBtn}
                               title="IP 주소 클립보드 복사"
                             >
                               📋

@@ -948,6 +948,149 @@
   padding: 24px;
 }
 
+.metricGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.metricCard {
+  background: #ffffff;
+  border: 3px solid #000000;
+  padding: 14px;
+  border-radius: 14px;
+  box-shadow: 4px 4px 0px #000000;
+}
+
+.metricLabel {
+  font-size: 12px;
+  font-weight: 800;
+  color: #64748b;
+}
+
+.metricValue {
+  font-size: 20px;
+  font-weight: 950;
+  color: #000000;
+  margin-top: 4px;
+}
+
+.metricSub {
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.toolbarContainer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+  justify-content: space-between;
+  background: #ffffff;
+  border: 3px solid #000000;
+  border-radius: 14px;
+  padding: 14px 16px;
+  margin-bottom: 20px;
+  box-shadow: 4px 4px 0px #000000;
+}
+
+.filterGroup {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.filterLabel {
+  font-size: 12px;
+  font-weight: 900;
+  color: #000000;
+}
+
+.filterSelect {
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 2px solid #000000;
+  font-size: 12px;
+  font-weight: 800;
+  background: #f8fafc;
+  color: #000000;
+  cursor: pointer;
+}
+
+.searchGroup {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-grow: 1;
+  max-width: 440px;
+}
+
+.searchInput {
+  flex-grow: 1;
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 2px solid #000000;
+  font-size: 12px;
+  font-weight: 700;
+  background: #f1f5f9;
+  color: #000000;
+}
+
+.maskToggleBtn {
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 2px solid #000000;
+  font-size: 11px;
+  font-weight: 900;
+  cursor: pointer;
+  white-space: nowrap;
+  box-shadow: 2px 2px 0px #000000;
+  transition: all 0.1s ease;
+}
+
+.pageTitleText {
+  font-weight: 900;
+  color: #000000;
+  font-size: 13px;
+  margin-bottom: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.pageSubText {
+  font-size: 10px;
+  color: #64748b;
+  font-family: var(--font-geist-mono), monospace;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ipCode {
+  background: #f1f5f9;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 800;
+  color: #000000;
+  border: 1px solid #cbd5e1;
+}
+
+.ipCopyBtn {
+  border: 2px solid #000000;
+  background: #ffffff;
+  border-radius: 6px;
+  padding: 4px 8px;
+  font-size: 11px;
+  cursor: pointer;
+  font-weight: 900;
+  box-shadow: 2px 2px 0px #000000;
+  color: #000000;
+}
+
 .tableWrapper {
   margin-top: 20px;
   overflow-x: auto;
@@ -1079,6 +1222,58 @@
     border-color: #ffffff;
     box-shadow: 6px 6px 0px #ffffff;
   }
+  .metricCard {
+    background: #0f172a;
+    border-color: #ffffff;
+    box-shadow: 4px 4px 0px #ffffff;
+  }
+  .metricLabel {
+    color: #94a3b8;
+  }
+  .metricValue {
+    color: #ffffff;
+  }
+  .toolbarContainer {
+    background: #0f172a;
+    border-color: #ffffff;
+    box-shadow: 4px 4px 0px #ffffff;
+  }
+  .filterLabel {
+    color: #ffffff;
+  }
+  .filterSelect {
+    background: #1e293b;
+    border-color: #ffffff;
+    color: #ffffff;
+  }
+  .searchInput {
+    background: #1e293b;
+    border-color: #ffffff;
+    color: #ffffff;
+  }
+  .maskToggleBtn {
+    border-color: #ffffff;
+    box-shadow: 2px 2px 0px #ffffff;
+    color: #ffffff;
+    background: #334155;
+  }
+  .pageTitleText {
+    color: #ffffff;
+  }
+  .pageSubText {
+    color: #94a3b8;
+  }
+  .ipCode {
+    background: #1e293b;
+    border-color: #475569;
+    color: #38bdf8;
+  }
+  .ipCopyBtn {
+    background: #1e293b;
+    border-color: #ffffff;
+    color: #ffffff;
+    box-shadow: 2px 2px 0px #ffffff;
+  }
   .tableWrapper {
     border-color: #ffffff;
     box-shadow: 4px 4px 0px #ffffff;
@@ -1088,6 +1283,7 @@
     border-bottom-color: #ffffff;
     border-right-color: #ffffff;
     background: var(--kitsch-lime, #a3e635);
+    color: #000000;
   }
   .logsTable td {
     border-bottom-color: #ffffff;
@@ -1107,8 +1303,37 @@
     background: #1e293b;
     color: #ffffff;
   }
-  .ipTd code {
-    color: #94a3b8;
+}
+
+/* Mobile Responsive Optimization for Toolbar & Inputs */
+@media (max-width: 768px) {
+  .toolbarContainer {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 12px !important;
+  }
+  .filterGroup {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    width: 100% !important;
+  }
+  .filterSelect {
+    width: 100% !important;
+  }
+  .searchGroup {
+    max-width: 100% !important;
+    width: 100% !important;
+    flex-direction: column !important;
+  }
+  .searchInput {
+    width: 100% !important;
+  }
+  .maskToggleBtn {
+    width: 100% !important;
+    text-align: center !important;
+  }
+  .metricGrid {
+    grid-template-columns: repeat(2, 1fr) !important;
   }
 }
 
