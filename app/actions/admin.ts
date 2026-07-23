@@ -135,29 +135,62 @@ export async function exchangeThreadsToken(shortToken: string, appSecret: string
       throw new Error('Unauthorized');
     }
 
-    if (!shortToken.trim() || !appSecret.trim()) {
+    const cleanToken = shortToken.replace(/[\r\n"']/g, '').trim();
+    const cleanSecret = appSecret.replace(/[\r\n"']/g, '').trim();
+
+    if (!cleanToken || !cleanSecret) {
       throw new Error('단기 토큰과 앱 시크릿 코드를 모두 입력해 주세요.');
     }
 
-    const url = `https://graph.threads.net/access_token?grant_type=th_exchange_token&client_secret=${appSecret.trim()}&access_token=${shortToken.trim()}`;
-    console.log('Exchanging Threads short token for long token...');
+    // 1차 시도: Threads 전용 Graph API 엔드포인트
+    const urlThreads = `https://graph.threads.net/access_token?grant_type=th_exchange_token&client_secret=${cleanSecret}&access_token=${cleanToken}`;
+    console.log('Exchanging Threads short token via graph.threads.net...');
     
-    const res = await fetch(url, {
+    let res = await fetch(urlThreads, {
       headers: {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
       }
     });
-    const text = await res.text();
-    
+    let text = await res.text();
     let data: any = {};
     try {
       data = JSON.parse(text);
     } catch (e) {
-      throw new Error(`메타 서버 응답 해석 실패 (HTTP ${res.status}): ${text}`);
+      data = {};
+    }
+
+    // 2차 시도: Facebook Graph API 엔드포인트 폴백 (EAA 계열 토큰 교체용)
+    if (data.error && (data.error.message?.includes('Session key invalid') || data.error.message?.includes('OAuth'))) {
+      console.log('Threads endpoint failed, trying Facebook Graph API fallback...');
+      const urlFb = `https://graph.facebook.com/v19.0/oauth/access_token?grant_type=fb_exchange_token&client_secret=${cleanSecret}&fb_exchange_token=${cleanToken}`;
+      const resFb = await fetch(urlFb, {
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'
+        }
+      });
+      const textFb = await resFb.text();
+      try {
+        const dataFb = JSON.parse(textFb);
+        if (dataFb.access_token) {
+          return {
+            success: true,
+            longLivedToken: dataFb.access_token,
+            expiresIn: dataFb.expires_in
+          };
+        }
+      } catch (e) {}
     }
 
     if (data.error) {
-      throw new Error(data.error.message || JSON.stringify(data.error));
+      const errMsg = data.error.message || JSON.stringify(data.error);
+      if (errMsg.includes('Session key invalid') || errMsg.includes('revoked')) {
+        throw new Error(`[세션 키 만료] 메타 단기 토큰은 발급 후 1시간 이내에 교환해야 합니다.\n기존 단기 토큰 세션이 만료되었거나 취소되었으니, Meta Graph API Explorer에서 새로 [Generate Token]을 클릭한 갓 발급받은 'TH...' 토큰으로 다시 시도해 주세요.`);
+      }
+      throw new Error(errMsg);
+    }
+
+    if (!data.access_token) {
+      throw new Error(`토큰 발급 실패 (응답: ${text.substring(0, 150)})`);
     }
 
     return { 
