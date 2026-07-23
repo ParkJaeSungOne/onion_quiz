@@ -4,4 +4,16 @@ Disallow: /admin
 Disallow: /admin/login
 Disallow: /api/
 
+User-agent: Yeti
+Allow: /
+Disallow: /admin
+Disallow: /admin/login
+Disallow: /api/
+
+User-agent: NaverBot
+Allow: /
+Disallow: /admin
+Disallow: /admin/login
+Disallow: /api/
+
 Sitemap: https://kkado-kkado.com/sitemap.xml
