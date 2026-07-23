@@ -71,6 +71,30 @@ export default function RootLayout({
           crossOrigin="anonymous"
           strategy="afterInteractive"
         />
+        {/* 🔍 네이버/구글 검색엔진 노출 극대화용 JSON-LD 구조화 데이터 스니펫 */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "WebSite",
+              "name": "까도까도 (Kkado-Kkado)",
+              "alternateName": ["까도까도 성향테스트", "Onion Quiz", "까도까도 테스트"],
+              "url": "https://kkado-kkado.com",
+              "description": "양파처럼 깔수록 재미있고 적나라한 B급 팩폭 성향 테스트 연구소 까도까도.",
+              "publisher": {
+                "@type": "Organization",
+                "name": "까도까도",
+                "logo": "https://kkado-kkado.com/thumbnail.png"
+              },
+              "potentialAction": {
+                "@type": "SearchAction",
+                "target": "https://kkado-kkado.com/?search={search_term_string}",
+                "query-input": "required name=search_term_string"
+              }
+            })
+          }}
+        />
         {/* 🕶️ 테마 플리커 차단 스크립트 (hydration 이전 html 테마 강제 동기화) */}
         <script dangerouslySetInnerHTML={{
           __html: `

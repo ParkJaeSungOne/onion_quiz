@@ -94,6 +94,35 @@ export default async function Home({ searchParams }: HomePageProps) {
       {/* 🔍 검색 바 컴포넌트 마운트 */}
       <SearchBar />
 
+      {/* 🔥 핫 트렌드 인기 카테고리 태그 모음 */}
+      <div style={{
+        display: 'flex',
+        gap: '8px',
+        flexWrap: 'wrap',
+        justifyContent: 'center',
+        margin: '12px 0 20px 0',
+        padding: '0 10px'
+      }}>
+        <Link href="/" className={styles.tagBtn} style={{ background: !searchStr ? 'var(--kitsch-lime, #a3e635)' : undefined }}>
+          🔥 전체
+        </Link>
+        <Link href="/?search=연애" className={styles.tagBtn} style={{ background: searchStr === '연애' ? 'var(--kitsch-lime, #a3e635)' : undefined }}>
+          💖 #연애/소개팅
+        </Link>
+        <Link href="/?search=직장" className={styles.tagBtn} style={{ background: searchStr === '직장' ? 'var(--kitsch-lime, #a3e635)' : undefined }}>
+          💼 #직장/꼰대
+        </Link>
+        <Link href="/?search=소비" className={styles.tagBtn} style={{ background: searchStr === '소비' ? 'var(--kitsch-lime, #a3e635)' : undefined }}>
+          💸 #소비/탕진
+        </Link>
+        <Link href="/?search=도파민" className={styles.tagBtn} style={{ background: searchStr === '도파민' ? 'var(--kitsch-lime, #a3e635)' : undefined }}>
+          📱 #도파민/중독
+        </Link>
+        <Link href="/?search=게으름" className={styles.tagBtn} style={{ background: searchStr === '게으름' ? 'var(--kitsch-lime, #a3e635)' : undefined }}>
+          🛌 #게으름/백수
+        </Link>
+      </div>
+
       {/* 📢 방명록 바로가기 배너 */}
       <div className={styles.guestbookBanner}>
         <Link href="/guestbook" className={styles.guestbookLink}>

@@ -87,15 +87,26 @@ export async function GET(request: Request) {
   }
 
   try {
-    // 2. 오늘의 날짜 일자 기반으로 순환할 템플릿 인덱스 결정 (Stateless Rotation)
-    // 12:00 PM KST = 3:00 AM UTC이므로 같은 날 기준 매칭
-    const day = new Date().getDate();
-    const templateIndex = day % templates.length; // 0 ~ 9
+    // 2. 오늘의 날짜와 시각(KST)을 기반으로 하루 3회(아침, 점심, 저녁) 각각 다른 템플릿 선택
+    const now = new Date();
+    // UTC -> KST (+9시간)
+    const kstHour = (now.getUTCHours() + 9) % 24;
+    const day = now.getUTCDate();
+
+    // 08시 전후(아침: slot 0), 12시 전후(점심: slot 1), 19시 전후(저녁: slot 2)
+    let slot = 0;
+    if (kstHour >= 11 && kstHour < 17) {
+      slot = 1;
+    } else if (kstHour >= 17 || kstHour < 4) {
+      slot = 2;
+    }
+
+    // (일자 * 3 + 슬롯)으로 템플릿 인덱스를 매번 다르게 무한 순환
+    const templateIndex = (day * 3 + slot) % templates.length;
     const target = templates[templateIndex];
 
-    console.log(`[Cron Threads Autoposter] Selected template #${target.num} ("${target.title}") for day of month ${day}.`);
+    console.log(`[Cron Threads Autoposter] Selected template #${target.num} ("${target.title}") for KST Day ${day}, Slot ${slot} (Hour ${kstHour}).`);
 
-    // 3. 본문 포스트 생성
     // 3. 본문 포스트 즉시 발행 (auto_publish_text 사용)
     const containerRes = await fetch(`https://graph.threads.net/v1.0/me/threads?media_type=TEXT&text=${encodeURIComponent(target.text)}&auto_publish_text=true&access_token=${token}`, {
       method: 'POST',
@@ -128,6 +139,8 @@ export async function GET(request: Request) {
     return NextResponse.json({
       success: true,
       day,
+      slot,
+      kstHour,
       template: target.num,
       title: target.title,
       postId: parentPostId
