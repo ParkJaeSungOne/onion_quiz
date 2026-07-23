@@ -107,16 +107,29 @@ export async function GET(request: Request) {
 
     console.log(`[Cron Threads Autoposter] Selected template #${target.num} ("${target.title}") for KST Day ${day}, Slot ${slot} (Hour ${kstHour}).`);
 
-    // 3. 본문 포스트 즉시 발행 (auto_publish_text 사용)
+    // 3. 본문 포스트 즉시 발행 (auto_publish_text 사용 및 토큰 만료 가드)
     const containerRes = await fetch(`https://graph.threads.net/v1.0/me/threads?media_type=TEXT&text=${encodeURIComponent(target.text)}&auto_publish_text=true&access_token=${token}`, {
       method: 'POST',
       headers: { 
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
       }
     });
-    const containerData = await containerRes.json();
-    if (containerData.error) {
-      throw new Error(`Container creation error: ${JSON.stringify(containerData.error)}`);
+
+    const wwwAuth = containerRes.headers.get('www-authenticate') || '';
+    if (wwwAuth.includes('invalid_token') || wwwAuth.includes('expired')) {
+      throw new Error(`스레드 Access Token이 만료되었습니다. (Meta Graph API: Session Has Expired). 어드민 패널(/admin)의 '60일 장기 토큰 교환기'에서 토큰을 재발급받아 Vercel 환경변수(THREADS_ACCESS_TOKEN)를 갱신해 주세요.`);
+    }
+
+    const textResStr = await containerRes.text();
+    let containerData: any = {};
+    try {
+      containerData = JSON.parse(textResStr);
+    } catch {
+      throw new Error(`Meta 서버가 JSON이 아닌 응답을 반환했습니다 (HTTP ${containerRes.status}). 상세: ${textResStr || wwwAuth}`);
+    }
+
+    if (!containerRes.ok || containerData.error) {
+      throw new Error(`Container creation error: ${JSON.stringify(containerData.error || containerData)}`);
     }
 
     const parentPostId = containerData.id;
