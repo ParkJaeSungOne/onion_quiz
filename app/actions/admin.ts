@@ -100,9 +100,9 @@ export async function triggerAIGenerate(subject?: string, questionCount?: number
       data = await response.json();
     } else {
       const text = await response.text();
-      // Vercel 10초 타임아웃 또는 504 Gateway Timeout 검출 및 직관적 번역
+      // Vercel 504 Gateway Timeout 검출 및 직관적 번역 (Vercel Pro 60초 제한 적용)
       if (response.status === 504 || text.includes('504') || text.includes('An error occurred')) {
-        throw new Error(`Vercel 10초 실행 시간 제한 초과 (504 Gateway Timeout)가 발생했습니다. Vercel Hobby 무료 플랜은 10초 이내에 완료되지 않으면 강제로 작동이 끊깁니다. 다시 한번 시도해 보시거나 결과 텍스트 분량을 약간 조절해야 할 수 있습니다.`);
+        throw new Error(`Vercel Pro 실행 시간 제한(60초)을 초과했습니다 (504 Gateway Timeout). Gemini AI 서버 응답이 지연되고 있으니 10초 후 다시 한번 트리거를 시도해 주세요.`);
       }
       throw new Error(`서버가 JSON이 아닌 텍스트를 반환했습니다 (상태 코드: ${response.status}). 상세내용: ${text.substring(0, 150)}...`);
     }
