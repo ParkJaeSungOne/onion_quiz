@@ -92,6 +92,7 @@ export async function GET(request: Request) {
     // UTC -> KST (+9시간)
     const kstHour = (now.getUTCHours() + 9) % 24;
     const day = now.getUTCDate();
+    const mode = searchParams.get('mode') || 'auto'; // 'auto', 'quote', 'post'
 
     // 08시 전후(아침: slot 0), 12시 전후(점심: slot 1), 19시 전후(저녁: slot 2)
     let slot = 0;
@@ -105,10 +106,23 @@ export async function GET(request: Request) {
     const templateIndex = (day * 3 + slot) % templates.length;
     const target = templates[templateIndex];
 
+    // 병맛 캡처 썸네일 이미지 배열 (랜덤/순환 매핑)
+    const charImages = [
+      'https://kkado-kkado.com/images/char-zombie.jpg',
+      'https://kkado-kkado.com/images/char-lazy.jpg',
+      'https://kkado-kkado.com/images/char-broke.jpg',
+      'https://kkado-kkado.com/images/char-angry.jpg',
+      'https://kkado-kkado.com/images/char-food.jpg',
+      'https://kkado-kkado.com/thumbnail.png'
+    ];
+    const selectedImage = charImages[templateIndex % charImages.length];
+
     console.log(`[Cron Threads Autoposter] Selected template #${target.num} ("${target.title}") for KST Day ${day}, Slot ${slot} (Hour ${kstHour}).`);
 
-    // 3. 본문 포스트 즉시 발행 (auto_publish_text 사용 및 토큰 만료 가드)
-    const containerRes = await fetch(`https://graph.threads.net/v1.0/me/threads?media_type=TEXT&text=${encodeURIComponent(target.text)}&auto_publish_text=true&access_token=${token}`, {
+    // 3. 본문 포스트 발행 (이미지 포함 미디어 타입 vs 텍스트 타입 자동 분기)
+    let postUrl = `https://graph.threads.net/v1.0/me/threads?media_type=IMAGE&image_url=${encodeURIComponent(selectedImage)}&text=${encodeURIComponent(target.text)}&auto_publish_text=true&access_token=${token}`;
+
+    const containerRes = await fetch(postUrl, {
       method: 'POST',
       headers: { 
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
@@ -129,7 +143,11 @@ export async function GET(request: Request) {
     }
 
     if (!containerRes.ok || containerData.error) {
-      throw new Error(`Container creation error: ${JSON.stringify(containerData.error || containerData)}`);
+      // 이미지 전송 실패 시 텍스트 전용 폴백
+      console.warn('Image post container failed, falling back to text-only mode...', containerData);
+      const fallbackUrl = `https://graph.threads.net/v1.0/me/threads?media_type=TEXT&text=${encodeURIComponent(target.text)}&auto_publish_text=true&access_token=${token}`;
+      const fallbackRes = await fetch(fallbackUrl, { method: 'POST' });
+      containerData = await fallbackRes.json();
     }
 
     const parentPostId = containerData.id;
@@ -145,8 +163,19 @@ export async function GET(request: Request) {
       }
     });
     const replyContainerData = await replyContainerRes.json();
-    if (replyContainerData.error) {
-      throw new Error(`Reply container creation error: ${JSON.stringify(replyContainerData.error)}`);
+
+    // 6. 저녁 슬롯(slot 2) 또는 quote 모드일 경우: 상단 재노출용 인용 리포스트 (Quote Thread) 실행!
+    let quotePostId = null;
+    if (slot === 2 || mode === 'quote') {
+      await new Promise((resolve) => setTimeout(resolve, 2000));
+      const quoteText = `🔥 [실시간 피크타임 반응 폭발 중] ㅋㅋㅋ 다들 직접 테스트해보고 팩폭 당하는 중 ㅋㅋㅋ 너는 몇 점 나옴?\n\n👇 1분 성향 테스트 바로가기`;
+      const quoteRes = await fetch(`https://graph.threads.net/v1.0/me/threads?media_type=TEXT&text=${encodeURIComponent(quoteText)}&quote_post_id=${parentPostId}&auto_publish_text=true&access_token=${token}`, {
+        method: 'POST'
+      });
+      const quoteData = await quoteRes.json();
+      if (quoteData.id) {
+        quotePostId = quoteData.id;
+      }
     }
 
     return NextResponse.json({
@@ -156,7 +185,9 @@ export async function GET(request: Request) {
       kstHour,
       template: target.num,
       title: target.title,
-      postId: parentPostId
+      imageUrl: selectedImage,
+      postId: parentPostId,
+      quotePostId
     });
   } catch (error: any) {
     console.error('[Cron Threads Autoposter Error]:', error);
