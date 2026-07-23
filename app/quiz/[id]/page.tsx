@@ -36,8 +36,12 @@ export async function generateMetadata({ params }: QuizPageProps): Promise<Metad
   }
 
   return {
+    metadataBase: new URL('https://kkado-kkado.com'),
     title: `${quiz.title} | 까도까도 팩폭 테스트`,
     description: `${quiz.description} - 요즘 인싸들 사이에서 유행하는 핫한 밈 ${quiz.category} 성향 테스트 까도까도.`,
+    alternates: {
+      canonical: `https://kkado-kkado.com/quiz/${quizId}`,
+    },
     openGraph: {
       title: `${quiz.title} - 까도까도 (kkado-kkado.com)`,
       description: quiz.description,
