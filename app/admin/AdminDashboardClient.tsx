@@ -78,6 +78,24 @@ interface TopQuizItem {
   createdAt: string;
 }
 
+interface FunnelChannelItem {
+  channel: string;
+  label: string;
+  visits: number;
+  plays: number;
+  conversionRate: number;
+  avgStaySec: number;
+}
+
+interface FunnelData {
+  stage1Visits: number;
+  stage2Plays: number;
+  stage3Shares: number;
+  conversionRate: number;
+  shareRate: number;
+  channelFunnel: FunnelChannelItem[];
+}
+
 interface AdminDashboardClientProps {
   stats: {
     totalQuizzes: number;
@@ -92,6 +110,7 @@ interface AdminDashboardClientProps {
   currentPage: number;
   totalPages: number;
   topQuizzes: TopQuizItem[];
+  funnelData?: FunnelData;
 }
 
 export default function AdminDashboardClient({ 
@@ -103,7 +122,8 @@ export default function AdminDashboardClient({
   visitorLogs,
   currentPage,
   totalPages,
-  topQuizzes
+  topQuizzes,
+  funnelData
 }: AdminDashboardClientProps) {
   const router = useRouter();
   const [activeQuizId, setActiveQuizId] = useState<number | null>(null);
@@ -607,6 +627,88 @@ export default function AdminDashboardClient({
           </div>
         </div>
       </section>
+
+      {/* 📈 바이럴 유입 펀널 & 채널별 전환율 분석 보드 */}
+      {funnelData && (
+        <section style={{ marginTop: '36px', marginBottom: '36px' }}>
+          <div style={{
+            background: '#ffffff',
+            border: '4px solid #000000',
+            borderRadius: '20px',
+            padding: '24px',
+            boxShadow: '6px 6px 0px #000000'
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px', marginBottom: '20px' }}>
+              <div>
+                <h2 style={{ margin: 0, fontSize: '18px', fontWeight: 950, color: '#000000' }}>
+                  📈 바이럴 유입 펀널 & 채널별 전환율 분석 (Funnel Intelligence)
+                </h2>
+                <p style={{ margin: '4px 0 0 0', fontSize: '12px', fontWeight: 700, color: '#64748b' }}>
+                  방문자가 어느 단계에서 이탈하고, 어떤 유입 채널(스레드/인스타/카톡)이 플레이 전환율이 가장 높은지 실시간으로 판독합니다.
+                </p>
+              </div>
+              <span style={{ background: '#dcfce7', color: '#166534', border: '2px solid #000000', padding: '4px 10px', borderRadius: '8px', fontSize: '12px', fontWeight: 900 }}>
+                ⚡ 전체 전환율: {funnelData.conversionRate}%
+              </span>
+            </div>
+
+            {/* 3단계 바이럴 펀널 바 시각화 */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '16px', marginBottom: '24px' }}>
+              <div style={{ background: '#f8fafc', border: '3px solid #000000', borderRadius: '14px', padding: '16px', boxShadow: '3px 3px 0px #000000' }}>
+                <div style={{ fontSize: '12px', fontWeight: 800, color: '#64748b' }}>1단계: 방문 유입 (PV)</div>
+                <div style={{ fontSize: '22px', fontWeight: 950, color: '#000000', marginTop: '4px' }}>{funnelData.stage1Visits.toLocaleString()}회</div>
+                <div style={{ marginTop: '8px', background: '#e2e8f0', borderRadius: '6px', height: '10px', overflow: 'hidden' }}>
+                  <div style={{ width: '100%', background: '#3b82f6', height: '100%' }} />
+                </div>
+                <div style={{ fontSize: '10px', fontWeight: 800, color: '#3b82f6', marginTop: '4px' }}>100% 유입 기준</div>
+              </div>
+
+              <div style={{ background: '#f8fafc', border: '3px solid #000000', borderRadius: '14px', padding: '16px', boxShadow: '3px 3px 0px #000000' }}>
+                <div style={{ fontSize: '12px', fontWeight: 800, color: '#64748b' }}>2단계: 플레이 완료 (Completes)</div>
+                <div style={{ fontSize: '22px', fontWeight: 950, color: '#16a34a', marginTop: '4px' }}>{funnelData.stage2Plays.toLocaleString()}명</div>
+                <div style={{ marginTop: '8px', background: '#e2e8f0', borderRadius: '6px', height: '10px', overflow: 'hidden' }}>
+                  <div style={{ width: `${funnelData.conversionRate}%`, background: '#22c55e', height: '100%' }} />
+                </div>
+                <div style={{ fontSize: '10px', fontWeight: 800, color: '#16a34a', marginTop: '4px' }}>방문 대비 플레이 전환율 {funnelData.conversionRate}%</div>
+              </div>
+
+              <div style={{ background: '#f8fafc', border: '3px solid #000000', borderRadius: '14px', padding: '16px', boxShadow: '3px 3px 0px #000000' }}>
+                <div style={{ fontSize: '12px', fontWeight: 800, color: '#64748b' }}>3단계: SNS 공유 & 바이럴 초청</div>
+                <div style={{ fontSize: '22px', fontWeight: 950, color: '#e11d48', marginTop: '4px' }}>{funnelData.stage3Shares.toLocaleString()}회</div>
+                <div style={{ marginTop: '8px', background: '#e2e8f0', borderRadius: '6px', height: '10px', overflow: 'hidden' }}>
+                  <div style={{ width: `${funnelData.shareRate}%`, background: '#f43f5e', height: '100%' }} />
+                </div>
+                <div style={{ fontSize: '10px', fontWeight: 800, color: '#e11d48', marginTop: '4px' }}>플레이어 대비 공유율 {funnelData.shareRate}%</div>
+              </div>
+            </div>
+
+            {/* 채널별 전환율 성능 비교 카치 그리드 */}
+            <h3 style={{ margin: '0 0 12px 0', fontSize: '14px', fontWeight: 900, color: '#000000' }}>
+              🌐 채널별 바이럴 유입 및 전환율 성능 비교 (Channel Matrix):
+            </h3>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px' }}>
+              {funnelData.channelFunnel.map((ch) => (
+                <div key={ch.channel} style={{
+                  background: '#ffffff',
+                  border: '2px solid #000000',
+                  borderRadius: '12px',
+                  padding: '12px 14px',
+                  boxShadow: '3px 3px 0px #000000'
+                }}>
+                  <div style={{ fontSize: '13px', fontWeight: 900, color: '#000000' }}>{ch.label}</div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginTop: '6px' }}>
+                    <span style={{ fontSize: '18px', fontWeight: 950, color: '#0284c7' }}>{ch.conversionRate}%</span>
+                    <span style={{ fontSize: '11px', fontWeight: 800, color: '#64748b' }}>{ch.plays}회 완료</span>
+                  </div>
+                  <div style={{ fontSize: '10px', fontWeight: 700, color: '#475569', marginTop: '4px', borderTop: '1px solid #e2e8f0', paddingTop: '4px' }}>
+                    방문: {ch.visits}회 · 평균체류: {ch.avgStaySec}초
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* 📊 실시간 방문자 트렌드 차트 (7일 차트) */}
       <section className={styles.chartSection} style={{ marginTop: '40px', marginBottom: '40px' }}>

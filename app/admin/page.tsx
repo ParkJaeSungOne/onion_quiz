@@ -244,6 +244,73 @@ export default async function AdminDashboardPage({ searchParams }: AdminDashboar
     .sort((a, b) => b.playCount - a.playCount)
     .slice(0, 3);
 
+  // 2.4 바이럴 유입 펀널 분석 통계 연산 (Funnel Analytics)
+  const totalVisits = visitorStats.totalPv || 1;
+  const totalCompletedPlays = totalPlays;
+  
+  // 총 공유 횟수 (카톡 + 링크 복사 + 결과 공유)
+  const totalSharesAgg = await prisma.quiz.aggregate({
+    _sum: {
+      shareKakaoCount: true,
+      shareLinkCount: true,
+      shareResultKakaoCount: true,
+      shareResultLinkCount: true
+    }
+  });
+  const totalShares = (totalSharesAgg._sum.shareKakaoCount || 0) + 
+                      (totalSharesAgg._sum.shareLinkCount || 0) + 
+                      (totalSharesAgg._sum.shareResultKakaoCount || 0) + 
+                      (totalSharesAgg._sum.shareResultLinkCount || 0);
+
+  const conversionRate = Math.min(100, Math.round((totalCompletedPlays / totalVisits) * 100));
+  const shareRate = Math.min(100, Math.round((totalShares / (totalCompletedPlays || 1)) * 100));
+
+  // 최근 방문 로그 기반 채널별 펀널 효율 연산
+  const allVisitorLogs = await prisma.visitorLog.findMany({
+    take: 500,
+    orderBy: { createdAt: 'desc' },
+    select: { referrer: true, staySeconds: true, pagePath: true }
+  });
+
+  const channelFunnelMap: Record<string, { visits: number; plays: number; totalStay: number }> = {
+    threads: { visits: 0, plays: 0, totalStay: 0 },
+    instagram: { visits: 0, plays: 0, totalStay: 0 },
+    kakaotalk: { visits: 0, plays: 0, totalStay: 0 },
+    search: { visits: 0, plays: 0, totalStay: 0 },
+    direct: { visits: 0, plays: 0, totalStay: 0 },
+  };
+
+  allVisitorLogs.forEach(log => {
+    const ref = (log.referrer || '').toLowerCase();
+    let ch = 'direct';
+    if (ref.includes('threads') || ref.includes('t.co')) ch = 'threads';
+    else if (ref.includes('instagram') || ref.includes('insta')) ch = 'instagram';
+    else if (ref.includes('kakao')) ch = 'kakaotalk';
+    else if (ref.includes('naver') || ref.includes('google') || ref.includes('daum')) ch = 'search';
+
+    channelFunnelMap[ch].visits += 1;
+    channelFunnelMap[ch].totalStay += log.staySeconds || 0;
+    if (log.pagePath.includes('/result/')) {
+      channelFunnelMap[ch].plays += 1;
+    }
+  });
+
+  const funnelData = {
+    stage1Visits: totalVisits,
+    stage2Plays: totalCompletedPlays,
+    stage3Shares: totalShares,
+    conversionRate,
+    shareRate,
+    channelFunnel: Object.entries(channelFunnelMap).map(([key, data]) => ({
+      channel: key,
+      label: key === 'threads' ? '🌀 스레드 (Threads)' : key === 'instagram' ? '📸 인스타그램' : key === 'kakaotalk' ? '💬 카카오톡' : key === 'search' ? '🔍 검색엔진 (구글/네이버)' : '🚪 직접/기타',
+      visits: data.visits,
+      plays: data.plays,
+      conversionRate: Math.min(100, Math.round((data.plays / (data.visits || 1)) * 100)),
+      avgStaySec: data.visits > 0 ? Math.round(data.totalStay / data.visits) : 0
+    }))
+  };
+
   return (
     <AdminDashboardClient
       stats={{
@@ -259,6 +326,7 @@ export default async function AdminDashboardPage({ searchParams }: AdminDashboar
       currentPage={validatedPage}
       totalPages={totalPages}
       topQuizzes={topQuizzes}
+      funnelData={funnelData}
     />
   );
 }
