@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { logoutAdmin, deleteQuiz, triggerAIGenerate, exchangeThreadsToken } from '@/app/actions/admin';
+import { logoutAdmin, deleteQuiz, triggerAIGenerate, exchangeThreadsToken, triggerThreadsPostAction } from '@/app/actions/admin';
 import styles from './admin.module.css';
 
 interface RefererStat {
@@ -122,6 +122,40 @@ export default function AdminDashboardClient({
   const [exchangeLoading, setExchangeLoading] = useState(false);
   const [exchangeResult, setExchangeResult] = useState<string | null>(null);
   const [exchangeError, setExchangeError] = useState<string | null>(null);
+  const [showTokenBox, setShowTokenBox] = useState(false);
+
+  // 🚀 스레드 원클릭 수동 테스트 상태
+  const [testPostLoading, setTestPostLoading] = useState(false);
+  const [testPostResult, setTestPostResult] = useState<{ success: boolean; message: string; error?: string } | null>(null);
+
+  const handleTestPost = async () => {
+    setTestPostLoading(true);
+    setTestPostResult(null);
+    try {
+      const res = await triggerThreadsPostAction();
+      if (res.success) {
+        setTestPostResult({
+          success: true,
+          message: `${res.message}\n🖼️ 미디어 이미지: ${res.imageUrl}`
+        });
+      } else {
+        setTestPostResult({
+          success: false,
+          message: '',
+          error: res.error || '포스팅 도중 오류가 발생했습니다.'
+        });
+      }
+    } catch (err: any) {
+      setTestPostResult({
+        success: false,
+        message: '',
+        error: err.message || '네트워크 오류가 발생했습니다.'
+      });
+    } finally {
+      setTestPostLoading(false);
+    }
+  };
+
   const [isTokenToolOpen, setIsTokenToolOpen] = useState(true);
 
   // 👥 실시간 방문 유입 로그 검색 & 필터링 상태
@@ -445,6 +479,43 @@ export default function AdminDashboardClient({
                 </p>
               </div>
             )}
+
+            {/* 🚀 원클릭 즉시 수동 포스팅 테스트 버튼 */}
+            <div style={{ marginTop: '20px', paddingTop: '16px', borderTop: '2px dashed #cbd5e1' }}>
+              <h4 style={{ margin: '0 0 8px 0', fontSize: '13px', fontWeight: 900, color: '#000000' }}>
+                🧪 스레드 바이럴 포스팅 원클릭 실시간 테스트:
+              </h4>
+              <button
+                onClick={handleTestPost}
+                disabled={testPostLoading}
+                style={{
+                  width: '100%',
+                  padding: '12px',
+                  fontSize: '13px',
+                  fontWeight: 900,
+                  backgroundColor: '#0284c7',
+                  color: '#ffffff',
+                  border: '3px solid #000000',
+                  borderRadius: '10px',
+                  boxShadow: '3px 3px 0px #000000',
+                  cursor: 'pointer'
+                }}
+              >
+                {testPostLoading ? '🚀 스레드 게시물 작성 중...' : '🚀 [원클릭 즉시 테스트] 스레드에 신상 이미지 퀴즈 올리기'}
+              </button>
+
+              {testPostResult?.success && (
+                <div style={{ marginTop: '12px', background: '#ecfdf5', border: '2px solid #10b981', borderRadius: '8px', padding: '12px', fontSize: '12px', color: '#065f46', fontWeight: 800, whiteSpace: 'pre-line' }}>
+                  {testPostResult.message}
+                </div>
+              )}
+
+              {testPostResult?.error && (
+                <div style={{ marginTop: '12px', background: '#fee2e2', border: '2px solid #ef4444', borderRadius: '8px', padding: '12px', fontSize: '12px', color: '#991b1b', fontWeight: 800, whiteSpace: 'pre-line' }}>
+                  ❌ <strong>포스팅 실패:</strong> {testPostResult.error}
+                </div>
+              )}
+            </div>
           </div>
         )}
       </div>

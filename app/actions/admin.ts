@@ -203,3 +203,82 @@ export async function exchangeThreadsToken(shortToken: string, appSecret: string
     return { success: false, error: error.message };
   }
 }
+
+// 🚀 어드민 원클릭 스레드 수동 테스트 트리거
+export async function triggerThreadsPostAction() {
+  try {
+    const cookieStore = await cookies();
+    const session = cookieStore.get(SESSION_COOKIE_NAME);
+    if (!session || session.value !== 'authenticated') {
+      throw new Error('Unauthorized');
+    }
+
+    const tokenRaw = process.env.THREADS_ACCESS_TOKEN || '';
+    const token = tokenRaw.replace(/["']/g, '').trim();
+
+    if (!token) {
+      throw new Error('THREADS_ACCESS_TOKEN 환경변수가 설정되지 않았습니다.');
+    }
+
+    // 템플릿 선택 및 이미지 배정
+    const charImages = [
+      'https://kkado-kkado.com/images/char-zombie.jpg',
+      'https://kkado-kkado.com/images/char-lazy.jpg',
+      'https://kkado-kkado.com/images/char-broke.jpg',
+      'https://kkado-kkado.com/images/char-angry.jpg',
+      'https://kkado-kkado.com/images/char-food.jpg',
+      'https://kkado-kkado.com/thumbnail.png'
+    ];
+    const selectedImage = charImages[Math.floor(Math.random() * charImages.length)];
+
+    const testText = "📱 [실시간 테스트] 도파민 중독 성향 테스트 떴다 ㅋㅋㅋ\n쇼츠/릴스 5분만 봐야지 하다가 2시간 뚝딱 지나가는 사람 필수 검사 ㅋㅋㅋ\n\n👇 1분 팩폭 테스트 링크는 첫 댓글 확인!";
+    const replyText = "📱 나의 도파민 중독 수준 진단하기 👇\nhttps://kkado-kkado.com/quiz/21";
+
+    // 1. 본문 포스트 발행 (IMAGE 미디어 타입)
+    const postUrl = `https://graph.threads.net/v1.0/me/threads?media_type=IMAGE&image_url=${encodeURIComponent(selectedImage)}&text=${encodeURIComponent(testText)}&auto_publish_text=true&access_token=${token}`;
+
+    const containerRes = await fetch(postUrl, {
+      method: 'POST',
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'
+      }
+    });
+
+    const wwwAuth = containerRes.headers.get('www-authenticate') || '';
+    if (wwwAuth.includes('invalid_token') || wwwAuth.includes('expired')) {
+      throw new Error(`스레드 Access Token이 만료되었습니다. Vercel 환경변수(THREADS_ACCESS_TOKEN)를 최신 60일 장기 토큰으로 업데이트했는지 확인해 주세요.`);
+    }
+
+    const textResStr = await containerRes.text();
+    let containerData: any = {};
+    try {
+      containerData = JSON.parse(textResStr);
+    } catch {
+      throw new Error(`Meta 응답 오류 (HTTP ${containerRes.status}): ${textResStr || wwwAuth}`);
+    }
+
+    if (!containerRes.ok || containerData.error) {
+      throw new Error(containerData.error?.message || JSON.stringify(containerData.error || containerData));
+    }
+
+    const parentPostId = containerData.id;
+
+    // 2. 2초 딜레이 후 댓글 링크 발행
+    await new Promise((resolve) => setTimeout(resolve, 2000));
+    const replyRes = await fetch(`https://graph.threads.net/v1.0/me/threads?media_type=TEXT&text=${encodeURIComponent(replyText)}&reply_to_id=${parentPostId}&auto_publish_text=true&access_token=${token}`, {
+      method: 'POST'
+    });
+    const replyData = await replyRes.json();
+
+    return {
+      success: true,
+      postId: parentPostId,
+      replyId: replyData.id || null,
+      imageUrl: selectedImage,
+      message: `🎉 스레드 포스팅 성공! (게시물 ID: ${parentPostId})`
+    };
+  } catch (error: any) {
+    console.error('Failed to trigger Threads post action:', error);
+    return { success: false, error: error.message };
+  }
+}

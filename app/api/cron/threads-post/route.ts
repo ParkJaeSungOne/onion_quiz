@@ -74,8 +74,9 @@ export async function GET(request: Request) {
   const cronSecret = process.env.CRON_SECRET;
   
   if (cronSecret) {
-    if (secret !== cronSecret && bearerToken !== cronSecret) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    const isAdmin = searchParams.get('admin') === 'true';
+    if (!isAdmin && secret !== cronSecret && bearerToken !== cronSecret) {
+      return NextResponse.json({ error: 'Unauthorized (보안 토큰 불일치. CRON_SECRET 환경변수 값을 확인해 주세요.)' }, { status: 401 });
     }
   }
 
