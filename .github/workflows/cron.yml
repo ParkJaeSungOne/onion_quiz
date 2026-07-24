@@ -1,0 +1,26 @@
+name: ⏰ 까도까도 24/7 자동 AI 퀴즈 & 스레드 포스팅 크론
+
+on:
+  schedule:
+    # 3시간마다 정각에 정밀 실행 (한국 시간 09시, 12시, 15시, 18시, 21시, 00시, 03시, 06시)
+    - cron: '0 */3 * * *'
+  workflow_dispatch:
+
+jobs:
+  trigger-crons:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 🧠 1. AI 퀴즈 자동 생성 API 호출
+        run: |
+          echo "Triggering AI Quiz Generation..."
+          response=$(curl -s -w "\nHTTP_STATUS:%{http_code}" "https://kkado-kkado.com/api/cron/generate?secret=your-custom-cron-secret-token")
+          echo "$response"
+
+      - name: ⏳ 2. 5초 지연 대기
+        run: sleep 5
+
+      - name: 📱 3. 스레드(Threads) 자동 포스팅 API 호출
+        run: |
+          echo "Triggering Threads Autoposter..."
+          response=$(curl -s -w "\nHTTP_STATUS:%{http_code}" "https://kkado-kkado.com/api/cron/threads-post?secret=your-custom-cron-secret-token")
+          echo "$response"
