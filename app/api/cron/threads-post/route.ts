@@ -71,9 +71,10 @@ export async function GET(request: Request) {
   const secret = searchParams.get('secret');
   const authHeader = request.headers.get('authorization');
   const bearerToken = authHeader?.startsWith('Bearer ') ? authHeader.substring(7) : null;
+  const isVercelCron = request.headers.get('x-vercel-cron') === '1' || request.headers.get('user-agent')?.includes('vercel-cron');
   const cronSecret = process.env.CRON_SECRET;
   
-  if (cronSecret) {
+  if (cronSecret && !isVercelCron) {
     const isAdmin = searchParams.get('admin') === 'true';
     if (!isAdmin && secret !== cronSecret && bearerToken !== cronSecret) {
       return NextResponse.json({ error: 'Unauthorized (보안 토큰 불일치. CRON_SECRET 환경변수 값을 확인해 주세요.)' }, { status: 401 });
