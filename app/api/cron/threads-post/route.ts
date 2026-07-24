@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { getThreadsToken, autoRenewThreadsToken } from '@/lib/threadsToken';
 
 export const maxDuration = 60; // 넉넉히 60초 지정 (두 번의 API 전송 + 대기시간)
 
@@ -81,12 +82,15 @@ export async function GET(request: Request) {
     }
   }
 
-  const tokenRaw = process.env.THREADS_ACCESS_TOKEN || '';
-  const token = tokenRaw.replace(/["']/g, '').trim();
+  // 2. DB 및 환경변수에서 유효한 Threads 장기 토큰 로드 + 자동 연장 시도
+  let token = await getThreadsToken();
 
   if (!token) {
-    return NextResponse.json({ error: 'THREADS_ACCESS_TOKEN environment variable is not defined.' }, { status: 500 });
+    return NextResponse.json({ error: 'THREADS_ACCESS_TOKEN이 DB 및 환경변수에 정의되어 있지 않습니다.' }, { status: 500 });
   }
+
+  // 🚀 매 실행 시 Meta Graph API를 호출하여 토큰을 60일 자동 연장 (유효한 경우 DB에 자동 갱신)
+  autoRenewThreadsToken().catch((err) => console.warn('[Cron Threads] Auto-renew background error:', err));
 
   try {
     // 2. 오늘의 날짜와 시각(KST)을 기반으로 하루 3회(아침, 점심, 저녁) 각각 다른 템플릿 선택

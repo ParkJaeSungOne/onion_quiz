@@ -115,3 +115,9 @@ model VisitorLog {
   staySeconds Int?     @default(0) // 유저 체류 시간 (초 단위)
   createdAt   DateTime @default(now())
 }
+
+model SystemSetting {
+  key       String   @id
+  value     String
+  updatedAt DateTime @updatedAt
+}
