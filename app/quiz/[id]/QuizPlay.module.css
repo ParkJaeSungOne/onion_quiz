@@ -202,6 +202,10 @@
   transition: all 0.15s ease;
   line-height: 1.4;
   box-shadow: 3px 3px 0px #000000;
+  outline: none;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+  user-select: none;
 }
 
 .optionButton:hover {
@@ -215,11 +219,29 @@
   box-shadow: 1px 1px 0px #000000;
 }
 
+/* 📱 모바일 선택 시 즉시 하이라이팅 피드백 */
+.selectedOption {
+  background-color: var(--kitsch-lime, #a3e635) !important;
+  transform: translate(2px, 2px) !important;
+  box-shadow: 1px 1px 0px #000000 !important;
+}
+
 /* 카드 4가지 색상 랜덤 테마 */
 .optionButton:nth-child(4n+1):hover { background-color: #fef08a; }
 .optionButton:nth-child(4n+2):hover { background-color: #d9f99d; }
 .optionButton:nth-child(4n+3):hover { background-color: #cffafe; }
 .optionButton:nth-child(4n+4):hover { background-color: #fbcfe8; }
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+@keyframes progress {
+  0% { transform: translateX(-100%); }
+  50% { transform: translateX(0%); }
+  100% { transform: translateX(100%); }
+}
 
 /* 페이드 인/아웃 */
 .fadeIn {

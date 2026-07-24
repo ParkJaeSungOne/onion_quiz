@@ -50,6 +50,7 @@ export default function QuizPlayClient({ quiz }: QuizPlayClientProps) {
   const [totalScore, setTotalScore] = useState(0);
   const [quizLogId, setQuizLogId] = useState<string | null>(null);
   const [isTransitioning, setIsTransitioning] = useState(false);
+  const [selectedOptionId, setSelectedOptionId] = useState<string | null>(null);
   const [kakaoInitialized, setKakaoInitialized] = useState(false);
   const [copied, setCopied] = useState(false);
 
@@ -83,7 +84,6 @@ export default function QuizPlayClient({ quiz }: QuizPlayClientProps) {
       return;
     }
 
-    // 📈 공유 수 증가 호출
     incrementShareCount(quiz.id, 'kakao');
 
     window.Kakao.Share.sendDefault({
@@ -111,7 +111,6 @@ export default function QuizPlayClient({ quiz }: QuizPlayClientProps) {
 
   // 링크 클립보드 복사
   const handleCopyLink = () => {
-    // 📈 공유 수 증가 호출
     incrementShareCount(quiz.id, 'link');
 
     if (typeof navigator !== 'undefined' && navigator.clipboard) {
@@ -141,39 +140,45 @@ export default function QuizPlayClient({ quiz }: QuizPlayClientProps) {
     }
   };
 
-  // 답변 선택
-  const handleAnswerSelect = async (score: number, optionText: string) => {
+  // 답변 선택 (모바일 active 포커스 고정 해제 & 즉시 반응 로딩 피드백)
+  const handleAnswerSelect = async (e: React.MouseEvent<HTMLButtonElement>, optionId: string, score: number, optionText: string) => {
     if (isTransitioning) return;
 
-    // 1. 답변 로그를 비동기로 전송 (사용자가 logId를 성공적으로 받았을 때만)
+    // 📱 모바일 터치 및 포커스 잔상 해제
+    e.currentTarget.blur();
+    setSelectedOptionId(optionId);
+
+    // 1. 답변 로그를 비동기로 전송
     if (quizLogId) {
       logAnswer(quizLogId, quiz.questions[currentIdx].questionNumber, optionText);
     }
 
-    // 2. 점수 합산 및 마지막 문제 처리
+    // 2. 점수 합산
     const finalScore = totalScore + score;
     setTotalScore(finalScore);
 
     // 3. 마지막 문제인지 체크
     if (currentIdx >= quiz.questions.length - 1) {
+      // 🚀 즉시 로딩 화면으로전환하여 유저에게 강력한 피드백 제공!
+      setStep('loading');
+
       const finalLogId = quizLogId || 'guest';
-      
       if (quizLogId) {
-        // 백그라운드에서 비동기로 최종 점수를 DB 로그에 기록
         completeQuizLog(quizLogId, finalScore).catch((err) => {
           console.error('Failed to complete quiz log in background:', err);
         });
       }
       
-      // 인위적 대기 시간 없이 즉시 결과 라우트로 이동 (Next.js Suspense 로더가 노출됨)
+      // 결과 페이지로 라우팅 전환
       router.push(`/quiz/${quiz.id}/result/${finalLogId}?score=${finalScore}`);
     } else {
-      // 다음 문제로 넘어갈 때 부드러운 슬라이딩/페이딩 애니메이션 유도
+      // 다음 문제로 넘어갈 때 부드러운 전환 & 선택된 옵션 포커스 초기화
       setIsTransitioning(true);
       setTimeout(() => {
         setCurrentIdx((prev) => prev + 1);
+        setSelectedOptionId(null);
         setIsTransitioning(false);
-      }, 300); // 0.3초 애니메이션 지연
+      }, 250); // 0.25초 부드러운 넘김
     }
   };
 
@@ -220,6 +225,30 @@ export default function QuizPlayClient({ quiz }: QuizPlayClientProps) {
     );
   }
 
+  // 2. 최종 결과 라우팅 대기용 B급 팩폭 로딩 화면
+  if (step === 'loading') {
+    return (
+      <div className={styles.container}>
+        <div className={styles.coverCard} style={{ textAlign: 'center', padding: '48px 24px' }}>
+          <div style={{ fontSize: '56px', display: 'inline-block', animation: 'spin 1.2s infinite linear' }}>
+            🧅
+          </div>
+          <h2 style={{ fontSize: '22px', fontWeight: 950, marginTop: '20px', color: '#000000' }}>
+            🔮 당신의 팩폭 결과 분석 중...
+          </h2>
+          <p style={{ fontSize: '13.5px', fontWeight: 700, color: '#475569', marginTop: '10px', lineHeight: 1.6 }}>
+            양파 껍질을 적나라하게 까고 있습니다! <br />
+            잠시 후 소름 돋는 결과 리포트가 공개됩니다 ⚡
+          </p>
+          <div style={{ marginTop: '24px', background: '#f1f5f9', borderRadius: '10px', height: '12px', overflow: 'hidden', border: '2px solid #000000' }}>
+            <div style={{ width: '100%', background: 'var(--kitsch-lime, #a3e635)', height: '100%', animation: 'progress 1.5s ease-in-out infinite' }} />
+          </div>
+        </div>
+        <AdSlot type="quiz" />
+      </div>
+    );
+  }
+
 
 
   // 3. 질문 진행 단계
@@ -254,8 +283,8 @@ export default function QuizPlayClient({ quiz }: QuizPlayClientProps) {
           {currentQuestion.options.map((option) => (
             <button
               key={option.id}
-              className={styles.optionButton}
-              onClick={() => handleAnswerSelect(option.score, option.text)}
+              className={`${styles.optionButton} ${selectedOptionId === option.id ? styles.selectedOption : ''}`}
+              onClick={(e) => handleAnswerSelect(e, option.id, option.score, option.text)}
             >
               {option.text}
             </button>
