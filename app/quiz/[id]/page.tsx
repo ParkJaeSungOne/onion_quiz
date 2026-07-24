@@ -1,5 +1,6 @@
 import { notFound } from 'next/navigation';
 import { Metadata } from 'next';
+import { unstable_cache } from 'next/cache';
 import prisma from '@/lib/prisma';
 import QuizPlayClient from './QuizPlayClient';
 
@@ -8,8 +9,46 @@ interface QuizPageProps {
 }
 
 // 1시간 단위 증분 정적 재생성 (ISR) 설정으로 플레이 페이지 로드 속도 향상
-export const revalidate = 3600; 
+export const revalidate = 3600;
 
+/**
+ * ⚡ DB 조회 쿼리 캐싱 (Supabase 통신 대기 시간을 0ms로 대폭 최적화)
+ */
+const getCachedQuiz = unstable_cache(
+  async (quizId: number) => {
+    return prisma.quiz.findUnique({
+      where: { id: quizId },
+      include: {
+        questions: {
+          orderBy: { questionNumber: 'asc' },
+          include: {
+            options: {
+              orderBy: { score: 'asc' }
+            }
+          }
+        }
+      }
+    });
+  },
+  ['quiz-detail-cache-v2'],
+  { revalidate: 3600, tags: ['quizzes'] }
+);
+
+/**
+ * ⚡ 사전 정적 파라미터 생성 (빌드 시 모든 퀴즈 페이지를 사전 렌더링하여 초고속 진입)
+ */
+export async function generateStaticParams() {
+  try {
+    const quizzes = await prisma.quiz.findMany({
+      select: { id: true }
+    });
+    return quizzes.map((q) => ({
+      id: q.id.toString()
+    }));
+  } catch {
+    return [];
+  }
+}
 
 /**
  * 1. 검색엔진 최적화 (SEO) 극대화를 위한 개별 테스트 동적 메타데이터 생성기
@@ -22,14 +61,7 @@ export async function generateMetadata({ params }: QuizPageProps): Promise<Metad
     return {};
   }
 
-  const quiz = await prisma.quiz.findUnique({
-    where: { id: quizId },
-    select: {
-      title: true,
-      description: true,
-      category: true
-    }
-  });
+  const quiz = await getCachedQuiz(quizId);
 
   if (!quiz) {
     return {};
@@ -88,20 +120,8 @@ export default async function QuizPage({ params }: QuizPageProps) {
     notFound();
   }
 
-  // DB에서 퀴즈와 하위 질문, 선택지를 한 번에 긁어옴
-  const quiz = await prisma.quiz.findUnique({
-    where: { id: quizId },
-    include: {
-      questions: {
-        orderBy: { questionNumber: 'asc' },
-        include: {
-          options: {
-            orderBy: { score: 'asc' }
-          }
-        }
-      }
-    }
-  });
+  // ⚡ 캐시된 퀴즈 데이터 초고속 로드
+  const quiz = await getCachedQuiz(quizId);
 
   if (!quiz) {
     notFound();

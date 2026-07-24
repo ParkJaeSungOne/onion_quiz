@@ -208,10 +208,18 @@
   user-select: none;
 }
 
-.optionButton:hover {
-  background: var(--primary-bg);
-  transform: translate(-2px, -2px);
-  box-shadow: 5px 5px 0px #000000;
+/* 📱 모바일 터치 기기에서는 sticky :hover 발동을 차단하고 PC 마우스 환경에서만 :hover 동작 */
+@media (hover: hover) and (pointer: fine) {
+  .optionButton:hover {
+    background: var(--primary-bg);
+    transform: translate(-2px, -2px);
+    box-shadow: 5px 5px 0px #000000;
+  }
+
+  .optionButton:nth-child(4n+1):hover { background-color: #fef08a; }
+  .optionButton:nth-child(4n+2):hover { background-color: #d9f99d; }
+  .optionButton:nth-child(4n+3):hover { background-color: #cffafe; }
+  .optionButton:nth-child(4n+4):hover { background-color: #fbcfe8; }
 }
 
 .optionButton:active {
@@ -219,18 +227,12 @@
   box-shadow: 1px 1px 0px #000000;
 }
 
-/* 📱 모바일 선택 시 즉시 하이라이팅 피드백 */
+/* 📱 터치 선택 순간의 찰나의 피드백 (선택 후 다음 문항으로 넘어갈 때 100% 깔끔히 리셋) */
 .selectedOption {
   background-color: var(--kitsch-lime, #a3e635) !important;
   transform: translate(2px, 2px) !important;
   box-shadow: 1px 1px 0px #000000 !important;
 }
-
-/* 카드 4가지 색상 랜덤 테마 */
-.optionButton:nth-child(4n+1):hover { background-color: #fef08a; }
-.optionButton:nth-child(4n+2):hover { background-color: #d9f99d; }
-.optionButton:nth-child(4n+3):hover { background-color: #cffafe; }
-.optionButton:nth-child(4n+4):hover { background-color: #fbcfe8; }
 
 @keyframes spin {
   0% { transform: rotate(0deg); }
