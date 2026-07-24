@@ -8,6 +8,7 @@ import { incrementShareCount } from '@/app/actions/share';
 import AdSlot from '@/components/AdSlot';
 import Footer from '@/components/Footer';
 import styles from './QuizPlay.module.css';
+import QuizUnifiedLoader from '@/components/QuizUnifiedLoader';
 
 // Kakao SDK 타입 확장 선언
 declare global {
@@ -225,27 +226,13 @@ export default function QuizPlayClient({ quiz }: QuizPlayClientProps) {
     );
   }
 
-  // 2. 최종 결과 라우팅 대기용 B급 팩폭 로딩 화면
+  // 2. 최종 결과 라우팅 대기용 통일된 B급 팩폭 로딩 화면
   if (step === 'loading') {
     return (
-      <div className={styles.container}>
-        <div className={styles.coverCard} style={{ textAlign: 'center', padding: '48px 24px' }}>
-          <div style={{ fontSize: '56px', display: 'inline-block', animation: 'spin 1.2s infinite linear' }}>
-            🧅
-          </div>
-          <h2 style={{ fontSize: '22px', fontWeight: 950, marginTop: '20px', color: '#000000' }}>
-            🔮 당신의 팩폭 결과 분석 중...
-          </h2>
-          <p style={{ fontSize: '13.5px', fontWeight: 700, color: '#475569', marginTop: '10px', lineHeight: 1.6 }}>
-            양파 껍질을 적나라하게 까고 있습니다! <br />
-            잠시 후 소름 돋는 결과 리포트가 공개됩니다 ⚡
-          </p>
-          <div style={{ marginTop: '24px', background: '#f1f5f9', borderRadius: '10px', height: '12px', overflow: 'hidden', border: '2px solid #000000' }}>
-            <div style={{ width: '100%', background: 'var(--kitsch-lime, #a3e635)', height: '100%', animation: 'progress 1.5s ease-in-out infinite' }} />
-          </div>
-        </div>
-        <AdSlot type="quiz" />
-      </div>
+      <QuizUnifiedLoader 
+        title="🔮 당신의 팩폭 결과 분석 중..." 
+        subtitle="양파 껍질을 적나라하게 까고 있습니다! 잠시 후 소름 돋는 결과 리포트가 공개됩니다 ⚡" 
+      />
     );
   }
 
