@@ -15,11 +15,13 @@ interface VisitorStatsResponse {
 }
 
 export default function VisitorCounter() {
-  // 초기 렌더링 시 "집계 중..." 멈춤 현상을 완전히 방지하기 위해 기본 백업 수치 설정
-  const [stats, setStats] = useState<{ todayUv: number; totalUv: number }>({
-    todayUv: 34,
-    totalUv: 2480
+  const [stats, setStats] = useState<{ todayPv: number; todayUv: number; totalPv: number; totalUv: number }>({
+    todayPv: 0,
+    todayUv: 0,
+    totalPv: 0,
+    totalUv: 0
   });
+  const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
     // 백그라운드 비동기 호출로 실제 사람 방문 집계 진행
@@ -34,9 +36,12 @@ export default function VisitorCounter() {
           const data: VisitorStatsResponse = await res.json();
           if (data && data.success && data.today && data.total) {
             setStats({
-              todayUv: data.today.uv || 34,
-              totalUv: data.total.uv || 2480
+              todayPv: data.today.pv || 1,
+              todayUv: data.today.uv || 1,
+              totalPv: data.total.pv || 1,
+              totalUv: data.total.uv || 1
             });
+            setLoaded(true);
           }
         }
       } catch (err) {
@@ -47,15 +52,19 @@ export default function VisitorCounter() {
     trackVisit();
   }, []);
 
+  // 집계 데이터가 도착하기 전까지는 깔끔한 로딩 배지 표시
+  const displayToday = loaded ? Math.max(stats.todayPv, stats.todayUv) : 0;
+  const displayTotal = loaded ? Math.max(stats.totalPv, stats.totalUv) : 0;
+
   return (
     <div className={styles.counterBadge}>
       <span className={styles.dot}>🟢</span>
       <span className={styles.text}>
-        오늘 온 양파: <strong>{stats.todayUv.toLocaleString()}</strong>명
+        오늘 탐색된 양파: <strong>{displayToday.toLocaleString()}</strong>회
       </span>
       <span className={styles.divider}>|</span>
       <span className={styles.text}>
-        누적 양파: <strong>{stats.totalUv.toLocaleString()}</strong>명
+        누적 깐 양파: <strong>{displayTotal.toLocaleString()}</strong>회
       </span>
     </div>
   );
