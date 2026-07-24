@@ -7,14 +7,15 @@ import { after } from 'next/server';
 export const maxDuration = 60; 
 
 export async function GET(request: Request) {
-  // 인증 키 체크 (로컬 ?secret=... 파라미터 또는 Vercel Cron Bearer 토큰 대응)
+  // 인증 키 체크 (로컬 ?secret=... 파라미터, Vercel Cron x-vercel-cron 헤더, 또는 Bearer 토큰 대응)
   const { searchParams } = new URL(request.url);
   const secret = searchParams.get('secret');
   const authHeader = request.headers.get('authorization');
   const bearerToken = authHeader?.startsWith('Bearer ') ? authHeader.substring(7) : null;
+  const isVercelCron = request.headers.get('x-vercel-cron') === '1' || request.headers.get('user-agent')?.includes('vercel-cron');
   const cronSecret = process.env.CRON_SECRET;
   
-  if (cronSecret) {
+  if (cronSecret && !isVercelCron) {
     if (secret !== cronSecret && bearerToken !== cronSecret) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
