@@ -168,8 +168,17 @@ export default async function AdminDashboardPage({ searchParams }: AdminDashboar
     quizTitle: comment.quiz?.title || '자유 방명록'
   }));
 
-  // 2.3 최근 상세 실시간 방문자 로그 50개 조회
+  // 2.3 최근 상세 실시간 방문자 로그 50개 조회 (어드민 페이지 접속 및 봇/크론 배제 후 순수 사람 유저만 조회)
   const visitorLogsRaw = await prisma.visitorLog.findMany({
+    where: {
+      NOT: [
+        { pagePath: { startsWith: '/admin' } },
+        { pagePath: { startsWith: '/api' } },
+        { userAgent: { contains: 'bot' } },
+        { userAgent: { contains: 'crawler' } },
+        { userAgent: { contains: 'yeti' } }
+      ]
+    },
     orderBy: { createdAt: 'desc' },
     take: 50
   });

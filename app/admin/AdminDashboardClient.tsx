@@ -1156,10 +1156,10 @@ export default function AdminDashboardClient({
           </div>
         </div>
 
-        {/* 📋 로그 데이터 테이블 */}
+        {/* 📋 로그 데이터 테이블 (순수 사람 유저 트랙킹) */}
         {visitorLogs.length === 0 ? (
           <div className={styles.emptyCard}>
-            <p className={styles.emptyText}>아직 수집된 방문 로그가 없습니다.</p>
+            <p className={styles.emptyText}>아직 수집된 순수 사람 방문자 로그가 없습니다. (어드민 본인 접속 및 봇/크론은 자동 필터링됩니다)</p>
           </div>
         ) : (() => {
           // 필터링된 방문 로그 목록 계산
@@ -1200,14 +1200,13 @@ export default function AdminDashboardClient({
                     <th>유입 채널</th>
                     <th>조회한 페이지 (제목 / 경로)</th>
                     <th>기기 및 접속 환경</th>
-                    <th>체류 시간 & 행동</th>
+                    <th>유저 행동 & 충성도 배지</th>
                     <th>위치</th>
                     <th>접속 IP 주소</th>
                   </tr>
                 </thead>
                 <tbody>
                   {filteredLogs.map((log) => {
-                    // IP 표시 (마스킹 옵션 준수)
                     const formatIp = (ipAddr: string) => {
                       if (!ipAddr) return 'unknown';
                       if (maskIpToggle) {
@@ -1230,22 +1229,31 @@ export default function AdminDashboardClient({
                       day: '2-digit'
                     });
 
-                    // 체류 시간 배지
+                    // 유저 행동 및 플레이 심도 지표 (Real User Intelligence Persona)
                     const sec = log.staySeconds || 0;
-                    let stayBadgeBg = '#fee2e2';
-                    let stayBadgeColor = '#991b1b';
-                    let stayText = `🚪 ${sec}초 (이탈)`;
+                    const isResultPage = log.pagePath.includes('/result/');
+                    const isQuizPage = log.pagePath.includes('/quiz/');
 
-                    if (sec >= 60) {
-                      stayBadgeBg = '#dcfce7';
-                      stayBadgeColor = '#166534';
-                      const min = Math.floor(sec / 60);
-                      const remSec = sec % 60;
-                      stayText = `⚡ ${min}분 ${remSec}초 (딥 플레이)`;
+                    let userBadgeBg = '#fee2e2';
+                    let userBadgeColor = '#991b1b';
+                    let userBadgeText = `🚪 ${sec}초 (이탈)`;
+
+                    if (isResultPage && sec >= 45) {
+                      userBadgeBg = '#fef3c7';
+                      userBadgeColor = '#b45309';
+                      userBadgeText = `👑 파워 바이럴 유저 (${sec}초 · 결과 완독)`;
+                    } else if (isResultPage) {
+                      userBadgeBg = '#dcfce7';
+                      userBadgeColor = '#15803d';
+                      userBadgeText = `⚡ 테스트 완료 (${sec}초)`;
+                    } else if (isQuizPage && sec >= 15) {
+                      userBadgeBg = '#e0f2fe';
+                      userBadgeColor = '#0369a1';
+                      userBadgeText = `🧩 퀴즈 풀이 중 (${sec}초)`;
                     } else if (sec >= 15) {
-                      stayBadgeBg = '#fef9c3';
-                      stayBadgeColor = '#854d0e';
-                      stayText = `⏱️ ${sec}초 (일반 뷰)`;
+                      userBadgeBg = '#f3e8ff';
+                      userBadgeColor = '#6b21a8';
+                      userBadgeText = `🏠 홈 탐색 (${sec}초)`;
                     }
 
                     return (
@@ -1301,19 +1309,20 @@ export default function AdminDashboardClient({
                           </div>
                         </td>
 
-                        {/* 5. 체류 시간 & 행동 */}
+                        {/* 5. 유저 행동 & 충성도 배지 */}
                         <td>
                           <span style={{
                             display: 'inline-block',
-                            background: stayBadgeBg,
-                            color: stayBadgeColor,
-                            padding: '3px 8px',
+                            background: userBadgeBg,
+                            color: userBadgeColor,
+                            border: '1.5px solid #000000',
+                            padding: '4px 8px',
                             borderRadius: '6px',
                             fontSize: '11px',
                             fontWeight: '900',
                             whiteSpace: 'nowrap'
                           }}>
-                            {stayText}
+                            {userBadgeText}
                           </span>
                         </td>
 

@@ -1,6 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 
+// 봇, 크론, 스크래퍼, AI 에이전트 및 어드민 페이지 전면 필터링 정규식
+const BOT_AND_CRON_REGEX = /bot|crawler|spider|crawling|yeti|daum|google|naver|yahoo|bing|lighthouse|facebookexternalhit|whatsapp|slack|telegram|vercel|headlesschrome|phantomjs|puppeteer|python-requests|curl|wget|go-http-client|axios|postman|gemini|claude|chatgpt|meta-externalagent|threadsbot|cron/i;
+
+function isBotOrCron(ua: string): boolean {
+  return BOT_AND_CRON_REGEX.test(ua);
+}
+
 // 가볍고 고속인 User-Agent 파서 (소셜 인앱 브라우저 정밀 탐지)
 function parseUserAgent(ua: string) {
   let device = 'Desktop';
@@ -13,8 +20,6 @@ function parseUserAgent(ua: string) {
   if (/mobi|android|iphone|ipad|ipod/i.test(ua)) {
     device = 'Mobile';
     if (/ipad/i.test(ua)) device = 'Tablet';
-  } else if (/bot|crawler|spider|lighthouse|slack|discord/i.test(ua)) {
-    device = 'Bot';
   }
 
   // 2. OS 분류
@@ -38,14 +43,25 @@ function parseUserAgent(ua: string) {
 }
 
 /**
- * POST: 방문 유입 로그 생성
+ * POST: 순수 사람 방문 유입 로그 생성 (어드민 & 봇/크론 전면 배제)
  */
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { pagePath, referrer, userAgent } = body;
+    const { pagePath = '/', referrer = 'direct', userAgent } = body;
+
+    // 🛡️ 1. 어드민 페이지 및 API 경로 접속은 로그 수집에서 완전 제외 (어드민 본인 방문 배제)
+    if (pagePath.startsWith('/admin') || pagePath.startsWith('/api')) {
+      return NextResponse.json({ success: true, ignored: true, reason: 'Admin/API page excluded' });
+    }
 
     const ua = userAgent || req.headers.get('user-agent') || 'unknown';
+
+    // 🛡️ 2. 봇, 크론, AI 에이전트 트래픽 전면 배제 (순수 사람 유저만 기록)
+    if (isBotOrCron(ua)) {
+      return NextResponse.json({ success: true, ignored: true, reason: 'Bot/Cron traffic excluded' });
+    }
+
     const { device, os, browser } = parseUserAgent(ua);
 
     // Vercel Geolocation 및 IP 헤더 파싱
