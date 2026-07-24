@@ -176,7 +176,7 @@ export default function AdminDashboardClient({
     }
   };
 
-  const [isTokenToolOpen, setIsTokenToolOpen] = useState(true);
+  const [isTokenToolOpen, setIsTokenToolOpen] = useState(false);
 
   // 👥 실시간 방문 유입 로그 검색 & 필터링 상태
   const [logSearchQuery, setLogSearchQuery] = useState('');

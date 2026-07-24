@@ -1326,35 +1326,147 @@
   }
 }
 
-/* Mobile Responsive Optimization for Toolbar & Inputs */
+/* Mobile Responsive Optimization for Admin Dashboard */
 @media (max-width: 768px) {
+  .container {
+    padding: 16px 12px 60px 12px !important;
+  }
+
+  .header {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 16px !important;
+    margin-bottom: 24px !important;
+  }
+
+  .title {
+    font-size: 22px !important;
+  }
+
+  .headerActions {
+    flex-direction: column !important;
+    width: 100% !important;
+    align-items: stretch !important;
+  }
+
+  .seedButton,
+  .logoutButton {
+    width: 100% !important;
+    text-align: center !important;
+    padding: 12px !important;
+    font-size: 13px !important;
+  }
+
+  .kpiGrid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 10px !important;
+    margin-bottom: 24px !important;
+  }
+
+  .kpiCard {
+    padding: 12px !important;
+  }
+
+  .kpiLabel {
+    font-size: 11px !important;
+  }
+
+  .kpiValue {
+    font-size: 17px !important;
+    margin-top: 4px !important;
+  }
+
+  .seedSection {
+    padding: 16px !important;
+    border-radius: 16px !important;
+  }
+
+  .seedTitle {
+    font-size: 16px !important;
+  }
+
+  .seedForm {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 10px !important;
+  }
+
+  .seedInput,
+  .seedSelect,
+  .seedSubmitBtn {
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
   .toolbarContainer {
     flex-direction: column !important;
     align-items: stretch !important;
     gap: 12px !important;
+    padding: 12px !important;
   }
+
   .filterGroup {
     flex-direction: column !important;
     align-items: stretch !important;
     width: 100% !important;
+    gap: 8px !important;
   }
+
   .filterSelect {
     width: 100% !important;
+    box-sizing: border-box !important;
   }
+
   .searchGroup {
     max-width: 100% !important;
     width: 100% !important;
     flex-direction: column !important;
+    gap: 8px !important;
   }
+
   .searchInput {
     width: 100% !important;
+    box-sizing: border-box !important;
   }
+
   .maskToggleBtn {
     width: 100% !important;
     text-align: center !important;
   }
+
   .metricGrid {
     grid-template-columns: repeat(2, 1fr) !important;
+    gap: 8px !important;
+  }
+
+  .metricCard {
+    padding: 10px !important;
+  }
+
+  .metricValue {
+    font-size: 16px !important;
+  }
+
+  .quizzesGrid {
+    grid-template-columns: 1fr !important;
+    gap: 16px !important;
+  }
+
+  .chartSection,
+  .visitorLogsSection {
+    padding: 16px !important;
+    border-radius: 16px !important;
+    margin-top: 24px !important;
+    margin-bottom: 24px !important;
+  }
+
+  .chartContainer {
+    gap: 4px !important;
+    height: 180px !important;
+  }
+
+  .chartDate {
+    font-size: 9px !important;
   }
 }
 
