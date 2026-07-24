@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { GoogleGenAI } from '@google/genai';
 import prisma from '@/lib/prisma';
 import { after } from 'next/server';
+import { getThreadsToken } from '@/lib/threadsToken';
 
 // API 실행 제한시간을 넉넉히 설정 (Gemini API 호출 및 처리에 시간이 걸릴 수 있음)
 export const maxDuration = 60; 
@@ -245,8 +246,7 @@ ${subject ? `▶ **[사용자 지정 강제 주제]**: "${subject}"
     });
 
     // 4. [신규 기능] AI 퀴즈 생성 성공 시 Threads 채널 즉시 자동 포스팅 및 유입 링크 생성 (오토파일럿)
-    const threadsTokenRaw = process.env.THREADS_ACCESS_TOKEN || '';
-    const threadsToken = threadsTokenRaw.replace(/["']/g, '').trim();
+    const threadsToken = await getThreadsToken();
     let threadsResult = 'Not attempted (No token)';
 
     // 안전한 API 호출 및 응답 해석용 로컬 헬퍼 (URL Query Parameter 방식 사용)
