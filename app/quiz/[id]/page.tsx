@@ -42,6 +42,17 @@ export async function generateMetadata({ params }: QuizPageProps): Promise<Metad
     alternates: {
       canonical: `https://kkado-kkado.com/quiz/${quizId}`,
     },
+    robots: {
+      index: true,
+      follow: true,
+      nocache: false,
+      googleBot: {
+        index: true,
+        follow: true,
+        'max-image-preview': 'large',
+        'max-snippet': -1,
+      },
+    },
     openGraph: {
       title: `${quiz.title} - 까도까도 (kkado-kkado.com)`,
       description: quiz.description,
