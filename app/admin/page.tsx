@@ -1,6 +1,7 @@
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import prisma from '@/lib/prisma';
+import { getKstDateAndStart } from '@/lib/kst';
 import AdminDashboardClient from './AdminDashboardClient';
 
 const SESSION_COOKIE_NAME = 'kkado_admin_session';
@@ -32,13 +33,11 @@ export default async function AdminDashboardPage({ searchParams }: AdminDashboar
     where: { totalScore: { gt: 0 } }
   });
   
-  // 오늘 오전 00시 기준 (KST)
-  const todayKst = new Date(new Date().getTime() + 9 * 60 * 60 * 1000).toISOString().split('T')[0];
-  const todayStart = new Date();
-  todayStart.setHours(0, 0, 0, 0);
+  // 🇰🇷 한국 표준시(KST) 자정(00:00:00 KST) 기준 정확한 연산 (Vercel 서버리스 UTC 오차 전면 수정)
+  const { todayKst, todayStartKstUTC } = getKstDateAndStart();
   const todayPlays = await prisma.quizLog.count({
     where: {
-      createdAt: { gte: todayStart },
+      createdAt: { gte: todayStartKstUTC },
       totalScore: { gt: 0 }
     }
   });

@@ -1,20 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import prisma from '@/lib/prisma';
+import { getKstDateString } from '@/lib/kst';
 
 // 봇(크롤러, 서칭 로봇) 필터용 정규식
 const BOT_REGEX = /bot|crawler|spider|crawling|yeti|daum|google|naver|yahoo|bing|lighthouse|facebookexternalhit|whatsapp|slack|telegram/i;
 
 function isBot(userAgent: string): boolean {
   return BOT_REGEX.test(userAgent);
-}
-
-// KST (한국 시간) 기준 YYYY-MM-DD 날짜 문자열 반환
-function getKstDateString(): string {
-  const utc = new Date();
-  // UTC 시간에 9시간을 더하여 KST 날짜 계산
-  const kst = new Date(utc.getTime() + 9 * 60 * 60 * 1000);
-  return kst.toISOString().split('T')[0];
 }
 
 export async function POST(req: NextRequest) {
