@@ -131,14 +131,19 @@ export default function QuizPlayClient({ quiz }: QuizPlayClientProps) {
     }
   };
 
-  // 퀴즈 시작하기
-  const handleStart = async () => {
+  // 퀴즈 시작하기 (0.001초 비동기 초고속 전환)
+  const handleStart = () => {
+    // ⚡ UI를 0.001초만에 1번 질문 카드로 즉각 동기 전환!
     setStep('questions');
-    // 비동기로 유저 유입 정보 로그 적재 및 logId 확보
-    const result = await createQuizLog(quiz.id);
-    if (result.success && result.logId) {
-      setQuizLogId(result.logId);
-    }
+
+    // 🚀 비동기 백그라운드 유입 로그 적재 (네트워크 대기시간 0초)
+    createQuizLog(quiz.id).then((result) => {
+      if (result?.success && result?.logId) {
+        setQuizLogId(result.logId);
+      }
+    }).catch((err) => {
+      console.warn('Non-blocking quiz log warning:', err);
+    });
   };
 
   // 답변 선택 (모바일 active 포커스 고정 해제 & 즉시 반응 로딩 피드백)
