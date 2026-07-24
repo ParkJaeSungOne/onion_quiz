@@ -1468,14 +1468,29 @@
   .chartDate {
     font-size: 9px !important;
   }
+
+  .pagination {
+    gap: 4px !important;
+    margin-top: 18px !important;
+  }
+
+  .pageButton {
+    padding: 5px 9px !important;
+    font-size: 11px !important;
+    border-width: 2px !important;
+  }
 }
 
-/* 어드민 페이징 스타일 */
+/* 어드민 페이징 스타일 (모바일 카드 오버플로우 방지) */
 .pagination {
   display: flex;
   justify-content: center;
-  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
   margin-top: 28px;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .pageButton {
@@ -1483,12 +1498,13 @@
   border: 3px solid #000000;
   box-shadow: 2px 2px 0px #000000;
   border-radius: 10px;
-  padding: 6px 14px;
+  padding: 6px 12px;
   font-size: 12px;
   font-weight: 800;
   cursor: pointer;
   color: #000000;
   transition: all 0.1s ease;
+  white-space: nowrap;
 }
 
 .pageButton:hover:not(.disabled) {

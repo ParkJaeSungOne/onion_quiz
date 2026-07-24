@@ -971,18 +971,41 @@ export default function AdminDashboardClient({
               <span className={`${styles.pageButton} ${styles.disabled}`}>◀ 이전</span>
             )}
 
-            {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => {
-              const isCurrent = p === currentPage;
-              return (
-                <button
-                  key={p}
-                  onClick={() => router.push(`/admin?page=${p}`)}
-                  className={`${styles.pageButton} ${isCurrent ? styles.activePage : ''}`}
-                >
-                  {p}
-                </button>
-              );
-            })}
+            {/* 스마트 창 분할 페이징 (모바일 카체 이탈 전면 방지) */}
+            {(() => {
+              const pages: (number | string)[] = [];
+              if (totalPages <= 5) {
+                for (let i = 1; i <= totalPages; i++) pages.push(i);
+              } else {
+                pages.push(1);
+                if (currentPage > 3) pages.push('...1');
+                const start = Math.max(2, currentPage - 1);
+                const end = Math.min(totalPages - 1, currentPage + 1);
+                for (let i = start; i <= end; i++) pages.push(i);
+                if (currentPage < totalPages - 2) pages.push('...2');
+                pages.push(totalPages);
+              }
+
+              return pages.map((p, idx) => {
+                if (typeof p === 'string') {
+                  return (
+                    <span key={`dots-${idx}`} className={`${styles.pageButton} ${styles.disabled}`} style={{ padding: '6px 8px' }}>
+                      ...
+                    </span>
+                  );
+                }
+                const isCurrent = p === currentPage;
+                return (
+                  <button
+                    key={p}
+                    onClick={() => router.push(`/admin?page=${p}`)}
+                    className={`${styles.pageButton} ${isCurrent ? styles.activePage : ''}`}
+                  >
+                    {p}
+                  </button>
+                );
+              });
+            })()}
 
             {currentPage < totalPages ? (
               <button 
