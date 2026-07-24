@@ -1093,11 +1093,29 @@
 
 .tableWrapper {
   margin-top: 20px;
+  max-height: 540px;
+  overflow-y: auto;
   overflow-x: auto;
   border: 3px solid #000000;
   box-shadow: 4px 4px 0px #000000;
   border-radius: 12px;
   background: #ffffff;
+  -webkit-overflow-scrolling: touch;
+}
+
+.tableWrapper::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.tableWrapper::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 4px;
+}
+
+.tableWrapper::-webkit-scrollbar-thumb {
+  background: #000000;
+  border-radius: 4px;
 }
 
 .logsTable {
@@ -1108,6 +1126,9 @@
 }
 
 .logsTable th {
+  position: sticky;
+  top: 0;
+  z-index: 10;
   background: var(--kitsch-lime, #a3e635);
   color: #000000;
   font-weight: 950;
