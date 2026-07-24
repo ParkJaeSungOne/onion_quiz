@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import prisma from '@/lib/prisma';
-import { getKstDateString } from '@/lib/kst';
+import { getKstDateAndStart } from '@/lib/kst';
 
 // 봇(크롤러, 서칭 로봇) 필터용 정규식
 const BOT_REGEX = /bot|crawler|spider|crawling|yeti|daum|google|naver|yahoo|bing|lighthouse|facebookexternalhit|whatsapp|slack|telegram/i;
@@ -13,13 +13,12 @@ function isBot(userAgent: string): boolean {
 export async function POST(req: NextRequest) {
   try {
     const userAgent = req.headers.get('user-agent') || 'unknown';
+    const { todayKst } = getKstDateAndStart();
 
     // 1. 봇 트래픽 제외 (실제 사람만 집계)
     if (isBot(userAgent)) {
-      // 봇인 경우 데이터 변경 없이 기존 통계값만 리턴하여 읽기만 진행
-      const today = getKstDateString();
       const todayStats = await prisma.visitorStats.findUnique({
-        where: { date: today }
+        where: { date: todayKst }
       });
       const totals = await prisma.visitorStats.aggregate({
         _sum: { pv: true, uv: true }
@@ -40,17 +39,16 @@ export async function POST(req: NextRequest) {
 
     const cookieStore = await cookies();
     const isUnique = !cookieStore.has('kkado_uv_registered');
-    const today = getKstDateString();
 
     // 2. 오늘의 PV, UV 증분 Upsert 트랜잭션 수행
     const todayStats = await prisma.visitorStats.upsert({
-      where: { date: today },
+      where: { date: todayKst },
       update: {
         pv: { increment: 1 },
         uv: isUnique ? { increment: 1 } : undefined
       },
       create: {
-        date: today,
+        date: todayKst,
         pv: 1,
         uv: 1
       }
@@ -71,8 +69,8 @@ export async function POST(req: NextRequest) {
         uv: todayStats.uv
       },
       total: {
-        pv: totals._sum.pv || 0,
-        uv: totals._sum.uv || 0
+        pv: totals._sum.pv || todayStats.pv,
+        uv: totals._sum.uv || todayStats.uv
       }
     });
 
@@ -95,13 +93,13 @@ export async function POST(req: NextRequest) {
 }
 
 /**
- * GET: 단순히 현재 방문자 통계값만 즉시 조회 (쿠키 변경 없음)
+ * GET: 단순히 현재 순 방문자 통계값만 즉시 조회 (쿠키 변경 없음)
  */
 export async function GET() {
   try {
-    const today = getKstDateString();
+    const { todayKst } = getKstDateAndStart();
     const todayStats = await prisma.visitorStats.findUnique({
-      where: { date: today }
+      where: { date: todayKst }
     });
     const totals = await prisma.visitorStats.aggregate({
       _sum: { pv: true, uv: true }
@@ -110,20 +108,20 @@ export async function GET() {
     return NextResponse.json({
       success: true,
       today: {
-        pv: todayStats?.pv || 15,
-        uv: todayStats?.uv || 12
+        pv: todayStats?.pv || 0,
+        uv: todayStats?.uv || 0
       },
       total: {
-        pv: totals._sum.pv || 2840,
-        uv: totals._sum.uv || 1920
+        pv: totals._sum.pv || 0,
+        uv: totals._sum.uv || 0
       }
     });
   } catch (error: any) {
     console.error('Visitor GET error:', error);
     return NextResponse.json({
-      success: true,
-      today: { pv: 24, uv: 18 },
-      total: { pv: 3420, uv: 2150 }
-    });
+      success: false,
+      today: { pv: 0, uv: 0 },
+      total: { pv: 0, uv: 0 }
+    }, { status: 500 });
   }
 }

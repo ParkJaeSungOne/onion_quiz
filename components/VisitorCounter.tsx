@@ -15,10 +15,8 @@ interface VisitorStatsResponse {
 }
 
 export default function VisitorCounter() {
-  const [stats, setStats] = useState<{ todayPv: number; todayUv: number; totalPv: number; totalUv: number }>({
-    todayPv: 0,
+  const [stats, setStats] = useState<{ todayUv: number; totalUv: number }>({
     todayUv: 0,
-    totalPv: 0,
     totalUv: 0
   });
   const [loaded, setLoaded] = useState(false);
@@ -36,10 +34,8 @@ export default function VisitorCounter() {
           const data: VisitorStatsResponse = await res.json();
           if (data && data.success && data.today && data.total) {
             setStats({
-              todayPv: data.today.pv || 1,
-              todayUv: data.today.uv || 1,
-              totalPv: data.total.pv || 1,
-              totalUv: data.total.uv || 1
+              todayUv: data.today.uv || 0,
+              totalUv: data.total.uv || 0
             });
             setLoaded(true);
           }
@@ -52,19 +48,15 @@ export default function VisitorCounter() {
     trackVisit();
   }, []);
 
-  // 집계 데이터가 도착하기 전까지는 깔끔한 로딩 배지 표시
-  const displayToday = loaded ? Math.max(stats.todayPv, stats.todayUv) : 0;
-  const displayTotal = loaded ? Math.max(stats.totalPv, stats.totalUv) : 0;
-
   return (
     <div className={styles.counterBadge}>
       <span className={styles.dot}>🟢</span>
       <span className={styles.text}>
-        오늘 탐색된 양파: <strong>{displayToday.toLocaleString()}</strong>회
+        오늘 온 순 양파(UV): <strong>{loaded ? stats.todayUv.toLocaleString() : '...'}</strong>명
       </span>
       <span className={styles.divider}>|</span>
       <span className={styles.text}>
-        누적 깐 양파: <strong>{displayTotal.toLocaleString()}</strong>회
+        누적 순 양파(UV): <strong>{loaded ? stats.totalUv.toLocaleString() : '...'}</strong>명
       </span>
     </div>
   );
