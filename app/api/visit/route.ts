@@ -2,21 +2,14 @@ import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import prisma from '@/lib/prisma';
 import { getKstDateAndStart } from '@/lib/kst';
-
-// 봇(크롤러, 서칭 로봇) 필터용 정규식
-const BOT_REGEX = /bot|crawler|spider|crawling|yeti|daum|google|naver|yahoo|bing|lighthouse|facebookexternalhit|whatsapp|slack|telegram/i;
-
-function isBot(userAgent: string): boolean {
-  return BOT_REGEX.test(userAgent);
-}
+import { isPureHumanVisitor } from '@/lib/visitorFilter';
 
 export async function POST(req: NextRequest) {
   try {
-    const userAgent = req.headers.get('user-agent') || 'unknown';
     const { todayKst } = getKstDateAndStart();
 
-    // 1. 봇 트래픽 제외 (실제 사람만 집계)
-    if (isBot(userAgent)) {
+    // 🛡️ 1. 봇, 크론, 스크립트, 어드민 트래픽 전면 제외 (순수 사람만 집계)
+    if (!isPureHumanVisitor(req)) {
       const todayStats = await prisma.visitorStats.findUnique({
         where: { date: todayKst }
       });

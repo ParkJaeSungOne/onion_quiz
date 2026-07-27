@@ -42,6 +42,10 @@ function parseUserAgent(ua: string) {
   return { device, os, browser };
 }
 
+import { NextRequest, NextResponse } from 'next/server';
+import prisma from '@/lib/prisma';
+import { isPureHumanVisitor } from '@/lib/visitorFilter';
+
 /**
  * POST: 순수 사람 방문 유입 로그 생성 (어드민 & 봇/크론 전면 배제)
  */
@@ -50,16 +54,11 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const { pagePath = '/', referrer = 'direct', userAgent } = body;
 
-    // 🛡️ 1. 어드민 페이지 및 API 경로 접속은 로그 수집에서 완전 제외 (어드민 본인 방문 배제)
-    if (pagePath.startsWith('/admin') || pagePath.startsWith('/api')) {
-      return NextResponse.json({ success: true, ignored: true, reason: 'Admin/API page excluded' });
-    }
-
     const ua = userAgent || req.headers.get('user-agent') || 'unknown';
 
-    // 🛡️ 2. 봇, 크론, AI 에이전트 트래픽 전면 배제 (순수 사람 유저만 기록)
-    if (isBotOrCron(ua)) {
-      return NextResponse.json({ success: true, ignored: true, reason: 'Bot/Cron traffic excluded' });
+    // 🛡️ 봇, 크론, 스크립트, 어드민 트래픽 전면 제외 (순수 사람만 집계)
+    if (!isPureHumanVisitor(req, pagePath, ua)) {
+      return NextResponse.json({ success: true, ignored: true, reason: 'Non-human or Admin traffic excluded' });
     }
 
     const { device, os, browser } = parseUserAgent(ua);
