@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
-import { isPureHumanVisitor } from '@/lib/visitorFilter';
+import { isPureHumanVisitor, parseUserAgent } from '@/lib/visitorFilter';
 
 /**
  * POST: 순수 사람 방문 유입 로그 생성 (어드민 & 봇/크론 전면 배제)
