@@ -1,49 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
-
-// 봇, 크론, 스크래퍼, AI 에이전트 및 어드민 페이지 전면 필터링 정규식
-const BOT_AND_CRON_REGEX = /bot|crawler|spider|crawling|yeti|daum|google|naver|yahoo|bing|lighthouse|facebookexternalhit|whatsapp|slack|telegram|vercel|headlesschrome|phantomjs|puppeteer|python-requests|curl|wget|go-http-client|axios|postman|gemini|claude|chatgpt|meta-externalagent|threadsbot|cron/i;
-
-function isBotOrCron(ua: string): boolean {
-  return BOT_AND_CRON_REGEX.test(ua);
-}
-
-// 가볍고 고속인 User-Agent 파서 (소셜 인앱 브라우저 정밀 탐지)
-function parseUserAgent(ua: string) {
-  let device = 'Desktop';
-  let os = 'Unknown OS';
-  let browser = 'Unknown Browser';
-
-  const uaLower = ua.toLowerCase();
-
-  // 1. 기기 분류
-  if (/mobi|android|iphone|ipad|ipod/i.test(ua)) {
-    device = 'Mobile';
-    if (/ipad/i.test(ua)) device = 'Tablet';
-  }
-
-  // 2. OS 분류
-  if (/iphone|ipad|ipod/i.test(ua)) os = 'iOS';
-  else if (/android/i.test(ua)) os = 'Android';
-  else if (/windows/i.test(ua)) os = 'Windows';
-  else if (/macintosh|mac os x/i.test(ua)) os = 'macOS';
-  else if (/linux/i.test(ua)) os = 'Linux';
-
-  // 3. 브라우저 및 인앱 브라우저 분류
-  if (uaLower.includes('kakaotalk')) browser = 'KakaoTalk';
-  else if (uaLower.includes('instagram')) browser = 'Instagram';
-  else if (uaLower.includes('threads')) browser = 'Threads';
-  else if (uaLower.includes('fbav') || uaLower.includes('fb_iab')) browser = 'Facebook';
-  else if (uaLower.includes('chrome') && !uaLower.includes('edge') && !uaLower.includes('edg')) browser = 'Chrome';
-  else if (uaLower.includes('safari') && !uaLower.includes('chrome')) browser = 'Safari';
-  else if (uaLower.includes('firefox')) browser = 'Firefox';
-  else if (uaLower.includes('edge') || uaLower.includes('edg')) browser = 'Edge';
-
-  return { device, os, browser };
-}
-
-import { NextRequest, NextResponse } from 'next/server';
-import prisma from '@/lib/prisma';
 import { isPureHumanVisitor } from '@/lib/visitorFilter';
 
 /**
