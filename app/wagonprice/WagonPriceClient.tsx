@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
 import AdSlot from '@/components/AdSlot';
 import styles from './wagonprice.module.css';
 
@@ -204,9 +205,14 @@ const PRESETS: ProductPreset[] = [
 ];
 
 export default function WagonPriceClient() {
-  const [selectedId, setSelectedId] = useState<string>('hetbahn');
+  const searchParams = useSearchParams();
+  const initialItem = searchParams.get('item') || 'hetbahn';
+
+  const [selectedId, setSelectedId] = useState<string>(initialItem);
   const [priceStr, setPriceStr] = useState<string>('26900');
   const [qtyStr, setQtyStr] = useState<string>('36');
+
+  const cardRef = useRef<HTMLDivElement>(null);
 
   const activePreset = PRESETS.find((p) => p.id === selectedId) || PRESETS[0];
 
@@ -284,7 +290,7 @@ export default function WagonPriceClient() {
       <AdSlot type="main" />
 
       {/* 2. 메인 계산기 카드 */}
-      <div className={styles.card}>
+      <div ref={cardRef} className={styles.card}>
         <div className={styles.cardHeader}>
           <span className={styles.cardHeaderIcon}>{activePreset.icon}</span>
           <div>

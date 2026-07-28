@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { Suspense } from 'react';
 import { Metadata } from 'next';
 import Link from 'next/link';
 import WagonPriceClient from './WagonPriceClient';
@@ -51,7 +51,9 @@ export default function WagonPricePage() {
       </header>
 
       <main className={styles.main}>
-        <WagonPriceClient />
+        <Suspense fallback={<div style={{ textAlign: 'center', padding: '40px 0', fontWeight: 900 }}>🛒 웨건계산기 로딩 중...</div>}>
+          <WagonPriceClient />
+        </Suspense>
       </main>
 
       <footer className={styles.footer}>
