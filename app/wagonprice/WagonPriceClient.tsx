@@ -3,7 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import AdSlot from '@/components/AdSlot';
-import { PRESETS } from './[item]/ItemWagonClient';
+import { PRESETS } from './presets';
 import styles from './wagonprice.module.css';
 
 export default function WagonPriceClient() {

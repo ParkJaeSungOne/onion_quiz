@@ -2,7 +2,8 @@ import React from 'react';
 import { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import ItemWagonClient, { PRESETS } from './ItemWagonClient';
+import { PRESETS } from '../presets';
+import ItemWagonClient from './ItemWagonClient';
 import styles from '../wagonprice.module.css';
 
 interface ItemPageProps {
