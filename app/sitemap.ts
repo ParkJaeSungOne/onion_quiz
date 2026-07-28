@@ -20,6 +20,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: 'daily' as const,
       priority: 0.9,
     },
+    ...['hetbahn', 'ottogi_rice', 'misik_rice', 'coke_zero', 'coke_original', 'pepsi_zero', 'shin_ramen', 'jin_ramen', 'eggs', 'seoul_milk', 'tissue', 'samdasoo'].map((item) => ({
+      url: `${baseUrl}/wagonprice/${item}`,
+      lastModified: new Date(),
+      changeFrequency: 'daily' as const,
+      priority: 0.8,
+    })),
     {
       url: `${baseUrl}/guestbook`,
       lastModified: new Date(),
