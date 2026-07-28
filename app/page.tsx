@@ -89,6 +89,28 @@ export default async function Home({ searchParams }: HomePageProps) {
         <p className={styles.subtitle}>
           양파처럼 깔수록 재미있고 적나라한 진짜 나를 까보는 성향 테스트 연구소
         </p>
+
+        {/* 🛒 웨건계산기 메인 버튼 */}
+        <Link href="/wagonprice" style={{
+          marginTop: '16px',
+          display: 'inline-flex',
+          alignItems: 'center',
+          gap: '8px',
+          background: 'linear-gradient(135deg, #ffeb3b 0%, #ff9800 100%)',
+          color: '#000000',
+          border: '3px solid #000000',
+          boxShadow: '4px 4px 0px #000000',
+          borderRadius: '16px',
+          padding: '12px 24px',
+          fontWeight: 900,
+          fontSize: '16px',
+          textDecoration: 'none',
+          cursor: 'pointer',
+          transition: 'all 0.2s ease',
+          transform: 'rotate(-0.5deg)',
+        }}>
+          <span>🛒 웨건계산기 (햇반·코크·생필품 핫딜 단가 판독) 바로가기 →</span>
+        </Link>
       </header>
 
       {/* 🔍 검색 바 컴포넌트 마운트 */}
