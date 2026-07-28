@@ -35,12 +35,14 @@ const getCachedQuiz = unstable_cache(
 );
 
 /**
- * ⚡ 사전 정적 파라미터 생성 (빌드 시 모든 퀴즈 페이지를 사전 렌더링하여 초고속 진입)
+ * ⚡ 사전 정적 파라미터 생성 (최신 20개 인기 퀴즈 사전 렌더링으로 커넥션 풀 고갈 방지 및 초고속 빌드)
  */
 export async function generateStaticParams() {
   try {
     const quizzes = await prisma.quiz.findMany({
-      select: { id: true }
+      select: { id: true },
+      orderBy: { id: 'desc' },
+      take: 20
     });
     return quizzes.map((q) => ({
       id: q.id.toString()
