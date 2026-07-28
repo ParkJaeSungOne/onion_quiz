@@ -457,11 +457,188 @@
   font-weight: 900;
 }
 
-@media (max-width: 480px) {
-  .title { font-size: 28px; }
-  .categoryGrid { grid-template-columns: repeat(3, 1fr); }
-  .metricsGrid { grid-template-columns: 1fr; }
-  .linkGroup { grid-template-columns: 1fr; }
-  .tierTable { font-size: 12px; }
-  .tierTable th, .tierTable td { padding: 8px; }
+@media (max-width: 600px) {
+  .container {
+    padding: 16px 10px 60px 10px;
+  }
+
+  .header {
+    margin-bottom: 20px;
+  }
+
+  .backLink {
+    font-size: 12px;
+    padding: 6px 12px;
+    margin-bottom: 14px;
+    box-shadow: 2px 2px 0px #000000;
+  }
+
+  .titleBadge {
+    font-size: 12px;
+    padding: 4px 12px;
+  }
+
+  .title {
+    font-size: 26px;
+    margin-bottom: 6px;
+  }
+
+  .subtitle {
+    font-size: 12px;
+    padding: 8px 12px;
+    box-shadow: 2px 2px 0px #000000;
+  }
+
+  .categoryGrid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 6px;
+    margin-bottom: 18px;
+  }
+
+  .catBtn {
+    padding: 8px 4px;
+    border-width: 2px;
+    box-shadow: 2px 2px 0px #000000;
+    border-radius: 12px;
+  }
+
+  .catBtn:hover, .catBtnActive {
+    box-shadow: 3px 3px 0px #000000 !important;
+  }
+
+  .catIcon {
+    font-size: 18px;
+  }
+
+  .catName {
+    font-size: 11px;
+    line-height: 1.2;
+  }
+
+  .card {
+    border-width: 2.5px;
+    box-shadow: 4px 4px 0px #000000;
+    border-radius: 18px;
+    padding: 18px 12px;
+  }
+
+  .cardHeader {
+    gap: 8px;
+    margin-bottom: 16px;
+    padding-bottom: 12px;
+  }
+
+  .cardHeaderIcon {
+    font-size: 28px;
+  }
+
+  .cardHeaderTitle {
+    font-size: 19px;
+  }
+
+  .cardHeaderDesc {
+    font-size: 12px;
+  }
+
+  .formGrid {
+    gap: 14px;
+  }
+
+  .label {
+    font-size: 13px;
+  }
+
+  .inputWrapper {
+    border-width: 2px;
+    box-shadow: 2px 2px 0px #000000;
+    border-radius: 10px;
+  }
+
+  .input {
+    padding: 10px 12px;
+    font-size: 16px; /* iOS 자동 확대 방지 규격 */
+  }
+
+  .unit {
+    padding: 0 10px;
+    font-size: 13px;
+  }
+
+  .presetBtn {
+    padding: 5px 8px;
+    font-size: 11px;
+    border-radius: 8px;
+  }
+
+  .resultBox {
+    margin-top: 20px;
+    padding: 16px 12px;
+    border-width: 2.5px;
+    box-shadow: 3px 3px 0px #000000;
+    border-radius: 14px;
+    gap: 12px;
+  }
+
+  .badge {
+    font-size: 13px;
+    padding: 6px 10px;
+    border-width: 2px;
+    box-shadow: 2px 2px 0px #000000;
+  }
+
+  .verdictText {
+    font-size: 14px;
+    line-height: 1.4;
+  }
+
+  .metricsGrid {
+    grid-template-columns: 1fr;
+    gap: 8px;
+    padding: 10px;
+  }
+
+  .metricVal {
+    font-size: 17px;
+  }
+
+  .tierTableSection {
+    margin-top: 20px;
+    padding: 14px 10px;
+    border-width: 2px;
+    box-shadow: 3px 3px 0px #000000;
+    border-radius: 14px;
+  }
+
+  .tierTableTitle {
+    font-size: 14px;
+    margin-bottom: 10px;
+  }
+
+  .tierTable {
+    font-size: 11px;
+  }
+
+  .tierTable th {
+    padding: 6px 6px;
+    border-bottom-width: 2px;
+  }
+
+  .tierTable td {
+    padding: 6px 6px;
+  }
+
+  .tagTop, .tagGood, .tagFair, .tagBad {
+    font-size: 10px;
+    padding: 2px 5px;
+  }
+
+  .linkGroup {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .shopLinkBtn {
+    padding: 10px;
+    font-size: 12px;
+  }
 }
