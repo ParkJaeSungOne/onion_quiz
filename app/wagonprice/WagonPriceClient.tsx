@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import AdSlot from '@/components/AdSlot';
 import styles from './wagonprice.module.css';
 
 interface ProductPreset {
@@ -279,6 +280,9 @@ export default function WagonPriceClient() {
         })}
       </div>
 
+      {/* 상단 광고 슬롯 */}
+      <AdSlot type="main" />
+
       {/* 2. 메인 계산기 카드 */}
       <div className={styles.card}>
         <div className={styles.cardHeader}>
@@ -387,6 +391,9 @@ export default function WagonPriceClient() {
           </div>
         </div>
       </div>
+
+      {/* 하단 광고 슬롯 */}
+      <AdSlot type="main" />
     </div>
   );
 }

@@ -1,6 +1,7 @@
 import React from 'react';
 import Link from 'next/link';
 import Footer from '@/components/Footer';
+import AdSlot from '@/components/AdSlot';
 import styles from './Privacy.module.css';
 
 export const metadata = {
@@ -17,6 +18,7 @@ export default function PrivacyPage() {
       </header>
 
       <main className={styles.main}>
+        <AdSlot type="main" />
         <section className={styles.section}>
           <h2>1. 개인정보의 처리 목적</h2>
           <p>

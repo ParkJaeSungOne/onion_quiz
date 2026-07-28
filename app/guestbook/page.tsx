@@ -4,6 +4,7 @@ import prisma from '@/lib/prisma';
 import CommentSection from '@/components/CommentSection';
 import OnionLogo from '@/components/OnionLogo';
 import Footer from '@/components/Footer';
+import AdSlot from '@/components/AdSlot';
 import styles from './Guestbook.module.css';
 
 export const metadata = {
@@ -57,6 +58,8 @@ export default async function GuestbookPage() {
             이곳은 까도까도 유저들의 소통 공간입니다! 새로 기획하고 싶은 성향 테스트 주제, 사이트에 대한 응원글, 혹은 뜬금없는 아무 말 대잔치까지 자유롭게 까보세요!
           </p>
         </div>
+
+        <AdSlot type="main" />
 
         {errorMsg ? (
           <p className={styles.error}>{errorMsg}</p>
