@@ -79,8 +79,25 @@ export default async function Home({ searchParams }: HomePageProps) {
     return link;
   };
 
+  const mainJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'WebSite',
+    name: '까도까도',
+    url: 'https://kkado-kkado.com',
+    description: '양파처럼 깔수록 재미있는 팩폭 성향 테스트 연구소 까도까도',
+    potentialAction: {
+      '@type': 'SearchAction',
+      target: 'https://kkado-kkado.com/?search={search_term_string}',
+      'query-input': 'required name=search_term_string',
+    },
+  };
+
   return (
     <div className={styles.container}>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(mainJsonLd) }}
+      />
       <header className={styles.header}>
         <div className={styles.logoArea}>
           <OnionLogo className={styles.logoIcon} />
