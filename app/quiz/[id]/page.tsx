@@ -26,11 +26,12 @@ const getCachedQuiz = unstable_cache(
               orderBy: { score: 'asc' }
             }
           }
-        }
+        },
+        results: true
       }
     });
   },
-  ['quiz-detail-cache-v2'],
+  ['quiz-detail-cache-v3'],
   { revalidate: 3600, tags: ['quizzes'] }
 );
 
@@ -152,6 +153,35 @@ export default async function QuizPage({ params }: QuizPageProps) {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
+      {/* 🚀 검색엔진 크롤러(네이버 Yeti, 구글 Googlebot) 수집용 SSR 시맨틱 텍스트 구조 */}
+      <article className="sr-only" style={{ position: 'absolute', width: '1px', height: '1px', padding: 0, margin: '-1px', overflow: 'hidden', clip: 'rect(0, 0, 0, 0)', whiteSpace: 'nowrap', borderWidth: 0 }}>
+        <h1>{quiz.title}</h1>
+        <p>{quiz.description}</p>
+        <section>
+          <h2>{quiz.title} 테스트 문항 및 선택지 목록</h2>
+          {quiz.questions.map((q) => (
+            <div key={q.id}>
+              <h3>Q{q.questionNumber}. {q.text}</h3>
+              <ul>
+                {q.options.map((opt) => (
+                  <li key={opt.id}>{opt.text}</li>
+                ))}
+              </ul>
+            </div>
+          ))}
+        </section>
+        {quiz.results && quiz.results.length > 0 && (
+          <section>
+            <h2>{quiz.title} 결과 유형 및 분석 리포트</h2>
+            {quiz.results.map((res) => (
+              <div key={res.id}>
+                <h3>{res.emoji} {res.title}</h3>
+                <p>{res.content}</p>
+              </div>
+            ))}
+          </section>
+        )}
+      </article>
       <QuizPlayClient quiz={quiz} />
     </>
   );
