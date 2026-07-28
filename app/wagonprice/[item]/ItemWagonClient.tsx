@@ -13,35 +13,43 @@ interface ItemWagonClientProps {
 export default function ItemWagonClient({ preset }: ItemWagonClientProps) {
   const [priceStr, setPriceStr] = useState<string>(preset.defaultPrice.toString());
   const [qtyStr, setQtyStr] = useState<string>(preset.defaultQty.toString());
+  const [specStr, setSpecStr] = useState<string>(preset.specSize.toString());
 
-  // 핫딜 계산 및 B급 팩폭 판정
+  // 핫딜 계산 및 B급 팩폭 판정 (규격 직접 입력 반영 및 표준 규격 환산 적용)
   const calcResult = () => {
     const price = parseFloat(priceStr) || 0;
     const qty = parseFloat(qtyStr) || 1;
-    if (price <= 0 || qty <= 0) return null;
+    const spec = parseFloat(specStr) || preset.specSize || 1;
+    if (price <= 0 || qty <= 0 || spec <= 0) return null;
 
     const pricePerItem = Math.round(price / qty);
 
+    // 입력받은 용량/규격(spec) 기반 환산 단가 계산
     let unitPrice = 0;
     if (preset.specSize > 1) {
-      unitPrice = Math.round((pricePerItem / preset.specSize) * 100);
+      unitPrice = Math.round((pricePerItem / spec) * 100);
     } else {
       unitPrice = pricePerItem;
     }
+
+    // 표준 규격(예: 210g, 355ml)으로 환산하여 핫딜 등급 공정 비교
+    const normalizedPrice = preset.specSize > 1
+      ? Math.round((pricePerItem / spec) * preset.specSize)
+      : pricePerItem;
 
     let tier: 'top' | 'good' | 'fair' | 'bad' = 'fair';
     let badge = '🟡 [평범한 핫딜 🛒]';
     let verdict = '구매 시 무난한 마트가/행사가 수준입니다!';
 
-    if (pricePerItem <= preset.topDealPrice) {
+    if (normalizedPrice <= preset.topDealPrice) {
       tier = 'top';
       badge = '🔥 [역대급 신의 딜 🚀]';
-      verdict = `개당 ${pricePerItem.toLocaleString()}원! 이건 망설임 없이 결제 버튼 눌러야 하는 역대급 최저가 신의 딜입니다! ㅋㅋㅋ`;
-    } else if (pricePerItem <= preset.goodDealPrice) {
+      verdict = `개당 ${pricePerItem.toLocaleString()}원(${preset.specSize > 1 ? `${preset.specLabel} 환산 ${normalizedPrice.toLocaleString()}원` : '최저가 기준'})! 무조건 망설임 없이 결제 버튼 눌러야 하는 역대급 최저가 신의 딜입니다! ㅋㅋㅋ`;
+    } else if (normalizedPrice <= preset.goodDealPrice) {
       tier = 'good';
       badge = '🟢 [혜자로운 핫딜 🛒]';
       verdict = `개당 ${pricePerItem.toLocaleString()}원! 창고나 냉장고에 든든하게 쟁여두기 딱 좋은 갓성비 딜입니다.`;
-    } else if (pricePerItem <= preset.fairDealPrice) {
+    } else if (normalizedPrice <= preset.fairDealPrice) {
       tier = 'fair';
       badge = '🟡 [약간 아쉬운 가격 ⚠️]';
       verdict = `개당 ${pricePerItem.toLocaleString()}원... 아주 급한 거 아니면 알림 설정하고 다음 최저가 딜 존버를 권장합니다!`;
@@ -51,10 +59,16 @@ export default function ItemWagonClient({ preset }: ItemWagonClientProps) {
       verdict = `멈춰! 개당 ${pricePerItem.toLocaleString()}원에 사면 사장님 잇몸 미소 발출 ㅋㅋㅋ 행사나 묶음 할인 기다리세요!`;
     }
 
-    return { pricePerItem, unitPrice, tier, badge, verdict };
+    return { pricePerItem, unitPrice, tier, badge, verdict, currentSpec: spec };
   };
 
   const res = calcResult();
+
+  const getSpecUnitText = () => {
+    if (preset.unitLabel.includes('g')) return 'g (그램)';
+    if (preset.unitLabel.includes('ml')) return 'ml (밀리리터)';
+    return '단위 수량';
+  };
 
   return (
     <div>
@@ -68,12 +82,80 @@ export default function ItemWagonClient({ preset }: ItemWagonClientProps) {
           <div>
             <h2 className={styles.cardHeaderTitle}>{preset.name} 핫딜 판독기</h2>
             <p className={styles.cardHeaderDesc}>
-              {preset.specLabel} 기준 | 결제 금액과 수량을 입력하면 역대 최저가 단가를 팩폭 판정합니다.
+              {preset.specLabel} 기준 | 용량, 금액, 수량을 직접 입력하고 역대 최저가 단가를 팩폭 판정받아보세요.
             </p>
           </div>
         </div>
 
         <div className={styles.formGrid}>
+          {/* ✏️ 개별 용량/규격 직접 입력 필드 (preset.specSize > 1 인 경우) */}
+          {preset.specSize > 1 && (
+            <div className={styles.inputGroup}>
+              <label className={styles.label}>개당 용량/규격 직접 입력 ({getSpecUnitText()})</label>
+              <div className={styles.inputWrapper}>
+                <input
+                  type="number"
+                  className={styles.input}
+                  placeholder={`예: ${preset.specSize}`}
+                  value={specStr}
+                  onChange={(e) => setSpecStr(e.target.value)}
+                />
+                <span className={styles.unit}>{preset.unitLabel.includes('g') ? 'g' : 'ml'}</span>
+              </div>
+              <div className={styles.presetGroup} style={{ marginTop: '6px' }}>
+                {preset.unitLabel.includes('g') ? (
+                  <>
+                    <button
+                      className={`${styles.presetBtn} ${specStr === '210' ? styles.presetBtnActive : ''}`}
+                      onClick={() => setSpecStr('210')}
+                    >
+                      210g (기본)
+                    </button>
+                    <button
+                      className={`${styles.presetBtn} ${specStr === '300' ? styles.presetBtnActive : ''}`}
+                      onClick={() => setSpecStr('300')}
+                    >
+                      300g (큰밥)
+                    </button>
+                    <button
+                      className={`${styles.presetBtn} ${specStr === '130' ? styles.presetBtnActive : ''}`}
+                      onClick={() => setSpecStr('130')}
+                    >
+                      130g (작은밥/120g)
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <button
+                      className={`${styles.presetBtn} ${specStr === '355' ? styles.presetBtnActive : ''}`}
+                      onClick={() => setSpecStr('355')}
+                    >
+                      355ml (뚱캔)
+                    </button>
+                    <button
+                      className={`${styles.presetBtn} ${specStr === '250' ? styles.presetBtnActive : ''}`}
+                      onClick={() => setSpecStr('250')}
+                    >
+                      250ml (씬캔)
+                    </button>
+                    <button
+                      className={`${styles.presetBtn} ${specStr === '500' ? styles.presetBtnActive : ''}`}
+                      onClick={() => setSpecStr('500')}
+                    >
+                      500ml (페트)
+                    </button>
+                    <button
+                      className={`${styles.presetBtn} ${specStr === '1500' ? styles.presetBtnActive : ''}`}
+                      onClick={() => setSpecStr('1500')}
+                    >
+                      1.5L (대용량)
+                    </button>
+                  </>
+                )}
+              </div>
+            </div>
+          )}
+
           <div className={styles.inputGroup}>
             <label className={styles.label}>총 결제 가격</label>
             <div className={styles.inputWrapper}>
