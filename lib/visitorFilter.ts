@@ -8,31 +8,25 @@ const NON_HUMAN_UA_REGEX = /bot|crawler|spider|crawling|yeti|daum|google|naver|y
  */
 export function isPureHumanVisitor(req: NextRequest, pagePath?: string, userAgentOverride?: string): boolean {
   const ua = userAgentOverride || req.headers.get('user-agent') || '';
-  const path = pagePath || req.nextUrl?.pathname || '';
-  const referer = req.headers.get('referer') || '';
+  const path = pagePath || req.headers.get('referer') || '';
 
-  // 1. 어드민 페이지 및 API 내부 경로 접속 전면 제외
-  if (path.startsWith('/admin') || path.startsWith('/api')) {
+  // 1. 어드민 페이지 경로 및 어드민 Referer 접속 전면 제외
+  if (path.includes('/admin')) {
     return false;
   }
 
-  // 2. 어드민에서 유입된 경로 제외
-  if (referer.includes('/admin')) {
-    return false;
-  }
-
-  // 3. 어드민 세션 쿠키 소지자(어드민 본인 테스트 접속) 전면 제외
+  // 2. 어드민 세션 쿠키 소지자(어드민 본인 테스트 접속) 전면 제외
   const adminCookie = req.cookies.get('kkado_admin_session');
   if (adminCookie && adminCookie.value === 'authenticated') {
     return false;
   }
 
-  // 4. Vercel Cron 및 GitHub Actions 자동 배치 헤더 제외
+  // 3. Vercel Cron 및 GitHub Actions 자동 배치 헤더 제외
   if (req.headers.get('x-vercel-cron') === '1' || req.headers.get('x-github-actions') === '1') {
     return false;
   }
 
-  // 5. User-Agent 봇/크론/스크립트 정규식 필터링
+  // 4. User-Agent 봇/크론/스크립트 정규식 필터링
   if (NON_HUMAN_UA_REGEX.test(ua)) {
     return false;
   }
