@@ -368,6 +368,49 @@ export default function WagonPriceClient() {
           </div>
         )}
 
+        {/* 📊 현재 선택 품목의 딜 구간별 팩폭 가이드표 */}
+        <div className={styles.tierTableSection}>
+          <h3 className={styles.tierTableTitle}>📊 {activePreset.name} 딜 구간별 가격 가이드표</h3>
+          <div className={styles.tableWrapper}>
+            <table className={styles.tierTable}>
+              <thead>
+                <tr>
+                  <th>구간 등급</th>
+                  <th>개당 단가 기준</th>
+                  <th>환산 단가</th>
+                  <th>웨건 팩폭 판정</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr className={styles.trTop}>
+                  <td><span className={styles.tagTop}>🔥 역대급 신의 딜</span></td>
+                  <td><strong>{activePreset.topDealPrice.toLocaleString()}원 이하</strong></td>
+                  <td>{activePreset.specSize > 1 ? `${Math.round((activePreset.topDealPrice / activePreset.specSize) * 100).toLocaleString()}원 / 100${activePreset.unitLabel.includes('g') ? 'g' : 'ml'}` : `${activePreset.topDealPrice.toLocaleString()}원 / 1개`}</td>
+                  <td>무지성 영혼의 즉시 결제 딜! 🚀</td>
+                </tr>
+                <tr className={styles.trGood}>
+                  <td><span className={styles.tagGood}>🟢 혜자로운 핫딜</span></td>
+                  <td><strong>{(activePreset.topDealPrice + 1).toLocaleString()}원 ~ {activePreset.goodDealPrice.toLocaleString()}원</strong></td>
+                  <td>{activePreset.specSize > 1 ? `${Math.round((activePreset.goodDealPrice / activePreset.specSize) * 100).toLocaleString()}원 / 100${activePreset.unitLabel.includes('g') ? 'g' : 'ml'}` : `${activePreset.goodDealPrice.toLocaleString()}원 / 1개`}</td>
+                  <td>창고/냉장고 든든한 갓성비 딜! 🛒</td>
+                </tr>
+                <tr className={styles.trFair}>
+                  <td><span className={styles.tagFair}>🟡 평범한 행사가</span></td>
+                  <td><strong>{(activePreset.goodDealPrice + 1).toLocaleString()}원 ~ {activePreset.fairDealPrice.toLocaleString()}원</strong></td>
+                  <td>{activePreset.specSize > 1 ? `${Math.round((activePreset.fairDealPrice / activePreset.specSize) * 100).toLocaleString()}원 / 100${activePreset.unitLabel.includes('g') ? 'g' : 'ml'}` : `${activePreset.fairDealPrice.toLocaleString()}원 / 1개`}</td>
+                  <td>급하면 사되 존버 권장! ⚠️</td>
+                </tr>
+                <tr className={styles.trBad}>
+                  <td><span className={styles.tagBad}>🔴 바가지 구간</span></td>
+                  <td><strong>{(activePreset.fairDealPrice + 1).toLocaleString()}원 이상</strong></td>
+                  <td>-</td>
+                  <td>멈춰! 사장님 잇몸 미소 구간 💸</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
         {/* 핫딜 검색 링크 */}
         <div className={styles.searchLinks}>
           <span className={styles.searchTitle}>🔎 실시간 {activePreset.name} 핫딜 검색하기</span>
