@@ -25,8 +25,13 @@ export const viewport: Viewport = {
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://kkado-kkado.com'),
-  title: "까도까도 (Kkado-Kkado) - 양파처럼 까보는 나의 팩폭 성향 테스트",
-  description: "양파처럼 깔수록 재미있고 적나라한 나의 본모습을 까보세요! 트렌디한 팩폭 성향 테스트 연구소 까도까도.",
+  title: "까도까도 (Kkado-Kkado) - B급 팩폭 성향 테스트 & 생필품 핫딜 웨건계산기",
+  description: "양파처럼 깔수록 재미있는 B급 팩폭 성향 테스트 180여 종과 햇반·코카콜라·신라면 핫딜 단가를 1초 만에 판독해 주는 생필품 웨건계산기 연구소 까도까도!",
+  keywords: [
+    '까도까도', 'kkado-kkado', '성향테스트', '팩폭테스트', '웨건계산기', 
+    '햇반웨건', '코카콜라제로웨건', '신라면웨건', '핫딜단가계산기', 
+    '생필품최저가계산기', '양파퀴즈', '자유방명록'
+  ],
   alternates: {
     canonical: 'https://kkado-kkado.com',
   },
