@@ -170,7 +170,34 @@ export async function GET(request: Request) {
     });
     const replyContainerData = await replyContainerRes.json();
 
-    // 6. 저녁 슬롯(slot 2) 또는 quote 모드일 경우: 상단 재노출용 인용 리포스트 (Quote Thread) 실행!
+    // 6. 인스타그램(Instagram) 프로페셔널 계정 연동 시 동시 자동 포스팅 실행 (INSTAGRAM_ACCOUNT_ID 환경변수 존재 시)
+    let igPostId = null;
+    if (process.env.INSTAGRAM_ACCOUNT_ID) {
+      try {
+        const igAccountId = process.env.INSTAGRAM_ACCOUNT_ID;
+        const igCaption = `${target.text}\n\n${target.reply}\n\n#까도까도 #성향테스트 #팩폭테스트 #심리테스트 #주말 #일상`;
+        
+        const igContainerRes = await fetch(
+          `https://graph.facebook.com/v18.0/${igAccountId}/media?image_url=${encodeURIComponent(selectedImage)}&caption=${encodeURIComponent(igCaption)}&access_token=${token}`,
+          { method: 'POST' }
+        );
+        const igContainerData = await igContainerRes.json();
+        
+        if (igContainerData.id) {
+          await new Promise((resolve) => setTimeout(resolve, 3000));
+          const igPubRes = await fetch(
+            `https://graph.facebook.com/v18.0/${igAccountId}/media_publish?creation_id=${igContainerData.id}&access_token=${token}`,
+            { method: 'POST' }
+          );
+          const igPubData = await igPubRes.json();
+          igPostId = igPubData.id || igContainerData.id;
+        }
+      } catch (igErr) {
+        console.warn('[Cron Threads Autoposter] Instagram publishing skipped/failed:', igErr);
+      }
+    }
+
+    // 7. 저녁 슬롯(slot 2) 또는 quote 모드일 경우: 상단 재노출용 인용 리포스트 (Quote Thread) 실행!
     let quotePostId = null;
     if (slot === 2 || mode === 'quote') {
       await new Promise((resolve) => setTimeout(resolve, 2000));
