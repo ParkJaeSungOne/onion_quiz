@@ -93,6 +93,14 @@ export default function RootLayout({
   return (
     <html lang="ko">
       <head>
+        {/* 📌 네이버 및 구글 파비콘 수집 로봇(Googlebot-Image) 전용 명시적 파비콘 태그 */}
+        <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon" />
+        <link rel="icon" href="/favicon.ico" sizes="any" />
+        <link rel="icon" href="/icon-48.png" type="image/png" sizes="48x48" />
+        <link rel="icon" href="/icon-192.png" type="image/png" sizes="192x192" />
+        <link rel="icon" href="/icon-512.png" type="image/png" sizes="512x512" />
+        <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+
         {/* 💰 Google AdSense 자동 광고 및 소유권 인증 스크립트 연동 */}
         <Script
           async
