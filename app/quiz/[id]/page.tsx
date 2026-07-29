@@ -95,19 +95,19 @@ export async function generateMetadata({ params }: QuizPageProps): Promise<Metad
       siteName: '까도까도',
       images: [
         {
-          url: 'https://kkado-kkado.com/thumbnail.png', // 고화질 512x512 양파 캐릭터 썸네일 활용
-          width: 512,
-          height: 512,
+          url: `https://kkado-kkado.com/api/og?title=${encodeURIComponent(quiz.title)}&category=${encodeURIComponent(quiz.category)}`,
+          width: 1200,
+          height: 630,
           alt: quiz.title,
         }
       ],
       type: 'website',
     },
     twitter: {
-      card: 'summary',
+      card: 'summary_large_image',
       title: quiz.title,
       description: quiz.description,
-      images: ['https://kkado-kkado.com/thumbnail.png'],
+      images: [`https://kkado-kkado.com/api/og?title=${encodeURIComponent(quiz.title)}&category=${encodeURIComponent(quiz.category)}`],
     }
   };
 }
