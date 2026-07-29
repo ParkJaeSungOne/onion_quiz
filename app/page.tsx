@@ -128,6 +128,66 @@ export default async function Home({ searchParams }: HomePageProps) {
         }}>
           <span>🛒 웨건계산기 (햇반·코크·생필품 핫딜 단가 판독) 바로가기 →</span>
         </Link>
+
+        {/* 🚀 3대 신규 킬러 피처 바로가기 핫링크 배너 */}
+        <div style={{
+          display: 'flex',
+          gap: '8px',
+          justifyContent: 'center',
+          flexWrap: 'wrap',
+          marginTop: '10px',
+          width: '100%',
+          maxWidth: '560px'
+        }}>
+          <Link href="/receipt" style={{
+            flex: '1 1 30%',
+            minWidth: '150px',
+            background: '#fef08a',
+            color: '#000000',
+            border: '2px solid #000000',
+            boxShadow: '3px 3px 0px #000000',
+            borderRadius: '12px',
+            padding: '8px 10px',
+            fontWeight: 900,
+            fontSize: '13px',
+            textDecoration: 'none',
+            textAlign: 'center'
+          }}>
+            💸 영수증 탕진 팩폭
+          </Link>
+          <Link href="/secondhand" style={{
+            flex: '1 1 30%',
+            minWidth: '150px',
+            background: '#ffedd5',
+            color: '#000000',
+            border: '2px solid #000000',
+            boxShadow: '3px 3px 0px #000000',
+            borderRadius: '12px',
+            padding: '8px 10px',
+            fontWeight: 900,
+            fontSize: '13px',
+            textDecoration: 'none',
+            textAlign: 'center'
+          }}>
+            🥕 중고 딜 & 네고 퇴치
+          </Link>
+          <Link href="/arbiter" style={{
+            flex: '1 1 30%',
+            minWidth: '150px',
+            background: '#f3e8ff',
+            color: '#000000',
+            border: '2px solid #000000',
+            boxShadow: '3px 3px 0px #000000',
+            borderRadius: '12px',
+            padding: '8px 10px',
+            fontWeight: 900,
+            fontSize: '13px',
+            textDecoration: 'none',
+            textAlign: 'center'
+          }}>
+            ⚖️ 카톡 싸움 팩폭 판사
+          </Link>
+        </div>
       </header>
 
       {/* 🔍 검색 바 컴포넌트 마운트 */}

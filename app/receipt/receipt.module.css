@@ -1,0 +1,337 @@
+.container {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 32px 16px 80px 16px;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.header {
+  text-align: center;
+  margin-bottom: 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.backLink {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 800;
+  color: #000000;
+  text-decoration: none;
+  background: #ffffff;
+  border: 2px solid #000000;
+  box-shadow: 3px 3px 0px #000000;
+  padding: 8px 14px;
+  border-radius: 12px;
+  margin-bottom: 16px;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.titleBadge {
+  display: inline-block;
+  background: #ec4899;
+  color: #ffffff;
+  border: 2.5px solid #000000;
+  box-shadow: 3px 3px 0px #000000;
+  padding: 5px 16px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 900;
+  margin-bottom: 8px;
+  transform: rotate(-1deg);
+}
+
+.title {
+  font-size: 32px;
+  font-weight: 900;
+  color: #000000;
+  letter-spacing: -1px;
+  margin-bottom: 8px;
+}
+
+.subtitle {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: #334155;
+  background: #ffffff;
+  border: 2px solid #000000;
+  box-shadow: 3px 3px 0px #000000;
+  padding: 10px 16px;
+  border-radius: 14px;
+  max-width: 560px;
+  line-height: 1.5;
+}
+
+.main {
+  flex-grow: 1;
+}
+
+.card {
+  background: #ffffff;
+  border: 3.5px solid #000000;
+  box-shadow: 7px 7px 0px #000000;
+  border-radius: 24px;
+  padding: 28px 20px;
+}
+
+.cardHeader {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 2px dashed #e2e8f0;
+}
+
+.cardHeaderIcon {
+  font-size: 36px;
+}
+
+.cardHeaderTitle {
+  font-size: 22px;
+  font-weight: 900;
+  color: #000000;
+}
+
+.cardHeaderDesc {
+  font-size: 13px;
+  font-weight: 700;
+  color: #64748b;
+}
+
+.formGrid {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.inputGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.label {
+  font-size: 13.5px;
+  font-weight: 800;
+  color: #000000;
+}
+
+.inputWrapper {
+  display: flex;
+  align-items: center;
+  border: 2.5px solid #000000;
+  border-radius: 14px;
+  background: #f8fafc;
+  overflow: hidden;
+  box-shadow: 3px 3px 0px #000000;
+}
+
+.input {
+  flex-grow: 1;
+  border: none;
+  background: transparent;
+  padding: 12px 14px;
+  font-size: 17px;
+  font-weight: 900;
+  color: #000000;
+  outline: none;
+  width: 100%;
+}
+
+.unit {
+  padding: 0 14px;
+  font-size: 14px;
+  font-weight: 800;
+  color: #475569;
+  background: #e2e8f0;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  border-left: 2px solid #000000;
+}
+
+.presetGroup {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.presetBtn {
+  background: #ffffff;
+  border: 2px solid #000000;
+  box-shadow: 2px 2px 0px #000000;
+  padding: 6px 10px;
+  border-radius: 10px;
+  font-size: 11.5px;
+  font-weight: 800;
+  color: #000000;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.presetBtnActive {
+  background: #000000 !important;
+  color: #ffffff !important;
+}
+
+/* 🧾 B급 키치 영수증 렌더링 스타일 */
+.receiptPaper {
+  margin-top: 28px;
+  background: #fefce8;
+  border: 3.5px solid #000000;
+  box-shadow: 6px 6px 0px #000000;
+  border-radius: 16px;
+  padding: 24px 20px;
+  font-family: 'Courier New', Courier, monospace, sans-serif;
+  color: #000000;
+  position: relative;
+  overflow: hidden;
+}
+
+.receiptHeader {
+  text-align: center;
+  border-bottom: 2px dashed #000000;
+  padding-bottom: 14px;
+  margin-bottom: 16px;
+}
+
+.receiptTitle {
+  font-size: 24px;
+  font-weight: 900;
+  letter-spacing: 2px;
+}
+
+.receiptSub {
+  font-size: 12px;
+  font-weight: 700;
+  color: #475569;
+  margin-top: 4px;
+}
+
+.receiptMeta {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11.5px;
+  font-weight: 700;
+  margin-bottom: 14px;
+  color: #334155;
+}
+
+.receiptTable {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 16px;
+  font-size: 13px;
+}
+
+.receiptTable th {
+  border-bottom: 2px solid #000000;
+  padding: 6px 0;
+  font-weight: 900;
+  text-align: left;
+}
+
+.receiptTable td {
+  padding: 8px 0;
+  border-bottom: 1px dashed #cbd5e1;
+  font-weight: 700;
+}
+
+.receiptTotalRow {
+  border-top: 2px solid #000000;
+  border-bottom: 2px solid #000000;
+  padding: 12px 0;
+  margin-top: 10px;
+  display: flex;
+  justify-content: space-between;
+  font-size: 18px;
+  font-weight: 900;
+}
+
+.roastBox {
+  margin-top: 16px;
+  background: #ffffff;
+  border: 2px solid #000000;
+  border-radius: 12px;
+  padding: 14px;
+  font-size: 14px;
+  font-weight: 900;
+  line-height: 1.5;
+  box-shadow: 2px 2px 0px #000000;
+}
+
+.barcodeArea {
+  margin-top: 20px;
+  text-align: center;
+  border-top: 2px dashed #000000;
+  padding-top: 14px;
+}
+
+.barcodeLines {
+  height: 40px;
+  background: repeating-linear-gradient(
+    90deg,
+    #000 0,
+    #000 3px,
+    #fff 3px,
+    #fff 6px,
+    #000 6px,
+    #000 8px,
+    #fff 8px,
+    #fff 12px
+  );
+  margin: 8px auto;
+  max-width: 280px;
+}
+
+.shareBtnGroup {
+  margin-top: 20px;
+  display: flex;
+  gap: 10px;
+}
+
+.shareBtn {
+  flex-grow: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 12px;
+  background: #ffeb3b;
+  color: #000000;
+  border: 2.5px solid #000000;
+  box-shadow: 3px 3px 0px #000000;
+  border-radius: 14px;
+  font-size: 14px;
+  font-weight: 900;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.shareBtn:hover {
+  transform: translateY(-1px);
+  box-shadow: 4px 4px 0px #000000;
+}
+
+.footer {
+  text-align: center;
+  margin-top: 40px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #94a3b8;
+}
+
+@media (max-width: 600px) {
+  .container { padding: 16px 10px 60px 10px; }
+  .title { font-size: 26px; }
+  .card { padding: 18px 12px; }
+  .receiptPaper { padding: 16px 12px; }
+  .shareBtnGroup { flex-direction: column; }
+}
