@@ -72,10 +72,7 @@ export default function ItemWagonClient({ preset }: ItemWagonClientProps) {
 
   return (
     <div>
-      {/* 1. 상단 광고 슬롯 */}
-      <AdSlot type="main" />
-
-      {/* 2. 메인 계산기 카드 */}
+      {/* 1. 메인 계산기 카드 */}
       <div className={styles.card}>
         <div className={styles.cardHeader}>
           <span className={styles.cardHeaderIcon}>{preset.icon}</span>

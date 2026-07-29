@@ -9,11 +9,8 @@ import styles from './wagonprice.module.css';
 export default function WagonPriceClient() {
   return (
     <div>
-      {/* 1. 상단 광고 슬롯 */}
-      <AdSlot type="main" />
-
-      {/* 2. 12개 생필품 웨건 개별 전용 페이지 이동 버튼 그리드 */}
-      <div style={{ marginTop: '24px', marginBottom: '24px' }}>
+      {/* 1. 12개 생필품 웨건 개별 전용 페이지 이동 버튼 그리드 */}
+      <div style={{ marginTop: '12px', marginBottom: '24px' }}>
         <h2 style={{
           fontSize: '18px',
           fontWeight: 900,
