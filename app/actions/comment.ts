@@ -10,7 +10,8 @@ export async function createComment(
   quizId: number | null,
   nickname: string,
   content: string,
-  password?: string
+  password?: string,
+  wagonItemId?: string
 ) {
   try {
     const cleanNickname = nickname.trim().substring(0, 20) || '익명의 양파';
@@ -22,7 +23,8 @@ export async function createComment(
 
     const comment = await prisma.comment.create({
       data: {
-        quizId,
+        quizId: quizId || null,
+        wagonItemId: wagonItemId || null,
         nickname: cleanNickname,
         content: cleanContent,
         password: password ? password.trim() : null,
@@ -33,6 +35,8 @@ export async function createComment(
     if (quizId) {
       revalidatePath(`/quiz/${quizId}/result`);
       revalidatePath(`/quiz/${quizId}`);
+    } else if (wagonItemId) {
+      revalidatePath(`/wagonprice/${wagonItemId}`);
     } else {
       revalidatePath('/guestbook');
     }

@@ -2,6 +2,8 @@ import React from 'react';
 import { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
+import prisma from '@/lib/prisma';
+import CommentSection from '@/components/CommentSection';
 import { PRESETS } from '../presets';
 import ItemWagonClient from './ItemWagonClient';
 import styles from '../wagonprice.module.css';
@@ -36,19 +38,19 @@ export async function generateMetadata({ params }: ItemPageProps): Promise<Metad
       siteName: '까도까도',
       images: [
         {
-          url: 'https://kkado-kkado.com/thumbnail.png',
-          width: 512,
-          height: 512,
+          url: `https://kkado-kkado.com/api/og?title=${encodeURIComponent(preset.name + ' 핫딜 계산기')}&category=${encodeURIComponent('웨건계산기')}`,
+          width: 1200,
+          height: 630,
           alt: `${preset.name} 웨건계산기`,
         }
       ],
       type: 'website',
     },
     twitter: {
-      card: 'summary',
+      card: 'summary_large_image',
       title: `${preset.name} 핫딜 팩폭 계산기`,
       description: `${preset.name} 역대 최저가 단가를 1초 만에 판독해주는 웨건계산기!`,
-      images: ['https://kkado-kkado.com/thumbnail.png'],
+      images: [`https://kkado-kkado.com/api/og?title=${encodeURIComponent(preset.name + ' 핫딜 계산기')}&category=${encodeURIComponent('웨건계산기')}`],
     }
   };
 }
@@ -59,6 +61,27 @@ export default async function ItemWagonPage({ params }: ItemPageProps) {
 
   if (!preset) {
     notFound();
+  }
+
+  let comments: any[] = [];
+  try {
+    comments = await prisma.comment.findMany({
+      where: { wagonItemId: preset.id },
+      orderBy: { createdAt: 'desc' },
+      select: {
+        id: true,
+        nickname: true,
+        content: true,
+        createdAt: true,
+        password: true,
+        reactionOnion: true,
+        reactionFire: true,
+        reactionHeart: true,
+        reactionLaugh: true,
+      }
+    });
+  } catch (e) {
+    console.error('Failed to fetch wagon comments:', e);
   }
 
   const jsonLd = {
@@ -118,6 +141,16 @@ export default async function ItemWagonPage({ params }: ItemPageProps) {
 
       <main className={styles.main}>
         <ItemWagonClient preset={preset} />
+
+        {/* 💬 생필품 웨건 개별 실시간 핫딜 정보 및 제보 토크방 */}
+        <div style={{ marginTop: '36px' }}>
+          <CommentSection
+            quizId={null}
+            wagonItemId={preset.id}
+            initialComments={comments}
+            title={`💬 ${preset.name} 실시간 핫딜 정보 & 제보 토크방`}
+          />
+        </div>
       </main>
 
       <footer className={styles.footer}>

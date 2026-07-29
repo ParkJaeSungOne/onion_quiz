@@ -78,13 +78,14 @@ model AnswerLog {
 }
 
 model Comment {
-  id        String   @id @default(uuid())
-  quizId    Int?     // null 이면 사이트 전체 방명록, 값이 있으면 특정 퀴즈의 댓글
-  quiz      Quiz?    @relation(fields: [quizId], references: [id], onDelete: Cascade)
-  nickname  String   // 익명 닉네임 (예: '익명의 양파')
-  content   String   // 댓글 본문
-  password  String?  // 삭제용 비밀번호
-  createdAt DateTime @default(now())
+  id          String   @id @default(uuid())
+  quizId      Int?     // null 이면 사이트 전체 방명록, 값이 있으면 특정 퀴즈의 댓글
+  quiz        Quiz?    @relation(fields: [quizId], references: [id], onDelete: Cascade)
+  wagonItemId String?  // null 이면 퀴즈/방명록, 값이 있으면 생필품 웨건 댓글 (예: 'hetbahn', 'coke_zero')
+  nickname    String   // 익명 닉네임 (예: '익명의 양파', '알뜰한 햇반러')
+  content     String   // 댓글 본문
+  password    String?  // 삭제용 비밀번호
+  createdAt   DateTime @default(now())
 
   // 실시간 이모지 리액션 집계용 누적 카운터 (B코스 연동)
   reactionOnion  Int @default(0) // 🧅 리액션 개수
@@ -93,6 +94,7 @@ model Comment {
   reactionLaugh  Int @default(0) // 😂 리액션 개수
 
   @@index([quizId])
+  @@index([wagonItemId])
   @@index([createdAt])
 }
 

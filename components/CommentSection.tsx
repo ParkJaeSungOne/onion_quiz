@@ -20,17 +20,18 @@ interface CommentType {
 
 interface CommentSectionProps {
   quizId: number | null; // null 이면 방명록, 번호가 있으면 특정 퀴즈 댓글
+  wagonItemId?: string | null; // 생필품 웨건 품목 ID (예: 'hetbahn', 'coke_zero')
   initialComments: CommentType[];
   title?: string;
 }
 
 // 닉네임 랜덤 플레이스홀더 추천
 const placeholderNicknames = [
-  '행복한 양파', '격분한 웰시코기', '도파민 좀비', '마이웨이 아싸', 
-  '침대 귀신', '알콜 요정', '지름신 강림러', '뼈 맞은 방랑자'
+  '알뜰한 햇반러', '제로콜라 중독자', '갓성비 핫딜 포착러', '쿠폰 영혼 긁개', 
+  '자취 10년차 웨건', '통장 수호 양파', '뽐뿌 정탐꾼', '라면 물 맞추기 장인'
 ];
 
-export default function CommentSection({ quizId, initialComments, title }: CommentSectionProps) {
+export default function CommentSection({ quizId, wagonItemId, initialComments, title }: CommentSectionProps) {
   const [comments, setComments] = useState<CommentType[]>(initialComments);
   const [nickname, setNickname] = useState('');
   const [content, setContent] = useState('');
