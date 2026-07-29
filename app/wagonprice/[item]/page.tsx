@@ -147,7 +147,7 @@ export default async function ItemWagonPage({ params }: ItemPageProps) {
               quizId={null}
               wagonItemId={preset.id}
               initialComments={comments}
-              title={`💬 ${preset.name} 실시간 핫딜 정보 & 제보 토크방`}
+              title="💬 댓글 목록"
             />
           </div>
         </ItemWagonClient>
