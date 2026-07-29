@@ -140,17 +140,17 @@ export default async function ItemWagonPage({ params }: ItemPageProps) {
       </header>
 
       <main className={styles.main}>
-        <ItemWagonClient preset={preset} />
-
-        {/* 💬 생필품 웨건 개별 실시간 핫딜 정보 및 제보 토크방 */}
-        <div style={{ marginTop: '36px' }}>
-          <CommentSection
-            quizId={null}
-            wagonItemId={preset.id}
-            initialComments={comments}
-            title={`💬 ${preset.name} 실시간 핫딜 정보 & 제보 토크방`}
-          />
-        </div>
+        <ItemWagonClient preset={preset}>
+          {/* 💬 생필품 웨건 개별 실시간 핫딜 정보 및 제보 토크방 (다른 생필품 계산기로 이동하기 바로 위 위치) */}
+          <div style={{ marginTop: '28px' }}>
+            <CommentSection
+              quizId={null}
+              wagonItemId={preset.id}
+              initialComments={comments}
+              title={`💬 ${preset.name} 실시간 핫딜 정보 & 제보 토크방`}
+            />
+          </div>
+        </ItemWagonClient>
       </main>
 
       <footer className={styles.footer}>

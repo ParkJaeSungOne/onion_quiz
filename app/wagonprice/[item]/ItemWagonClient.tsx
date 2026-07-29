@@ -8,9 +8,10 @@ import styles from '../wagonprice.module.css';
 
 interface ItemWagonClientProps {
   preset: ProductPreset;
+  children?: React.ReactNode;
 }
 
-export default function ItemWagonClient({ preset }: ItemWagonClientProps) {
+export default function ItemWagonClient({ preset, children }: ItemWagonClientProps) {
   const [priceStr, setPriceStr] = useState<string>(preset.defaultPrice.toString());
   const [qtyStr, setQtyStr] = useState<string>(preset.defaultQty.toString());
   const [specStr, setSpecStr] = useState<string>(preset.specSize.toString());
@@ -291,6 +292,9 @@ export default function ItemWagonClient({ preset }: ItemWagonClientProps) {
           </div>
         </div>
       </div>
+
+      {/* 💬 댓글 영역 (다른 생필품 핫딜 계산기로 이동하기 바로 위 위치) */}
+      {children}
 
       {/* 3. 다른 생필품 웨건 스위처 (하단 다른 품목 바로가기) */}
       <div style={{ marginTop: '36px' }}>
