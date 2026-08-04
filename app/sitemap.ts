@@ -27,6 +27,24 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.8,
     })),
     {
+      url: `${baseUrl}/guide`,
+      lastModified: new Date(),
+      changeFrequency: 'daily' as const,
+      priority: 0.9,
+    },
+    ...['life-essentials-unit-price-guide', 'adult-child-peter-pan-syndrome-analysis', 'single-household-bulk-buy-vs-unit-price', 'b-side-fact-bomb-quiz-trend-psychology', 'dopamine-impulse-spending-management'].map((slug) => ({
+      url: `${baseUrl}/guide/${slug}`,
+      lastModified: new Date(),
+      changeFrequency: 'weekly' as const,
+      priority: 0.9,
+    })),
+    {
+      url: `${baseUrl}/about`,
+      lastModified: new Date(),
+      changeFrequency: 'monthly' as const,
+      priority: 0.7,
+    },
+    {
       url: `${baseUrl}/guestbook`,
       lastModified: new Date(),
       changeFrequency: 'hourly' as const,

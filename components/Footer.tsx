@@ -9,6 +9,10 @@ export default function Footer() {
       <div className={styles.footerLinks}>
         <Link href="/" className={styles.link}>🏠 홈으로</Link>
         <span className={styles.divider}>|</span>
+        <Link href="/guide" className={styles.link}>📚 핫딜가이드</Link>
+        <span className={styles.divider}>|</span>
+        <Link href="/about" className={styles.link}>🧅 사이트소개</Link>
+        <span className={styles.divider}>|</span>
         <Link href="/privacy" className={styles.link}>🔒 개인정보처리방침</Link>
         <span className={styles.divider}>|</span>
         <Link href="/terms" className={styles.link}>📄 이용약관</Link>
