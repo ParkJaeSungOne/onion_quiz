@@ -396,26 +396,92 @@ export async function publishCoupangDealToThreads(
       logs.push(`⚠️ 크롤링 기본 통신 예외 (${crawlErr.message}) ➔ AI 정밀 분석으로 전환`);
     }
 
-    // 1단계 검증: 상품명 확보 확인 (자동 크롤링 실패 시 무작위 진행 금지 및 즉시 중단)
-    if (!productName || productName.toLowerCase().includes('access denied') || productName === '쿠팡!' || productName === 'COUPANG' || productName.trim().length < 2 || productName.includes('초특가 핫딜 상품') || productName.includes('단독 특가 여행')) {
-      logs.push(`❌ [1단계 실패] 쿠팡 방화벽으로 인해 상품명 자동 추출이 차단되었습니다.`);
+    // 1단계 보강: 상품명이 비어있을 경우 구글 실시간 검색 & 웹 인덱스를 통해 상품명 자동 특정
+    const prodIdMatch = redirectedUrl.match(/products\/(\d+)/i) || redirectedUrl.match(/productId=(\d+)/i) || cleanUrl.match(/\/a\/([a-zA-Z0-9]+)/i);
+    const prodId = prodIdMatch ? prodIdMatch[1] : '';
+
+    const { GoogleGenAI } = await import('@google/genai');
+    const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || '' });
+
+    if (!productName || productName.toLowerCase().includes('access denied') || productName === '쿠팡!' || productName === 'COUPANG') {
+      logs.push(`🔍 [1단계] 구글/포털 웹 인덱스에서 쿠팡 상품(ID: ${prodId || '추적중'}) 자동 식별 시도 중...`);
+      
+      // A. Gemini Google Search Grounding으로 실제 상품명 및 이미지 추적
+      try {
+        const searchPrompt = `쿠팡 상품 번호 ${prodId} 또는 쿠팡 링크 ${cleanUrl} 에 해당하는 실제 한국어 상품명(브랜드명 + 정확한 제품명)과 고화질 이미지 URL을 찾아줘.
+첫 줄: [PRODUCT_NAME: 실제 상품명]
+둘째 줄: [IMAGE_URL: 이미지 URL (있을 경우)]`;
+
+        const searchRes = await ai.models.generateContent({
+          model: 'gemini-3.1-flash-lite',
+          contents: searchPrompt,
+          config: {
+            tools: [{ googleSearch: {} }]
+          }
+        });
+
+        let rawSearch = searchRes.text?.trim() || '';
+        if (!rawSearch && searchRes.candidates && searchRes.candidates[0]?.content?.parts) {
+          rawSearch = searchRes.candidates[0].content.parts.map((p: any) => p.text || '').filter(Boolean).join('\n');
+        }
+
+        const nameMatch = rawSearch.match(/\[PRODUCT_NAME:\s*([^\]]+)\]/i);
+        if (nameMatch && nameMatch[1]?.trim() && !nameMatch[1].includes('쿠팡!') && !nameMatch[1].toLowerCase().includes('access denied')) {
+          productName = nameMatch[1].trim();
+          logs.push(`🏷️ [AI 웹검색 자동 특정] 상품명 ➔ "${productName}"`);
+        }
+
+        const imgMatch = rawSearch.match(/\[IMAGE_URL:\s*([^\]]+)\]/i);
+        if (imgMatch && imgMatch[1]?.startsWith('http') && !selectedImage) {
+          selectedImage = imgMatch[1].trim();
+          logs.push(`📸 [AI 웹검색 자동 특정] 이미지 ➔ ${selectedImage.substring(0, 45)}...`);
+        }
+      } catch (searchErr: any) {
+        logs.push(`⚠️ 구글 검색 엔진 통신 예외 (${searchErr.message?.substring(0, 30)}...)`);
+      }
+
+      // B. Daum 웹 검색 스니펫 폴백 (초고속 보조)
+      if (!productName && prodId) {
+        try {
+          const daumUrl = `https://search.daum.net/search?w=tot&q=${encodeURIComponent(`쿠팡 ${prodId}`)}`;
+          const daumRes = await fetch(daumUrl, {
+            headers: {
+              'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36'
+            }
+          });
+          const daumText = await daumRes.text();
+          const titleSnippetMatch = daumText.match(/class="f_tit"[^>]*>([^<]+)<\/a>/i) || daumText.match(/<a[^>]*class="tit_main"[^>]*>([^<]+)<\/a>/i);
+          if (titleSnippetMatch && titleSnippetMatch[1]) {
+            let cleanSnippet = titleSnippetMatch[1].replace(/쿠팡!\s*-\s*/g, '').replace(/ - 쿠팡!/g, '').trim();
+            if (cleanSnippet && !cleanSnippet.includes('쿠팡!') && cleanSnippet.length > 3) {
+              productName = cleanSnippet;
+              logs.push(`🌐 [포털 스니펫 자동 특정] 상품명 ➔ "${productName}"`);
+            }
+          }
+        } catch {
+          // ignore
+        }
+      }
+    }
+
+    // 1단계 최종 검증
+    if (!productName || productName.toLowerCase().includes('access denied') || productName === '쿠팡!' || productName === 'COUPANG' || productName.trim().length < 2) {
+      logs.push(`❌ [1단계 실패] 상품명을 자동으로 파악하지 못했습니다.`);
       throw new Error(
-        `[1단계: 상품명 자동 추출 실패]\n` +
+        `[1단계: 상품명 자동 식별 실패]\n` +
         `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n` +
-        `❌ 사유: 쿠팡 보안 방화벽이 서버의 상품 페이지 크롤링을 차단했습니다.\n` +
+        `❌ 사유: 쿠팡 보안 방화벽 및 검색 인덱스에서 상품명을 찾지 못했습니다.\n` +
         `🔗 링크: ${cleanUrl}\n` +
         `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n` +
         `👉 해결 방법:\n` +
-        `관리자 화면의 '🏷️ 2. 상품명 / 키워드' 입력칸에 정확한 상품명(예: 닥터지 선크림 1+1 / 페리페라 무드 틴트)을 직접 입력하고 다시 발행을 눌러주세요.`
+        `관리자 화면의 '🏷️ 2. 상품명 / 키워드' 입력칸에 상품명(예: 닥터지 선크림 / 페리페라 틴트)을 2~3글자만 적어주시면 즉시 발행됩니다!`
       );
     } else {
-      logs.push(`📦 [1단계 성공] 상품명 확정 ➔ "${productName}"`);
+      logs.push(`📦 [1단계 완료] 상품명 확정 ➔ "${productName}"`);
     }
 
     // 2. Gemini AI 고품질 팩폭 바이럴 카피라이팅 엔진 가동
     logs.push(`🧠 [2단계] Gemini AI 팩폭 바이럴 카피라이팅 가동 (상품명: "${productName}")...`);
-    const { GoogleGenAI } = await import('@google/genai');
-    const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || '' });
 
     const viralPrompt = `
 당신은 대한민국 스레드(Threads)에서 10만+ 조회수와 폭발적인 반응을 터뜨리는 바이럴 마케터입니다.
