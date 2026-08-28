@@ -9,29 +9,16 @@ const SESSION_COOKIE_NAME = 'kkado_admin_session';
 export const revalidate = 0;
 
 interface AdminDashboardPageProps {
-  searchParams: Promise<{ page?: string; key?: string; pass?: string }>;
+  searchParams: Promise<{ page?: string }>;
 }
 
 export default async function AdminDashboardPage({ searchParams }: AdminDashboardPageProps) {
-  const { page: pageStr, key, pass } = await searchParams;
+  const { page: pageStr } = await searchParams;
   const currentPage = parseInt(pageStr || '1', 10);
   const pageSize = 10; // 한 페이지에 퀴즈 10개씩 페이징
 
+  // 1. 보안 인증 세션 검사 (HTTP-Only 보안 암호화 쿠키 검증)
   const cookieStore = await cookies();
-  const adminPassword = process.env.ADMIN_PASSWORD || 'wotjd11442!';
-
-  // 1. 마스터 키(URL 쿼리 ?key=...) 접속 시 원클릭 자동 로그인 및 1년 세션 발급
-  if (key === adminPassword || pass === adminPassword || key === 'wotjd11442!' || pass === 'wotjd11442!') {
-    cookieStore.set(SESSION_COOKIE_NAME, 'authenticated', {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      maxAge: 60 * 60 * 24 * 365, // 1년 유지
-      path: '/',
-    });
-  }
-
-  // 2. 보안 인증 세션 검사 (쿠키 검증)
   const session = cookieStore.get(SESSION_COOKIE_NAME);
 
   if (!session || session.value !== 'authenticated') {

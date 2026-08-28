@@ -473,43 +473,6 @@ export default function AdminDashboardClient({
         </div>
       </header>
 
-      {/* 🔑 관리자 전용 비밀번호 프리패스 자동 로그인 북마크 안내 */}
-      <div style={{
-        background: '#ecfdf5',
-        border: '2.5px solid #059669',
-        borderRadius: '12px',
-        padding: '10px 16px',
-        marginBottom: '20px',
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        flexWrap: 'wrap',
-        gap: '8px'
-      }}>
-        <div style={{ fontSize: '12.5px', fontWeight: 800, color: '#065f46' }}>
-          💡 <strong>비번 입력 없이 1초 만에 바로 들어오는 관리자 전용 북마크 URL:</strong>
-          <span style={{ marginLeft: '8px', color: '#047857', fontFamily: 'monospace' }}>https://kkado-kkado.com/admin?key=wotjd11442!</span>
-        </div>
-        <button
-          onClick={() => {
-            navigator.clipboard.writeText('https://kkado-kkado.com/admin?key=wotjd11442!');
-            alert('📋 관리자 전용 자동 로그인 URL이 클립보드에 복사되었습니다!\n\n이 주소를 브라우저 즐겨찾기/북마크에 등록해 두시면 비번 없이 원클릭으로 평생 자동 로그인됩니다.');
-          }}
-          style={{
-            padding: '4px 10px',
-            fontSize: '11px',
-            fontWeight: 900,
-            background: '#059669',
-            color: '#ffffff',
-            border: '1.5px solid #047857',
-            borderRadius: '6px',
-            cursor: 'pointer'
-          }}
-        >
-          📋 북마크 링크 복사
-        </button>
-      </div>
-
       {/* 에러 메시지 팝아트 복사 카드 배너 */}
       {errorMsg && (
         <div className={styles.errorBanner}>
