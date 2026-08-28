@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { logoutAdmin, deleteQuiz, triggerAIGenerate, exchangeThreadsToken, triggerThreadsPostAction } from '@/app/actions/admin';
+import { logoutAdmin, deleteQuiz, triggerAIGenerate, exchangeThreadsToken, triggerThreadsPostAction, publishCoupangDealToThreads } from '@/app/actions/admin';
 import styles from './admin.module.css';
 
 interface RefererStat {
@@ -177,6 +177,45 @@ export default function AdminDashboardClient({
   };
 
   const [isTokenToolOpen, setIsTokenToolOpen] = useState(false);
+
+  // 🛒 쿠팡 핫딜 AI 스레드 자동 발행기 상태
+  const [coupangUrl, setCoupangUrl] = useState('');
+  const [isCoupangPublishing, setIsCoupangPublishing] = useState(false);
+  const [coupangResult, setCoupangResult] = useState<{
+    productName: string;
+    imageUrl: string;
+    postText: string;
+    replyText: string;
+    postId: string;
+    permalink: string;
+    message: string;
+  } | null>(null);
+  const [coupangError, setCoupangError] = useState<string | null>(null);
+
+  const handlePublishCoupang = async () => {
+    if (!coupangUrl.trim() || isCoupangPublishing) return;
+    if (!confirm('쿠팡 상품 페이지를 크롤링하고, Gemini AI로 어그로 카피를 생성하여 스레드에 실시간 포스팅하시겠습니까?')) {
+      return;
+    }
+
+    setIsCoupangPublishing(true);
+    setCoupangError(null);
+    setCoupangResult(null);
+
+    try {
+      const res = await publishCoupangDealToThreads(coupangUrl);
+      if (res.success && (res as any).postId) {
+        setCoupangResult(res as any);
+        setCoupangUrl('');
+      } else {
+        setCoupangError(res.error || '스레드 발행 실패');
+      }
+    } catch (err: any) {
+      setCoupangError(err.message || '네트워크 통신 에러가 발생했습니다.');
+    } finally {
+      setIsCoupangPublishing(false);
+    }
+  };
 
   // 👥 실시간 방문 유입 로그 검색 & 필터링 상태
   const [logSearchQuery, setLogSearchQuery] = useState('');
@@ -535,6 +574,190 @@ export default function AdminDashboardClient({
                   ❌ <strong>포스팅 실패:</strong> {testPostResult.error}
                 </div>
               )}
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* 🛒 쿠팡 핫딜 AI 스레드 자동 포스팅 발행기 */}
+      <div style={{
+        border: '3.5px solid #000000',
+        borderRadius: '18px',
+        padding: '24px',
+        background: '#fffbeb',
+        boxShadow: '6px 6px 0px #000000',
+        marginBottom: '32px',
+        color: '#000000'
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
+          <span style={{ fontSize: '24px' }}>🛒</span>
+          <div>
+            <h3 style={{ margin: 0, fontSize: '17px', fontWeight: 950, color: '#000000' }}>
+              쿠팡 핫딜 AI 스레드 포스터 (어그로 바이럴 자동 발행)
+            </h3>
+            <p style={{ margin: '4px 0 0 0', fontSize: '12.5px', fontWeight: 700, color: '#475569' }}>
+              쿠팡 파트너스 링크(https://link.coupang.com/a/...)를 넣고 버튼을 누르면, AI가 상품 정보와 사진을 분석해 <strong>어그로 팩폭 본문 + 대표 사진 + 첫 댓글 파트너스 링크</strong>를 스레드에 원클릭으로 자동 포스팅합니다!
+            </p>
+          </div>
+        </div>
+
+        <div style={{ display: 'flex', gap: '10px', marginTop: '16px', flexWrap: 'wrap' }}>
+          <input
+            type="text"
+            value={coupangUrl}
+            onChange={(e) => setCoupangUrl(e.target.value)}
+            placeholder="쿠팡 링크 입력 (예: https://link.coupang.com/a/gzAKLjJpyC)"
+            disabled={isCoupangPublishing}
+            style={{
+              flex: '1 1 300px',
+              padding: '12px 14px',
+              fontSize: '14px',
+              fontWeight: 800,
+              border: '3px solid #000000',
+              borderRadius: '12px',
+              backgroundColor: '#ffffff',
+              boxShadow: '3px 3px 0px #000000',
+              outline: 'none'
+            }}
+          />
+          <button
+            onClick={handlePublishCoupang}
+            disabled={isCoupangPublishing || !coupangUrl.trim()}
+            style={{
+              padding: '12px 20px',
+              fontSize: '14px',
+              fontWeight: 900,
+              backgroundColor: isCoupangPublishing ? '#94a3b8' : '#e11d48',
+              color: '#ffffff',
+              border: '3px solid #000000',
+              borderRadius: '12px',
+              boxShadow: '3px 3px 0px #000000',
+              cursor: isCoupangPublishing ? 'not-allowed' : 'pointer',
+              transition: 'all 0.15s ease'
+            }}
+          >
+            {isCoupangPublishing ? '⏳ AI 크롤링 & 스레드 발행 중...' : '🚀 AI 어그로 분석 및 스레드 실시간 발행'}
+          </button>
+        </div>
+
+        {/* 에러 피드백 */}
+        {coupangError && (
+          <div style={{
+            marginTop: '16px',
+            background: '#fee2e2',
+            border: '2.5px solid #ef4444',
+            borderRadius: '12px',
+            padding: '14px',
+            fontSize: '13px',
+            color: '#991b1b',
+            fontWeight: 800
+          }}>
+            ❌ <strong>발행 실패:</strong> {coupangError}
+          </div>
+        )}
+
+        {/* 성공 피드백 카드 */}
+        {coupangResult && (
+          <div style={{
+            marginTop: '20px',
+            background: '#ffffff',
+            border: '3px solid #000000',
+            borderRadius: '14px',
+            padding: '18px',
+            boxShadow: '4px 4px 0px #000000'
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px', flexWrap: 'wrap', gap: '8px' }}>
+              <span style={{ fontSize: '15px', fontWeight: 900, color: '#15803d' }}>
+                🎉 {coupangResult.message}
+              </span>
+              {coupangResult.permalink && (
+                <a
+                  href={coupangResult.permalink}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    padding: '8px 14px',
+                    background: '#000000',
+                    color: '#ffffff',
+                    borderRadius: '8px',
+                    fontSize: '12px',
+                    fontWeight: 900,
+                    textDecoration: 'none'
+                  }}
+                >
+                  🔗 스레드 실시간 게시물 보러가기 →
+                </a>
+              )}
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '16px', marginTop: '12px' }}>
+              <div>
+                <h4 style={{ margin: '0 0 6px 0', fontSize: '13px', fontWeight: 900, color: '#000000' }}>
+                  📦 분석 상품명:
+                </h4>
+                <p style={{ margin: '0 0 12px 0', fontSize: '13px', fontWeight: 800, color: '#2563eb' }}>
+                  {coupangResult.productName}
+                </p>
+
+                <h4 style={{ margin: '0 0 6px 0', fontSize: '13px', fontWeight: 900, color: '#000000' }}>
+                  📝 AI 어그로 본문 카피:
+                </h4>
+                <pre style={{
+                  background: '#f8fafc',
+                  border: '2px solid #cbd5e1',
+                  borderRadius: '8px',
+                  padding: '10px',
+                  fontSize: '12px',
+                  fontWeight: 700,
+                  whiteSpace: 'pre-wrap',
+                  lineHeight: 1.5,
+                  margin: 0,
+                  color: '#1e293b'
+                }}>
+                  {coupangResult.postText}
+                </pre>
+              </div>
+
+              <div>
+                <h4 style={{ margin: '0 0 6px 0', fontSize: '13px', fontWeight: 900, color: '#000000' }}>
+                  📸 첨부된 대표 상품 이미지:
+                </h4>
+                {coupangResult.imageUrl && (
+                  <img
+                    src={coupangResult.imageUrl}
+                    alt="Coupang Product"
+                    style={{
+                      width: '100%',
+                      maxHeight: '140px',
+                      objectFit: 'cover',
+                      borderRadius: '8px',
+                      border: '2px solid #000000',
+                      marginBottom: '12px'
+                    }}
+                  />
+                )}
+
+                <h4 style={{ margin: '0 0 6px 0', fontSize: '13px', fontWeight: 900, color: '#000000' }}>
+                  💬 첫 댓글(파트너스 링크):
+                </h4>
+                <pre style={{
+                  background: '#f1f5f9',
+                  border: '2px solid #cbd5e1',
+                  borderRadius: '8px',
+                  padding: '10px',
+                  fontSize: '11.5px',
+                  fontWeight: 700,
+                  whiteSpace: 'pre-wrap',
+                  lineHeight: 1.4,
+                  margin: 0,
+                  color: '#334155'
+                }}>
+                  {coupangResult.replyText}
+                </pre>
+              </div>
             </div>
           </div>
         )}
