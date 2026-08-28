@@ -692,11 +692,23 @@ export async function publishCoupangDealToThreads(
       throw new Error('THREADS_ACCESS_TOKEN이 설정되어 있지 않습니다.');
     }
 
-    // Step A: Create Media Container
+    // Step A: Create Media Container (직접 이미지 및 프록시 브릿지 2단계 안전 전송)
     logs.push(`🖼️ Step A: 이미지 미디어 컨테이너 생성 요청...`);
-    const containerUrl = `https://graph.threads.net/v1.0/me/threads?media_type=IMAGE&image_url=${encodeURIComponent(selectedImage)}&text=${encodeURIComponent(postText)}&access_token=${token}`;
-    const containerRes = await fetch(containerUrl, { method: 'POST' });
-    const containerData = await containerRes.json();
+    let containerData: any = {};
+
+    // 1차 시도: 직접 이미지 URL로 Meta 생성
+    const containerUrl1 = `https://graph.threads.net/v1.0/me/threads?media_type=IMAGE&image_url=${encodeURIComponent(selectedImage)}&text=${encodeURIComponent(postText)}&access_token=${token}`;
+    const containerRes1 = await fetch(containerUrl1, { method: 'POST' });
+    containerData = await containerRes1.json();
+
+    // 2차 시도: 쇼핑몰 핫링크 차단 시 까도까도 이미지 프록시 CDN 브릿지로 자동 우회 전송
+    if (!containerData.id && selectedImage.startsWith('http')) {
+      logs.push(`⚠️ 쇼핑몰 핫링크 방화벽 감지 ➔ 까도까도 이미지 CDN 브릿지로 우회 재전송`);
+      const proxiedUrl = `https://kkado-kkado.com/api/proxy-image?url=${encodeURIComponent(selectedImage)}`;
+      const containerUrl2 = `https://graph.threads.net/v1.0/me/threads?media_type=IMAGE&image_url=${encodeURIComponent(proxiedUrl)}&text=${encodeURIComponent(postText)}&access_token=${token}`;
+      const containerRes2 = await fetch(containerUrl2, { method: 'POST' });
+      containerData = await containerRes2.json();
+    }
 
     if (!containerData.id) {
       logs.push(`❌ [스레드 미디어 생성 실패] Meta 응답: ${JSON.stringify(containerData)}`);
