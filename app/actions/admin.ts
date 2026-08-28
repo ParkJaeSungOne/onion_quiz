@@ -439,16 +439,15 @@ export async function publishCoupangDealToThreads(
       } catch (searchErr: any) {
         logs.push(`⚠️ 구글 검색 도구 제한 (${searchErr.message?.substring(0, 30)}...) ➔ 고속 AI 추론으로 전환`);
 
-        // A-2. Search Grounding 실패 시 직통 AI 모델로 즉각 상품명 추론
+        // A-2. Search Grounding 실패 시 직통 AI 모델로 즉각 상품명 추론 (편향된 브랜드 예시 제거)
         try {
           const directRes = await ai.models.generateContent({
             model: 'gemini-flash-lite-latest',
-            contents: `다음 쿠팡 상품 링크(${cleanUrl}) 또는 쿠팡 상품 번호(${prodId})의 상품명을 특정하거나, 파라미터를 기반으로 상품명(예: 닥터지 선크림, 페리페라 틴트, 오션월드 종일권 등)을 추론해.
-반드시 첫 줄에 [PRODUCT_NAME: 상품명] 으로만 답해줘.`
+            contents: `다음 쿠팡 상품 링크(${cleanUrl}) 또는 쿠팡 상품 번호(${prodId})에 연결된 실제 한국어 상품명(브랜드명 + 제품명)을 찾아내. 모르는 상태에서 임의의 다른 브랜드를 추측하지 말고, 확실한 경우에만 [PRODUCT_NAME: 실제상품명] 형식으로 답해.`
           });
           const directText = directRes.text?.trim() || '';
           const nameMatch = directText.match(/\[PRODUCT_NAME:\s*([^\]]+)\]/i);
-          if (nameMatch && nameMatch[1]?.trim() && !nameMatch[1].includes('쿠팡!')) {
+          if (nameMatch && nameMatch[1]?.trim() && !nameMatch[1].includes('쿠팡!') && !nameMatch[1].toLowerCase().includes('unknown')) {
             productName = nameMatch[1].trim();
             logs.push(`🏷️ [AI 지능형 추론 특정] 상품명 ➔ "${productName}"`);
           }
