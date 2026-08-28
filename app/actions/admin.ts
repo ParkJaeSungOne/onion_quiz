@@ -396,18 +396,20 @@ export async function publishCoupangDealToThreads(
       logs.push(`⚠️ 크롤링 기본 통신 예외 (${crawlErr.message}) ➔ AI 정밀 분석으로 전환`);
     }
 
-    // 상품명이 비어있을 경우 안전한 기본값 배정
-    if (!productName || productName.toLowerCase().includes('access denied') || productName === '쿠팡!' || productName === 'COUPANG' || productName.trim().length < 2) {
-      if (productDetails) {
-        productName = productDetails.split(',')[0].trim();
-      } else if (redirectedUrl.includes('trip.coupang.com')) {
-        productName = '쿠팡 트래블 단독 특가 여행/숙박 패키지';
-      } else {
-        productName = '쿠팡 역대급 초특가 핫딜 상품';
-      }
-      logs.push(`⚠️ 상품명 자동 크롤링 제한 ➔ 기본 상품명("${productName}")으로 보정`);
+    // 1단계 검증: 상품명 확보 확인 (자동 크롤링 실패 시 무작위 진행 금지 및 즉시 중단)
+    if (!productName || productName.toLowerCase().includes('access denied') || productName === '쿠팡!' || productName === 'COUPANG' || productName.trim().length < 2 || productName.includes('초특가 핫딜 상품') || productName.includes('단독 특가 여행')) {
+      logs.push(`❌ [1단계 실패] 쿠팡 방화벽으로 인해 상품명 자동 추출이 차단되었습니다.`);
+      throw new Error(
+        `[1단계: 상품명 자동 추출 실패]\n` +
+        `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n` +
+        `❌ 사유: 쿠팡 보안 방화벽이 서버의 상품 페이지 크롤링을 차단했습니다.\n` +
+        `🔗 링크: ${cleanUrl}\n` +
+        `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n` +
+        `👉 해결 방법:\n` +
+        `관리자 화면의 '🏷️ 2. 상품명 / 키워드' 입력칸에 정확한 상품명(예: 닥터지 선크림 1+1 / 페리페라 무드 틴트)을 직접 입력하고 다시 발행을 눌러주세요.`
+      );
     } else {
-      logs.push(`📦 [상품명 확정] "${productName}"`);
+      logs.push(`📦 [1단계 성공] 상품명 확정 ➔ "${productName}"`);
     }
 
     // 2. Gemini AI 고품질 팩폭 바이럴 카피라이팅 엔진 가동
@@ -481,33 +483,36 @@ export async function publishCoupangDealToThreads(
 
     // 🚫 품질 검증 게이트: viralPrompt 기준에 맞는 고품질 카피가 완성되지 않았으면 스레드 발행 즉시 중단!
     if (!aiSuccess || !postText || postText.length < 120) {
-      logs.push(`❌ [발행 중단] viralPrompt 기준에 부합하는 고품질 AI 팩폭 카피가 생성되지 않아 스레드 발행을 즉시 중지했습니다.`);
+      logs.push(`❌ [2단계 실패] viralPrompt 기준에 부합하는 고품질 AI 팩폭 카피 생성 실패.`);
       throw new Error(
-        `[스레드 자동 발행 중단 리포트]\n` +
+        `[2단계: AI 카피 생성 실패]\n` +
         `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n` +
-        `❌ 사유: viralPrompt 품질 기준 미달 (구체적 상품 분석 카피 생성 실패)\n` +
-        `🔗 입력 URL: ${cleanUrl}\n` +
-        `🔍 리다이렉트 URL: ${redirectedUrl}\n` +
-        `📦 추출된 상품명: "${productName || '미확인'}"\n` +
-        `📝 생성 시도 텍스트 길이: ${postText ? postText.length : 0}자 (최소 120자 이상 필수)\n` +
+        `❌ 사유: viralPrompt 품질 기준 미달 (생성 텍스트 길이: ${postText ? postText.length : 0}자)\n` +
+        `📦 대상 상품: "${productName}"\n` +
         `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n` +
-        `💡 원인 분석:\n` +
-        `쿠팡 WAF 방화벽으로 인해 상품명이 정상 추출되지 않았거나 AI 카피 생성이 누락되었습니다.\n\n` +
-        `👉 해결 방법:\n` +
-        `관리자 화면의 '🏷️ 상품명 / 키워드' 입력칸에 정확한 상품명(예: 오션월드 얼리파크인 종일권 / 소노벨 단양 패키지)을 입력하신 후 다시 발행 버튼을 눌러주세요.`
+        `👉 해결 방법: 다시 한 번 발행 버튼을 눌러주시거나 '💡 4. 핵심 혜택 메모'에 간단한 키워드를 추가해 주세요.`
       );
     }
 
+    // 🚫 3단계 검증: 대표 이미지 확보 확인 (양파 썸네일 폴백 금지, 미입력/미추출 시 즉시 중단)
     if (!selectedImage) {
-      selectedImage = 'https://kkado-kkado.com/thumbnail.png';
-      logs.push(`📸 [이미지] 까도까도 공식 대표 썸네일 이미지 배정`);
-    } else {
-      logs.push(`✅ [이미지] 고화질 대표 이미지 확정 (${selectedImage.substring(0, 50)}...)`);
+      logs.push(`❌ [3단계 실패] 상품 대표 이미지가 없습니다.`);
+      throw new Error(
+        `[3단계: 대표 이미지 URL 누락]\n` +
+        `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n` +
+        `❌ 사유: 쿠팡 보안 방화벽으로 인해 상품 이미지를 자동으로 읽어오지 못했습니다.\n` +
+        `📦 대상 상품: "${productName}"\n` +
+        `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n` +
+        `👉 해결 방법:\n` +
+        `관리자 화면의 '📸 3. 이미지 URL' 입력칸에 쿠팡 상품 사진의 이미지 주소를 복사해 넣어주세요.`
+      );
     }
+
+    logs.push(`✅ [3단계 성공] 고화질 대표 이미지 확정 (${selectedImage.substring(0, 45)}...)`);
 
     const replyText = `🛒 [${productName.substring(0, 30)}] 특가 보러가기 👇\n${cleanUrl}\n\n(이 포스팅은 쿠팡 파트너스 활동의 일환으로, 이에 따른 일정액의 수수료를 제공받습니다.)`;
 
-    // 3. Threads API 포스팅 실행
+    // 4. Threads API 포스팅 실행
     logs.push(`📱 [4단계] Meta Threads Graph API 미디어 발행 시작...`);
     const { getThreadsToken } = await import('@/lib/threadsToken');
     const token = await getThreadsToken();
@@ -515,33 +520,23 @@ export async function publishCoupangDealToThreads(
       throw new Error('THREADS_ACCESS_TOKEN이 설정되어 있지 않습니다.');
     }
 
-    // Step A: Create Media Container (3단계 안전 폴백 탑재)
+    // Step A: Create Media Container
     logs.push(`🖼️ Step A: 이미지 미디어 컨테이너 생성 요청...`);
-    let containerData: any = {};
-    let finalImageUrl = selectedImage;
+    const containerUrl = `https://graph.threads.net/v1.0/me/threads?media_type=IMAGE&image_url=${encodeURIComponent(selectedImage)}&text=${encodeURIComponent(postText)}&access_token=${token}`;
+    const containerRes = await fetch(containerUrl, { method: 'POST' });
+    const containerData = await containerRes.json();
 
-    // 1차 시도: 사용자가 입력/추출된 이미지 URL
-    if (finalImageUrl) {
-      const containerUrl = `https://graph.threads.net/v1.0/me/threads?media_type=IMAGE&image_url=${encodeURIComponent(finalImageUrl)}&text=${encodeURIComponent(postText)}&access_token=${token}`;
-      const containerRes = await fetch(containerUrl, { method: 'POST' });
-      containerData = await containerRes.json();
-    }
-
-    // 2차 시도: 이미지 실패 시 (Meta OAuthException 1 등) -> 안정적인 정적 썸네일 PNG로 재시도
-    if (!containerData.id && finalImageUrl !== 'https://kkado-kkado.com/thumbnail.png') {
-      logs.push(`⚠️ 외부 이미지 Meta 크롤링 실패 ➔ 안정적인 대표 썸네일로 자동 전환 재시도`);
-      finalImageUrl = 'https://kkado-kkado.com/thumbnail.png';
-      const containerUrl = `https://graph.threads.net/v1.0/me/threads?media_type=IMAGE&image_url=${encodeURIComponent(finalImageUrl)}&text=${encodeURIComponent(postText)}&access_token=${token}`;
-      const containerRes = await fetch(containerUrl, { method: 'POST' });
-      containerData = await containerRes.json();
-    }
-
-    // 3차 시도: 이미지 컨테이너가 계속 실패할 경우 -> 텍스트 전용 포스트로 안전 발행
     if (!containerData.id) {
-      logs.push(`⚠️ 이미지 포스팅 실패 ➔ 텍스트 전용 포스트 모드로 안전 전환`);
-      const containerUrl = `https://graph.threads.net/v1.0/me/threads?media_type=TEXT&text=${encodeURIComponent(postText)}&access_token=${token}`;
-      const containerRes = await fetch(containerUrl, { method: 'POST' });
-      containerData = await containerRes.json();
+      logs.push(`❌ [스레드 미디어 생성 실패] Meta 응답: ${JSON.stringify(containerData)}`);
+      throw new Error(
+        `[4단계: 스레드 미디어 생성 실패]\n` +
+        `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n` +
+        `❌ 사유: Meta Threads API가 입력된 이미지 주소를 가져오는 데 실패했습니다.\n` +
+        `📸 시도한 이미지: ${selectedImage}\n` +
+        `⚠️ 에러 메시지: ${containerData?.error?.message || JSON.stringify(containerData)}\n` +
+        `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n` +
+        `👉 해결 방법: 이미지 주소가 올바른 jpg/png 링크인지 확인하거나 다른 이미지 링크로 교체해 주세요.`
+      );
     }
 
     if (!containerData.id) {
