@@ -367,9 +367,8 @@ export async function publishCoupangDealToThreads(
     }
 
     if (!selectedImage) {
-      // 일반 양파 이미지가 아닌, 해당 상품명이 큼직하게 박힌 고해상도 다이내믹 핫딜 썸네일 카드 자동 생성
-      selectedImage = `https://kkado-kkado.com/api/og?title=${encodeURIComponent(productName.substring(0, 30))}&category=${encodeURIComponent('🔥 역대급 쿠팡 핫딜')}`;
-      logs.push(`📸 [이미지] 다이내믹 핫딜 전용 썸네일 카드 자동 생성 배정`);
+      selectedImage = 'https://kkado-kkado.com/thumbnail.png';
+      logs.push(`📸 [이미지] 기본 대표 썸네일 이미지 배정`);
     } else {
       logs.push(`✅ [이미지] 고화질 상품 대표 이미지 확정 (${selectedImage.substring(0, 60)}...)`);
     }
@@ -443,11 +442,34 @@ export async function publishCoupangDealToThreads(
       throw new Error('THREADS_ACCESS_TOKEN이 설정되어 있지 않습니다.');
     }
 
-    // Step A: Create Media Container
+    // Step A: Create Media Container (3단계 안전 폴백 탑재)
     logs.push(`🖼️ Step A: 이미지 미디어 컨테이너 생성 요청...`);
-    const containerUrl = `https://graph.threads.net/v1.0/me/threads?media_type=IMAGE&image_url=${encodeURIComponent(selectedImage)}&text=${encodeURIComponent(postText)}&access_token=${token}`;
-    const containerRes = await fetch(containerUrl, { method: 'POST' });
-    const containerData = await containerRes.json();
+    let containerData: any = {};
+    let finalImageUrl = selectedImage;
+
+    // 1차 시도: 사용자가 입력/추출된 이미지 URL
+    if (finalImageUrl) {
+      const containerUrl = `https://graph.threads.net/v1.0/me/threads?media_type=IMAGE&image_url=${encodeURIComponent(finalImageUrl)}&text=${encodeURIComponent(postText)}&access_token=${token}`;
+      const containerRes = await fetch(containerUrl, { method: 'POST' });
+      containerData = await containerRes.json();
+    }
+
+    // 2차 시도: 이미지 실패 시 (Meta OAuthException 1 등) -> 안정적인 정적 썸네일 PNG로 재시도
+    if (!containerData.id && finalImageUrl !== 'https://kkado-kkado.com/thumbnail.png') {
+      logs.push(`⚠️ 외부 이미지 Meta 크롤링 실패 ➔ 안정적인 대표 썸네일로 자동 전환 재시도`);
+      finalImageUrl = 'https://kkado-kkado.com/thumbnail.png';
+      const containerUrl = `https://graph.threads.net/v1.0/me/threads?media_type=IMAGE&image_url=${encodeURIComponent(finalImageUrl)}&text=${encodeURIComponent(postText)}&access_token=${token}`;
+      const containerRes = await fetch(containerUrl, { method: 'POST' });
+      containerData = await containerRes.json();
+    }
+
+    // 3차 시도: 이미지 컨테이너가 계속 실패할 경우 -> 텍스트 전용 포스트로 안전 발행
+    if (!containerData.id) {
+      logs.push(`⚠️ 이미지 포스팅 실패 ➔ 텍스트 전용 포스트 모드로 안전 전환`);
+      const containerUrl = `https://graph.threads.net/v1.0/me/threads?media_type=TEXT&text=${encodeURIComponent(postText)}&access_token=${token}`;
+      const containerRes = await fetch(containerUrl, { method: 'POST' });
+      containerData = await containerRes.json();
+    }
 
     if (!containerData.id) {
       throw new Error('스레드 미디어 생성 실패: ' + JSON.stringify(containerData));
