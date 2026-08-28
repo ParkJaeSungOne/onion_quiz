@@ -308,14 +308,12 @@ export async function publishCoupangDealToThreads(
     // 쿠팡 파트너스 HTML 배너 태그 지원 (<a href="..." ...><img src="..." alt="..." ...></a>)
     if (cleanUrl.includes('<a') || cleanUrl.includes('<img') || cleanUrl.includes('href=') || cleanUrl.includes('src=')) {
       const hrefMatch = cleanUrl.match(/href=["'](https:\/\/[^"']+)["']/i) || cleanUrl.match(/https:\/\/link\.coupang\.com\/[a-zA-Z0-9_\/]+/i);
-      const srcMatch = cleanUrl.match(/src=["'](https:\/\/[^"']+)["']/i) || cleanUrl.match(/https:\/\/[^"'\s]+\.(?:jpg|jpeg|png|webp)/i);
       const altMatch = cleanUrl.match(/alt=["']([^"']+)["']/i);
 
       if (hrefMatch) cleanUrl = hrefMatch[1] || hrefMatch[0];
-      if (srcMatch && !selectedImage) selectedImage = srcMatch[1] || srcMatch[0];
       if (altMatch && altMatch[1]?.trim() && !productName) productName = altMatch[1].trim();
 
-      logs.push(`🏷️ [쿠팡 배너 태그 자동 분해 완료] 링크, 상품명("${productName}"), 쿠팡 정품 이미지 확보!`);
+      logs.push(`🏷️ [쿠팡 배너 태그 자동 분해 완료] 링크 및 상품명("${productName}") 추출 성공! (광고 이미지는 제외하고 정품 사진 자동 탐색)`);
     }
 
     if (!cleanUrl.startsWith('http://') && !cleanUrl.startsWith('https://')) {
@@ -590,34 +588,33 @@ export async function publishCoupangDealToThreads(
       );
     }
 
-    // 🚫 3단계: 대표 이미지 자동 발굴 및 검증 (수동 미입력 시 웹 카탈로그에서 고화질 상품 이미지 자동 수집)
+    // 🚫 3단계: 대표 이미지 자동 발굴 및 검증 (수동 미입력 시 상품명 기반으로 고화질 정품 상품 사진 자동 수집)
     if (!selectedImage && productName) {
-      logs.push(`🔍 [3단계] 웹 카탈로그에서 "${productName}" 대표 이미지 자동 탐색 중...`);
+      logs.push(`🔍 [3단계] 상품명("${productName}")으로 고화질 정품 사진 자동 탐색 중...`);
       try {
-        const daumImgUrl = `https://search.daum.net/search?w=img&q=${encodeURIComponent(productName)}`;
-        const imgSearchRes = await fetch(daumImgUrl, {
+        const tokenRes = await fetch(`https://duckduckgo.com/?q=${encodeURIComponent(productName)}`, {
           headers: {
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36'
           }
         });
-        const imgHtml = await imgSearchRes.text();
-        const srcMatches = imgHtml.match(/https:\/\/[^"'\s]+(?:jpg|jpeg|png|webp)/gi) || [];
-        const candidates = srcMatches.filter(src => 
-          (src.includes('daumcdn.net') || src.includes('search.daum')) &&
-          !src.includes('daum_og') &&
-          !src.includes('statics') &&
-          !src.includes('common') &&
-          !src.includes('logo') &&
-          !src.includes('ico') &&
-          !src.includes('top') &&
-          !src.includes('icon') &&
-          !src.includes('blank') &&
-          !src.includes('transparent')
-        );
+        const tokenHtml = await tokenRes.text();
+        const vqdMatch = tokenHtml.match(/vqd=["']?([^"'\s&]+)/i) || tokenHtml.match(/vqd=([\d-]+)/i);
+        const vqd = vqdMatch ? vqdMatch[1] : '';
 
-        if (candidates.length > 0) {
-          selectedImage = candidates[0];
-          logs.push(`📸 [이미지 자동 발굴 성공] ${selectedImage.substring(0, 45)}...`);
+        if (vqd) {
+          const imgRes = await fetch(`https://duckduckgo.com/i.js?l=kr-kr&o=json&q=${encodeURIComponent(productName)}&vqd=${vqd}&f=,,,`, {
+            headers: {
+              'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+            }
+          });
+          const data = await imgRes.json();
+          if (data?.results && data.results.length > 0) {
+            const valid = data.results.find((r: any) => r.image && r.image.startsWith('http') && !r.image.includes('.svg') && !r.image.includes('favicon'));
+            if (valid) {
+              selectedImage = valid.image;
+              logs.push(`📸 [정품 사진 발굴 성공] ${selectedImage.substring(0, 45)}...`);
+            }
+          }
         }
       } catch (imgSearchErr: any) {
         logs.push(`⚠️ 이미지 자동 검색 통신 예외 (${imgSearchErr.message})`);
