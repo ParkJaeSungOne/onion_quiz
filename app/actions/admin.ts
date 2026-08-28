@@ -312,10 +312,9 @@ export async function publishCoupangDealToThreads(
       const altMatch = cleanUrl.match(/alt=["']([^"']+)["']/i);
 
       if (hrefMatch) cleanUrl = hrefMatch[1] || hrefMatch[0];
-      if (srcMatch && !selectedImage) selectedImage = srcMatch[1] || srcMatch[0];
       if (altMatch && altMatch[1]?.trim() && !productName) productName = altMatch[1].trim();
 
-      logs.push(`🏷️ [쿠팡 배너 태그 자동 분해 완료] 링크, 상품명("${productName}"), 이미지 추출 성공!`);
+      logs.push(`🏷️ [쿠팡 배너 태그 자동 분해 완료] 링크 및 상품명("${productName}") 추출 성공!`);
     }
 
     if (!cleanUrl.startsWith('http://') && !cleanUrl.startsWith('https://')) {

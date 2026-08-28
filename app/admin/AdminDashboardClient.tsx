@@ -678,12 +678,11 @@ export default function AdminDashboardClient({
                 // 1. 쿠팡 파트너스 HTML 배너 태그 형태인 경우
                 if (raw.includes('<a') || raw.includes('<img') || raw.includes('href=') || raw.includes('src=')) {
                   const hrefMatch = raw.match(/href=["'](https:\/\/[^"']+)["']/i) || raw.match(/https:\/\/link\.coupang\.com\/[a-zA-Z0-9_\/]+/i);
-                  const srcMatch = raw.match(/src=["'](https:\/\/[^"']+)["']/i) || raw.match(/https:\/\/[^"'\s]+\.(?:jpg|jpeg|png|webp)/i);
                   const altMatch = raw.match(/alt=["']([^"']+)["']/i);
 
                   if (hrefMatch) setCoupangUrl(hrefMatch[1] || hrefMatch[0]);
-                  if (srcMatch) setCustomImageUrl(srcMatch[1] || srcMatch[0]);
                   if (altMatch && altMatch[1]?.trim()) setCustomProductName(altMatch[1].trim());
+                  setCustomImageUrl('');
                   return;
                 }
 

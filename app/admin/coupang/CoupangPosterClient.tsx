@@ -29,18 +29,16 @@ export default function CoupangPosterClient() {
     // 1. 쿠팡 파트너스 HTML 배너 태그 형태인 경우 (<a href="..." ...><img src="..." alt="..." ...></a>)
     if (trimmed.includes('<a') || trimmed.includes('<img') || trimmed.includes('href=') || trimmed.includes('src=')) {
       const hrefMatch = trimmed.match(/href=["'](https:\/\/[^"']+)["']/i) || trimmed.match(/https:\/\/link\.coupang\.com\/[a-zA-Z0-9_\/]+/i);
-      const srcMatch = trimmed.match(/src=["'](https:\/\/[^"']+)["']/i) || trimmed.match(/https:\/\/[^"'\s]+\.(?:jpg|jpeg|png|webp)/i);
       const altMatch = trimmed.match(/alt=["']([^"']+)["']/i);
 
       if (hrefMatch) {
         setCoupangUrl(hrefMatch[1] || hrefMatch[0]);
       }
-      if (srcMatch) {
-        setCustomImageUrl(srcMatch[1] || srcMatch[0]);
-      }
       if (altMatch && altMatch[1]?.trim()) {
         setCustomProductName(altMatch[1].trim());
       }
+      // 배너 광고 이미지는 무시하고 상품명 기반으로 깨끗한 고화질 상품 사진 자동 탐색
+      setCustomImageUrl('');
       return;
     }
 
