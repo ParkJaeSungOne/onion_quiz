@@ -442,7 +442,14 @@ export async function publishCoupangDealToThreads(
 
     let postText = '';
     let aiSuccess = false;
-    const modelsToTry = ['gemini-2.5-flash', 'gemini-1.5-flash'];
+    const modelsToTry = [
+      'gemini-flash-lite-latest',
+      'gemini-3.5-flash-lite',
+      'gemini-flash-latest',
+      'gemini-3.1-flash-lite',
+      'gemini-2.5-flash',
+      'gemini-2.5-pro'
+    ];
 
     for (const modelName of modelsToTry) {
       try {
@@ -468,7 +475,7 @@ export async function publishCoupangDealToThreads(
           break;
         }
       } catch (aiErr: any) {
-        logs.push(`⚠️ [${modelName}] 통신 예외 (${aiErr.message?.substring(0, 30)}...) ➔ 다음 모델로 전환`);
+        logs.push(`⚠️ [${modelName}] ${aiErr?.status || '예외'} (${aiErr.message?.substring(0, 30)}...) ➔ 다음 모델로 전환`);
       }
     }
 
