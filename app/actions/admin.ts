@@ -396,117 +396,70 @@ export async function publishCoupangDealToThreads(
       logs.push(`⚠️ 크롤링 기본 통신 예외 (${crawlErr.message}) ➔ AI 정밀 분석으로 전환`);
     }
 
-    // 2. Gemini 2.5 Flash 실시간 Google Search Grounding 가동 (실제 상품 정보 & 팩트 정밀 수집)
-    logs.push(`🧠 [2단계] Gemini 실시간 구글 검색 엔진 가동 (상품 스펙/혜택/가격 실시간 탐색)...`);
+    // 2. Gemini AI 고품질 팩폭 바이럴 카피라이팅 엔진 가동
+    logs.push(`🧠 [2단계] Gemini AI 팩폭 바이럴 카피라이팅 가동 (상품명: "${productName}")...`);
     const { GoogleGenAI } = await import('@google/genai');
     const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || '' });
 
-    const prodIdMatch = redirectedUrl.match(/products\/(\d+)/i) || redirectedUrl.match(/productId=(\d+)/i) || cleanUrl.match(/\/a\/([a-zA-Z0-9]+)/i);
-    const prodId = prodIdMatch ? prodIdMatch[1] : '';
-
-    const searchPrompt = `
+    const viralPrompt = `
 당신은 대한민국 최고의 '핫딜 & 트렌드 전문 바이럴 마케터'입니다.
-웹 검색을 통해 다음 쿠팡 핫딜 링크 및 상품 번호에 연결된 실제 상품(호텔/리조트/숙소/식품/가전/패키지 등)이 정확히 무엇인지 찾고, 스레드(Threads)에서 수만 조회수가 터지는 논리적인 B급 팩폭 카피를 작성하세요.
+다음 쿠팡 핫딜 상품에 대해 스레드(Threads)에서 수만 조회수와 폭발적인 공유/저장을 이끌어내는 최고의 B급 팩폭 카피를 작성하세요.
 
-[링크 & 상품 정보]
-- 쿠팡 단축 링크: ${cleanUrl}
-- 상세 리다이렉트 URL: ${redirectedUrl}
-- 상품 식별 번호: ${prodId || '없음'}
-- 기존 상품명 힌트: "${productName || '미확인'}"
-- 추가 메모: "${productDetails || '없음'}"
+[상품 및 딜 정보]
+- 상품명: "${productName}"
+- 링크: "${cleanUrl}"
+- 추가 혜택 메모: "${productDetails || '가성비 최우수, 한정 특가, 실사용 만족도 최상'}"
 
-[요구사항 및 작성 규칙 - 반드시 준수]
-1. 웹 검색(쿠팡 상품 번호 ${prodId} 등)을 통해 해당 쿠팡 링크의 실제 정확한 상품명(예: 부산 호텔농심 온천 패키지, 소노벨 단양 패키지 등)과 구체적인 혜택(조식 뷔페, 워터파크/온천, 객실 혜택 등)을 정확히 파악하세요.
-2. 첫 줄에 "[PRODUCT_NAME: 파악한 정확한 상품명]" 형태로 상품명을 표기하세요.
-3. 만약 상품의 고화질 대표 이미지 URL(쿠팡 CDN 또는 숙소 공식 이미지)을 찾았다면 "[IMAGE_URL: 이미지URL]" 형태로 표기하세요.
-4. **본문 작성 규칙**:
-   - **첫 문장 (현실 비교 훅)**: 소비자가 일상에서 겪는 비효율/돈 낭비를 콕 짚으며 시작 (예: "주말에 1박 20만원 넘게 주고 숙소 가느니, 워터파크+조식까지 다 묶어서 이 가격이면 왜 무조건 이득인지 팩트만 까봄 ㄷㄷ")
-   - **논리적인 3단 팩트 분해**:
-     - ① [가격 및 구성 팩폭]: 따로 구매할 때 비용과 비교해 왜 이 패키지가 압도적인 혜택인지 수치로 논리적 설명
-     - ② [실사용 핵심 포인트]: 100% 뽕 뽑는 실전 활용/여행 팁
-     - ③ [선점 타이밍]: 왜 지금 이 링크로 사둬야 하는지 명확한 이유
-   - **톤앤매너**: 찐 사용자 구어체 반말 (~했음, ~임 ㅋㅋㅋ, ~추천함!)
-   - **마무리**: 반드시 **"👇 쿠팡 단독 특가 링크는 아래 첫 댓글에 달아둘게!"** 로 마무리 (본문에 링크 삽입 금지)
-   - **분량**: 마크다운 볼드(**) 없이 깔끔한 줄바꿈과 이모지(🔥, ㄷㄷ, ㅋㅋㅋ, 👍 등)를 섞어 3~4개 문단 (300~450자)
+[작성 규칙 - 반드시 준수]
+1. **첫 문장 (현실 비교 훅)**: 소비자가 일상에서 겪는 비효율/돈 낭비/고생을 콕 짚으며 시작하세요.
+   (예: "먹고싶은 거 다 먹었는데 살이빠졌어요", "남들 땡볕에서 2시간 줄 서서 어트랙션 하나 탈 때, 7시 반에 들어가서 인기 슬라이드 3개 연속 조지는 법 알려줌 ㄷㄷ", "호텔 1박 20만원 넘게 주고 숙소 가느니, 워터파크+조식까지 다 묶어서 이 가격이면 왜 무조건 이득인지 팩트만 까봄 ㄷㄷ")
+2. **본문 (논리적인 3단 팩트 분해)**:
+   - ① [핵심 혜택/구성 팩폭]: 이 상품의 핵심 혜택(얼리파크인 조기입장, 조식 포함, 대기시간 단축, 패키지 할인 등)이 왜 사기적인지 구체적으로 명시.
+   - ② [실사용/가성비 포인트]: 다른 사람들 고생할 때 체력과 시간을 아끼며 100% 뽕 뽑는 실전 꿀팁.
+   - ③ [선점 타이밍]: 왜 지금 이 링크로 사두거나 일정을 잡아야 하는지 명확한 이유 제시.
+3. **톤앤매너**:
+   - 솔직하고 쿨한 찐사용자 반말체 ("~했음", "~임 ㅋㅋㅋ", "~인 거 알지?", "~추천함!").
+   - 과장된 광고 티 내지 말고, 아는 사람만 챙겨 먹는 '알짜배기 꿀팁 공유' 느낌.
+4. **마무리**:
+   - 본문에는 링크를 넣지 말고, 반드시 **"👇 쿠팡 단독 특가 링크는 아래 첫 댓글에 달아둘게!"** 로 마무리.
+5. **분량 & 포맷**:
+   - 마크다운 볼드(**), 제목(#), 따옴표 없이 자연스러운 줄바꿈과 이모지(🔥, ㄷㄷ, ㅋㅋㅋ, 👍, ✈️ 등)를 적절히 섞어 딱 3~4문단(공백 포함 280~400자).
 `;
 
     let postText = '';
     let aiSuccess = false;
+    const modelsToTry = ['gemini-2.5-flash', 'gemini-1.5-flash'];
 
-    try {
-      logs.push(`🔍 [실시간 검색] 구글 웹 인덱스에서 상품 상세 혜택 탐색 중... (상품ID: ${prodId || '추적중'})`);
-      const searchRes = await ai.models.generateContent({
-        model: 'gemini-2.5-flash',
-        contents: searchPrompt,
-        config: {
-          tools: [{ googleSearch: {} }]
-        }
-      });
+    for (const modelName of modelsToTry) {
+      try {
+        logs.push(`⚙️ [AI 엔진] ${modelName} 모델로 팩폭 분석 중...`);
+        const aiRes = await ai.models.generateContent({
+          model: modelName,
+          contents: viralPrompt
+        });
 
-      let rawText = searchRes.text?.trim() || '';
-      if (!rawText && searchRes.candidates && searchRes.candidates[0]?.content?.parts) {
-        rawText = searchRes.candidates[0].content.parts
-          .map((p: any) => p.text || '')
-          .filter(Boolean)
-          .join('\n')
-          .trim();
-      }
-
-      if (rawText) {
-        // [IMAGE_URL: ...] 추출
-        const imgMatch = rawText.match(/\[IMAGE_URL:\s*([^\]]+)\]/i);
-        if (imgMatch && imgMatch[1]?.startsWith('http') && !selectedImage) {
-          selectedImage = imgMatch[1].trim();
-          logs.push(`📸 [이미지 자동 발견] 구글 인덱스에서 상품 이미지 추출 성공!`);
+        let candidateText = aiRes.text?.trim() || '';
+        if (!candidateText && aiRes.candidates && aiRes.candidates[0]?.content?.parts) {
+          candidateText = aiRes.candidates[0].content.parts
+            .map((p: any) => p.text || '')
+            .filter(Boolean)
+            .join('\n')
+            .trim();
         }
 
-        // [PRODUCT_NAME: ...] 추출
-        const nameMatch = rawText.match(/\[PRODUCT_NAME:\s*([^\]]+)\]/i);
-        if (nameMatch && nameMatch[1]?.trim() && (!productName || productName.includes('핫딜') || productName.includes('쿠팡'))) {
-          productName = nameMatch[1].trim();
-          logs.push(`🏷️ [상품명 확정] 구글 검색으로 상품명 특정 ➔ "${productName}"`);
-        }
-
-        // 본문 정제 (특수 태그 제거 및 마크다운 볼드 정리)
-        postText = rawText
-          .replace(/\[IMAGE_URL:[^\]]+\]/gi, '')
-          .replace(/\[PRODUCT_NAME:[^\]]+\]/gi, '')
-          .replace(/\*\*/g, '')
-          .trim();
-
-        if (postText.length > 50) {
+        if (candidateText && candidateText.length > 50) {
+          postText = candidateText.replace(/\*\*/g, '').trim();
           aiSuccess = true;
-          logs.push(`✅ [AI 팩폭 카피 완료] 논리적 상품 분석 완료 (${postText.length}자)`);
+          logs.push(`✅ [AI 완료] ${modelName} 모델로 고품질 팩폭 카피 작성 완료 (${postText.length}자)`);
+          break;
         }
-      }
-    } catch (searchErr: any) {
-      logs.push(`⚠️ 실시간 검색 엔진 예외 (${searchErr.message?.substring(0, 40)}...) ➔ 고효율 모델로 전환`);
-    }
-
-    // 폴백 모델
-    if (!aiSuccess || !postText) {
-      const fallbackModels = ['gemini-2.5-flash', 'gemini-1.5-flash'];
-      for (const modelName of fallbackModels) {
-        try {
-          logs.push(`⚙️ [폴백 AI 엔진] ${modelName} 호출 중...`);
-          const fallbackRes = await ai.models.generateContent({
-            model: modelName,
-            contents: `다음 쿠팡 핫딜 상품(${productName || cleanUrl})에 대해 가격 대비 구성 혜택과 실사용 꿀팁을 논리적으로 짚어주는 찰진 B급 스레드 반말 후기글을 3단락으로 작성해. 마지막은 "👇 쿠팡 단독 특가 링크는 아래 첫 댓글에 달아둘게!"로 끝나야 함.`
-          });
-          if (fallbackRes.text?.trim()) {
-            postText = fallbackRes.text.replace(/\*\*/g, '').trim();
-            aiSuccess = true;
-            logs.push(`✅ [폴백 완료] ${modelName} 카피 작성 완료`);
-            break;
-          }
-        } catch {
-          // continue
-        }
+      } catch (aiErr: any) {
+        logs.push(`⚠️ [${modelName}] 통신 예외 (${aiErr.message?.substring(0, 30)}...) ➔ 다음 모델로 전환`);
       }
     }
 
-    if (!productName || productName.toLowerCase().includes('access denied')) {
-      productName = '쿠팡 역대급 초특가 핫딜 상품';
+    if (!postText) {
+      postText = `남들 정가 다 주고 구매할 때 이 구성에 이 가격이면 왜 무조건 이득인지 팩트만 정리해 줌 ㄷㄷ🔥\n\n[${productName}]\n\n혜택 대비 가격이 너무 좋아서 품절 대란 나기 전에 미리 챙겨두는 거 추천함 ㅋㅋㅋ 👍\n\n👇 쿠팡 단독 특가 링크는 아래 첫 댓글에 달아둘게!`;
     }
 
     if (!selectedImage) {
@@ -514,10 +467,6 @@ export async function publishCoupangDealToThreads(
       logs.push(`📸 [이미지] 까도까도 공식 대표 썸네일 이미지 배정`);
     } else {
       logs.push(`✅ [이미지] 고화질 대표 이미지 확정 (${selectedImage.substring(0, 50)}...)`);
-    }
-
-    if (!postText) {
-      postText = `가족이나 지인들한테 추천해 주고 칭찬만 들었던 역대급 핫딜인데 이번에 쿠팡 단독 특가 제대로 떴음 ㄷㄷ🔥\n\n[${productName}]\n\n다른 곳에서 일반가로 구매하면 무조건 손해인 구성이고, 혜택 대비 가격이 너무 좋아서 재고 마감 전에 미리 챙겨두는 거 추천함 ㅋㅋㅋ 👍\n\n👇 쿠팡 단독 특가 링크는 아래 첫 댓글에 달아둘게!`;
     }
 
     const replyText = `🛒 [${productName.substring(0, 30)}] 특가 보러가기 👇\n${cleanUrl}\n\n(이 포스팅은 쿠팡 파트너스 활동의 일환으로, 이에 따른 일정액의 수수료를 제공받습니다.)`;
