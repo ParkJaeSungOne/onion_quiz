@@ -376,24 +376,28 @@ export async function publishCoupangDealToThreads(
     const { GoogleGenAI } = await import('@google/genai');
     const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || '' });
 
+    const prodIdMatch = redirectedUrl.match(/products\/(\d+)/i) || redirectedUrl.match(/productId=(\d+)/i) || cleanUrl.match(/\/a\/([a-zA-Z0-9]+)/i);
+    const prodId = prodIdMatch ? prodIdMatch[1] : '';
+
     const searchPrompt = `
 당신은 대한민국 최고의 '핫딜 & 트렌드 전문 바이럴 마케터'입니다.
-다음 쿠팡 핫딜 링크 및 상세 URL을 실시간 웹 검색하여 어떤 상품인지 구체적인 정보(정확한 상품명, 패키지 구성, 핵심 혜택, 숙소/상품 특징, 가격 메리트, 실제 고화질 이미지 URL 등)를 찾아낸 뒤, 스레드(Threads)에서 수만 조회수가 터지는 논리적인 B급 팩폭 카피를 작성하세요.
+웹 검색을 통해 다음 쿠팡 핫딜 링크 및 상품 번호에 연결된 실제 상품(호텔/리조트/숙소/식품/가전/패키지 등)이 정확히 무엇인지 찾고, 스레드(Threads)에서 수만 조회수가 터지는 논리적인 B급 팩폭 카피를 작성하세요.
 
-[링크 정보]
+[링크 & 상품 정보]
 - 쿠팡 단축 링크: ${cleanUrl}
 - 상세 리다이렉트 URL: ${redirectedUrl}
+- 상품 식별 번호: ${prodId || '없음'}
 - 기존 상품명 힌트: "${productName || '미확인'}"
 - 추가 메모: "${productDetails || '없음'}"
 
 [요구사항 및 작성 규칙 - 반드시 준수]
-1. 웹 검색을 통해 해당 쿠팡 링크의 실제 정확한 상품명(예: 소노벨 단양 올인원 패키지 특가 등)과 구체적인 혜택(조식 뷔페 포함 여부, 워터파크 오션플레이, 객실 리모델링 등)을 정확히 파악하세요.
-2. 만약 쿠팡 CDN이나 해당 상품의 공개 이미지 URL을 찾을 수 있다면 첫 줄에 "[IMAGE_URL: 이미지주소]" 형태로 표기하세요.
-3. 첫 줄에 "[PRODUCT_NAME: 정확한상품명]" 형태로 상품명을 표기하세요.
+1. 웹 검색(쿠팡 상품 번호 ${prodId} 등)을 통해 해당 쿠팡 링크의 실제 정확한 상품명(예: 부산 호텔농심 온천 패키지, 소노벨 단양 패키지 등)과 구체적인 혜택(조식 뷔페, 워터파크/온천, 객실 혜택 등)을 정확히 파악하세요.
+2. 첫 줄에 "[PRODUCT_NAME: 파악한 정확한 상품명]" 형태로 상품명을 표기하세요.
+3. 만약 상품의 고화질 대표 이미지 URL(쿠팡 CDN 또는 숙소 공식 이미지)을 찾았다면 "[IMAGE_URL: 이미지URL]" 형태로 표기하세요.
 4. **본문 작성 규칙**:
    - **첫 문장 (현실 비교 훅)**: 소비자가 일상에서 겪는 비효율/돈 낭비를 콕 짚으며 시작 (예: "주말에 1박 20만원 넘게 주고 숙소 가느니, 워터파크+조식까지 다 묶어서 이 가격이면 왜 무조건 이득인지 팩트만 까봄 ㄷㄷ")
    - **논리적인 3단 팩트 분해**:
-     - ① [가격 및 구성 팩폭]: 따로 구매할 때 비용(예: 조식 1인 39,000원, 워터파크 입장료 등)과 비교해 왜 이 패키지가 압도적인 혜택인지 수치로 논리적 설명
+     - ① [가격 및 구성 팩폭]: 따로 구매할 때 비용과 비교해 왜 이 패키지가 압도적인 혜택인지 수치로 논리적 설명
      - ② [실사용 핵심 포인트]: 100% 뽕 뽑는 실전 활용/여행 팁
      - ③ [선점 타이밍]: 왜 지금 이 링크로 사둬야 하는지 명확한 이유
    - **톤앤매너**: 찐 사용자 구어체 반말 (~했음, ~임 ㅋㅋㅋ, ~추천함!)
@@ -405,7 +409,7 @@ export async function publishCoupangDealToThreads(
     let aiSuccess = false;
 
     try {
-      logs.push(`🔍 [실시간 검색] 구글 웹 인덱스에서 상품 상세 혜택 탐색 중...`);
+      logs.push(`🔍 [실시간 검색] 구글 웹 인덱스에서 상품 상세 혜택 탐색 중... (상품ID: ${prodId || '추적중'})`);
       const searchRes = await ai.models.generateContent({
         model: 'gemini-2.5-flash',
         contents: searchPrompt,
@@ -414,20 +418,28 @@ export async function publishCoupangDealToThreads(
         }
       });
 
-      const rawText = searchRes.text?.trim() || '';
+      let rawText = searchRes.text?.trim() || '';
+      if (!rawText && searchRes.candidates && searchRes.candidates[0]?.content?.parts) {
+        rawText = searchRes.candidates[0].content.parts
+          .map((p: any) => p.text || '')
+          .filter(Boolean)
+          .join('\n')
+          .trim();
+      }
+
       if (rawText) {
         // [IMAGE_URL: ...] 추출
         const imgMatch = rawText.match(/\[IMAGE_URL:\s*([^\]]+)\]/i);
         if (imgMatch && imgMatch[1]?.startsWith('http') && !selectedImage) {
           selectedImage = imgMatch[1].trim();
-          logs.push(`📸 [이미지 자동 발견] 구글 인덱스에서 상품 고화질 이미지 추출 성공!`);
+          logs.push(`📸 [이미지 자동 발견] 구글 인덱스에서 상품 이미지 추출 성공!`);
         }
 
         // [PRODUCT_NAME: ...] 추출
         const nameMatch = rawText.match(/\[PRODUCT_NAME:\s*([^\]]+)\]/i);
-        if (nameMatch && nameMatch[1]?.trim() && (!productName || productName.includes('핫딜'))) {
+        if (nameMatch && nameMatch[1]?.trim() && (!productName || productName.includes('핫딜') || productName.includes('쿠팡'))) {
           productName = nameMatch[1].trim();
-          logs.push(`🏷️ [상품명 확정] 구글 검색을 통해 상품명 특정 ➔ "${productName}"`);
+          logs.push(`🏷️ [상품명 확정] 구글 검색으로 상품명 특정 ➔ "${productName}"`);
         }
 
         // 본문 정제 (특수 태그 제거 및 마크다운 볼드 정리)
@@ -443,7 +455,7 @@ export async function publishCoupangDealToThreads(
         }
       }
     } catch (searchErr: any) {
-      logs.push(`⚠️ 실시간 검색 엔진 일시 한도 (${searchErr.message?.substring(0, 40)}...) ➔ 고효율 모델로 전환`);
+      logs.push(`⚠️ 실시간 검색 엔진 예외 (${searchErr.message?.substring(0, 40)}...) ➔ 고효율 모델로 전환`);
     }
 
     // 폴백 모델
