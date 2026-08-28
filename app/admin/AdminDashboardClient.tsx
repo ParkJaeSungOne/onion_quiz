@@ -181,6 +181,7 @@ export default function AdminDashboardClient({
   // 🛒 쿠팡 핫딜 AI 스레드 자동 발행기 상태
   const [coupangUrl, setCoupangUrl] = useState('');
   const [isCoupangPublishing, setIsCoupangPublishing] = useState(false);
+  const [coupangLogs, setCoupangLogs] = useState<string[]>([]);
   const [coupangResult, setCoupangResult] = useState<{
     productName: string;
     imageUrl: string;
@@ -201,9 +202,36 @@ export default function AdminDashboardClient({
     setIsCoupangPublishing(true);
     setCoupangError(null);
     setCoupangResult(null);
+    setCoupangLogs([
+      '🚀 [시작] 쿠팡 링크 실시간 AI 분석 & 스레드 포스팅 파이프라인 가동...',
+      `🔗 대상 URL: ${coupangUrl.trim()}`
+    ]);
+
+    // 실시간 진행 텍스트 시뮬레이션 인터벌 (서버 응답 대기 동안 시각적 피드백 제공)
+    const timer1 = setTimeout(() => {
+      setCoupangLogs(prev => [...prev, '🌐 1단계: 쿠팡 서버 접속 및 HTML 상품명/고화질 이미지 크롤링 중...']);
+    }, 1200);
+    const timer2 = setTimeout(() => {
+      setCoupangLogs(prev => [...prev, '🧠 2단계: Gemini 2.0 Flash AI 팩폭 어그로 카피라이팅 엔진 호출 중...']);
+    }, 3500);
+    const timer3 = setTimeout(() => {
+      setCoupangLogs(prev => [...prev, '📱 3단계: Meta Threads Graph API 미디어 컨테이너 생성 및 인코딩 검증 중...']);
+    }, 6500);
+    const timer4 = setTimeout(() => {
+      setCoupangLogs(prev => [...prev, '🚀 4단계: 스레드 피드 본문 및 첫 댓글(파트너스 링크) 동시 발행 중...']);
+    }, 9500);
 
     try {
       const res = await publishCoupangDealToThreads(coupangUrl);
+      clearTimeout(timer1);
+      clearTimeout(timer2);
+      clearTimeout(timer3);
+      clearTimeout(timer4);
+
+      if ((res as any).logs && (res as any).logs.length > 0) {
+        setCoupangLogs((res as any).logs);
+      }
+
       if (res.success && (res as any).postId) {
         setCoupangResult(res as any);
         setCoupangUrl('');
@@ -211,6 +239,10 @@ export default function AdminDashboardClient({
         setCoupangError(res.error || '스레드 발행 실패');
       }
     } catch (err: any) {
+      clearTimeout(timer1);
+      clearTimeout(timer2);
+      clearTimeout(timer3);
+      clearTimeout(timer4);
       setCoupangError(err.message || '네트워크 통신 에러가 발생했습니다.');
     } finally {
       setIsCoupangPublishing(false);
@@ -427,6 +459,43 @@ export default function AdminDashboardClient({
         </div>
       </header>
 
+      {/* 🔑 관리자 전용 비밀번호 프리패스 자동 로그인 북마크 안내 */}
+      <div style={{
+        background: '#ecfdf5',
+        border: '2.5px solid #059669',
+        borderRadius: '12px',
+        padding: '10px 16px',
+        marginBottom: '20px',
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        flexWrap: 'wrap',
+        gap: '8px'
+      }}>
+        <div style={{ fontSize: '12.5px', fontWeight: 800, color: '#065f46' }}>
+          💡 <strong>비번 입력 없이 1초 만에 바로 들어오는 관리자 전용 북마크 URL:</strong>
+          <span style={{ marginLeft: '8px', color: '#047857', fontFamily: 'monospace' }}>https://kkado-kkado.com/admin?key=wotjd11442!</span>
+        </div>
+        <button
+          onClick={() => {
+            navigator.clipboard.writeText('https://kkado-kkado.com/admin?key=wotjd11442!');
+            alert('📋 관리자 전용 자동 로그인 URL이 클립보드에 복사되었습니다!\n\n이 주소를 브라우저 즐겨찾기/북마크에 등록해 두시면 비번 없이 원클릭으로 평생 자동 로그인됩니다.');
+          }}
+          style={{
+            padding: '4px 10px',
+            fontSize: '11px',
+            fontWeight: 900,
+            background: '#059669',
+            color: '#ffffff',
+            border: '1.5px solid #047857',
+            borderRadius: '6px',
+            cursor: 'pointer'
+          }}
+        >
+          📋 북마크 링크 복사
+        </button>
+      </div>
+
       {/* 에러 메시지 팝아트 복사 카드 배너 */}
       {errorMsg && (
         <div className={styles.errorBanner}>
@@ -639,6 +708,41 @@ export default function AdminDashboardClient({
             {isCoupangPublishing ? '⏳ AI 크롤링 & 스레드 발행 중...' : '🚀 AI 어그로 분석 및 스레드 실시간 발행'}
           </button>
         </div>
+
+        {/* 💻 실시간 진행 로그 터미널 (Real-time Live Execution Logs) */}
+        {coupangLogs.length > 0 && (
+          <div style={{
+            marginTop: '16px',
+            background: '#0f172a',
+            border: '3px solid #000000',
+            borderRadius: '12px',
+            padding: '14px 16px',
+            boxShadow: '4px 4px 0px #000000'
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px', borderBottom: '1px solid #334155', paddingBottom: '6px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span style={{ display: 'inline-block', width: '10px', height: '10px', borderRadius: '50%', background: isCoupangPublishing ? '#38bdf8' : '#4ade80' }}></span>
+                <span style={{ fontSize: '12px', fontWeight: 900, color: '#f8fafc', fontFamily: 'monospace' }}>
+                  {isCoupangPublishing ? '🔄 LIVE PIPELINE LOGS (PROCESSING...)' : '✅ EXECUTION COMPLETE'}
+                </span>
+              </div>
+              <span style={{ fontSize: '11px', color: '#94a3b8', fontFamily: 'monospace' }}>
+                {coupangLogs.length} events logged
+              </span>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', maxHeight: '180px', overflowY: 'auto', fontFamily: 'monospace', fontSize: '12px' }}>
+              {coupangLogs.map((log, index) => (
+                <div key={index} style={{
+                  color: log.startsWith('❌') ? '#f87171' : log.startsWith('✅') || log.startsWith('🎉') ? '#4ade80' : log.startsWith('⚠️') ? '#facc15' : '#e2e8f0',
+                  lineHeight: 1.4
+                }}>
+                  <span style={{ color: '#64748b', marginRight: '8px' }}>[{index + 1}]</span>
+                  {log}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* 에러 피드백 */}
         {coupangError && (

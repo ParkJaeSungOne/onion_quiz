@@ -14,12 +14,12 @@ export async function authenticateAdmin(password: string) {
 
   if (password === adminPassword) {
     const cookieStore = await cookies();
-    // 24시간 동안 유효한 세션 쿠키 설정
+    // 1년 동안 유효한 세션 쿠키 설정 (로그인 상태 영구 유지)
     cookieStore.set(SESSION_COOKIE_NAME, 'authenticated', {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
-      maxAge: 60 * 60 * 24, // 1 day
+      sameSite: 'lax',
+      maxAge: 60 * 60 * 24 * 365, // 1 year
       path: '/',
     });
     return { success: true };
@@ -287,6 +287,7 @@ export async function triggerThreadsPostAction() {
  * 🛒 쿠팡 링크 분석 -> Gemini 어그로 바이럴 카피 생성 -> 스레드 이미지+본문+댓글 자동 발행
  */
 export async function publishCoupangDealToThreads(coupangUrl: string) {
+  const logs: string[] = [];
   try {
     const cookieStore = await cookies();
     const session = cookieStore.get(SESSION_COOKIE_NAME);
@@ -300,6 +301,7 @@ export async function publishCoupangDealToThreads(coupangUrl: string) {
     }
 
     // 1. 쿠팡 페이지 크롤링 및 상품 정보 추출
+    logs.push(`🌐 1단계: 쿠팡 링크 접속 및 리다이렉트 추적 중... (${cleanUrl.substring(0, 45)}...)`);
     console.log('[CoupangToThreads] Fetching URL:', cleanUrl);
     const crawlRes = await fetch(cleanUrl, {
       headers: {
@@ -320,6 +322,7 @@ export async function publishCoupangDealToThreads(coupangUrl: string) {
 
     let productName = prodNameMatch ? prodNameMatch[1] : '쿠팡 핫딜 추천 상품';
     productName = productName.replace(/쿠팡!\s*-\s*/g, '').replace(/ - 쿠팡!/g, '').trim();
+    logs.push(`📦 2단계: 상품명 추출 완료 ➔ "${productName}"`);
 
     // 대표 이미지 추출
     const imgMatches = html.match(/https:\/\/[^"'\s]+\.(?:jpg|jpeg|png|webp)/gi) || [];
@@ -332,11 +335,13 @@ export async function publishCoupangDealToThreads(coupangUrl: string) {
 
     if (!selectedImage) {
       selectedImage = 'https://kkado-kkado.com/thumbnail.png';
+      logs.push(`📸 대표 이미지: 기본 까도까도 썸네일 사용`);
+    } else {
+      logs.push(`📸 대표 이미지 추출 완료: ${selectedImage.substring(0, 60)}...`);
     }
 
-    console.log('[CoupangToThreads] Extracted Product:', productName, 'Image:', selectedImage);
-
-    // 2. Gemini 2.5 Flash를 사용해 바이럴 어그로 카피 생성
+    // 2. Gemini AI 멀티 모델 자동 폴백 가동 (429 Rate Limit 방지)
+    logs.push(`🧠 3단계: Gemini AI 팩폭 바이럴 카피라이팅 엔진 가동...`);
     const { GoogleGenAI } = await import('@google/genai');
     const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || '' });
 
@@ -357,16 +362,38 @@ export async function publishCoupangDealToThreads(coupangUrl: string) {
 5. 마크다운 볼드(**), 제목(#), 따옴표 없이 자연스러운 줄바꿈과 이모지(🔥, ㄷㄷ, ㅋㅋㅋ, 👍, ✈️ 등)를 적절히 섞어 딱 3~4문단(공백 포함 200~350자)으로 작성하세요.
 `;
 
-    const aiRes = await ai.models.generateContent({
-      model: 'gemini-2.5-flash',
-      contents: prompt
-    });
+    let postText = '';
+    const modelsToTry = ['gemini-2.0-flash', 'gemini-1.5-flash', 'gemini-2.5-flash'];
+    let aiSuccess = false;
 
-    const postText = aiRes.text?.trim() || `와 이번에 쿠팡에서 뜬 특가 상품 실화냐 ㄷㄷ🔥\n\n${productName}\n\n가성비나 혜택 대비 가격이 너무 좋아서 품절 전에 미리 쟁여두는 거 추천! 👍\n\n👇 구매 링크는 아래 첫 댓글에 달아둘게!`;
+    for (const modelName of modelsToTry) {
+      try {
+        logs.push(`⚙️ [AI 엔진] ${modelName} 호출 시도 중...`);
+        const aiRes = await ai.models.generateContent({
+          model: modelName,
+          contents: prompt
+        });
+        if (aiRes.text?.trim()) {
+          postText = aiRes.text.trim();
+          aiSuccess = true;
+          logs.push(`✅ [AI 완료] ${modelName} 모델로 바이럴 카피 생성 성공 (${postText.length}자)`);
+          break;
+        }
+      } catch (aiErr: any) {
+        const status = aiErr?.status || (aiErr?.message?.includes('429') ? '429 Quota Exceeded' : 'Error');
+        logs.push(`⚠️ [${modelName}] 한도 초과 (${status}) ➔ 다음 안정 모델로 자동 전환`);
+      }
+    }
+
+    if (!aiSuccess || !postText) {
+      logs.push(`💡 스마트 고효율 핫딜 템플릿 엔진으로 자동 폴백`);
+      postText = `가족이나 친구, 지인들한테 추천해 주고 칭찬만 들었던 핫딜인데 이번에 쿠팡 특가 제대로 떴음 ㄷㄷ🔥\n\n[${productName}]\n\n가성비나 혜택 대비 가격이 너무 좋아서 품절 대란 나기 전에 미리 쟁여두는 거 추천함 ㅋㅋㅋ 👍\n\n👇 쿠팡 단독 특가 링크는 아래 첫 댓글에 달아둘게!`;
+    }
 
     const replyText = `🛒 [${productName.substring(0, 30)}] 특가 보러가기 👇\n${cleanUrl}\n\n(이 포스팅은 쿠팡 파트너스 활동의 일환으로, 이에 따른 일정액의 수수료를 제공받습니다.)`;
 
     // 3. Threads API 포스팅 실행
+    logs.push(`📱 4단계: Meta Threads Graph API 통신 시작...`);
     const { getThreadsToken } = await import('@/lib/threadsToken');
     const token = await getThreadsToken();
     if (!token) {
@@ -374,6 +401,7 @@ export async function publishCoupangDealToThreads(coupangUrl: string) {
     }
 
     // Step A: Create Media Container
+    logs.push(`🖼️ Step A: 이미지 미디어 컨테이너 생성 요청...`);
     const containerUrl = `https://graph.threads.net/v1.0/me/threads?media_type=IMAGE&image_url=${encodeURIComponent(selectedImage)}&text=${encodeURIComponent(postText)}&access_token=${token}`;
     const containerRes = await fetch(containerUrl, { method: 'POST' });
     const containerData = await containerRes.json();
@@ -381,16 +409,22 @@ export async function publishCoupangDealToThreads(coupangUrl: string) {
     if (!containerData.id) {
       throw new Error('스레드 미디어 생성 실패: ' + JSON.stringify(containerData));
     }
+    logs.push(`✅ Step A 완료 (Container ID: ${containerData.id})`);
 
     // Step B: Wait for container to be FINISHED
+    logs.push(`⏳ Step B: Meta 서버 미디어 인코딩 대기 중...`);
     for (let i = 0; i < 5; i++) {
       await new Promise(r => setTimeout(r, 2000));
       const statusRes = await fetch(`https://graph.threads.net/v1.0/${containerData.id}?fields=status&access_token=${token}`);
       const statusData = await statusRes.json();
-      if (statusData.status === 'FINISHED') break;
+      if (statusData.status === 'FINISHED') {
+        logs.push(`✅ Step B 완료 (미디어 인코딩 FINISHED)`);
+        break;
+      }
     }
 
     // Step C: Publish Media Container
+    logs.push(`🚀 Step C: 스레드 피드 본문 공식 발행 중...`);
     const pubUrl = `https://graph.threads.net/v1.0/me/threads_publish?creation_id=${containerData.id}&access_token=${token}`;
     const pubRes = await fetch(pubUrl, { method: 'POST' });
     const pubData = await pubRes.json();
@@ -400,8 +434,10 @@ export async function publishCoupangDealToThreads(coupangUrl: string) {
     }
 
     const parentPostId = pubData.id;
+    logs.push(`✅ Step C 완료! 본문 게시물 ID: ${parentPostId}`);
 
     // Step D: Publish First Reply Comment
+    logs.push(`💬 Step D: 첫 댓글(쿠팡 파트너스 링크 & 공정위 문구) 등록 중...`);
     await new Promise(r => setTimeout(r, 2000));
     const replyContainerUrl = `https://graph.threads.net/v1.0/me/threads?media_type=TEXT&text=${encodeURIComponent(replyText)}&reply_to_id=${parentPostId}&access_token=${token}`;
     const replyContainerRes = await fetch(replyContainerUrl, { method: 'POST' });
@@ -414,6 +450,7 @@ export async function publishCoupangDealToThreads(coupangUrl: string) {
       const replyPubRes = await fetch(replyPubUrl, { method: 'POST' });
       const replyPubData = await replyPubRes.json();
       replyPostId = replyPubData.id || replyContainerData.id;
+      logs.push(`✅ Step D 완료! 댓글 게시물 ID: ${replyPostId}`);
     }
 
     // Step E: Fetch permalink
@@ -425,6 +462,7 @@ export async function publishCoupangDealToThreads(coupangUrl: string) {
         permalink = permalinkData.permalink;
       }
     } catch (e) {}
+    logs.push(`🎉 5단계 완료: 스레드 실시간 게시물 링크 생성됨 ➔ ${permalink}`);
 
     return {
       success: true,
@@ -435,12 +473,14 @@ export async function publishCoupangDealToThreads(coupangUrl: string) {
       postId: parentPostId,
       replyId: replyPostId,
       permalink,
+      logs,
       message: `🎉 쿠팡 핫딜 스레드 포스팅이 성공적으로 발행되었습니다!`
     };
 
   } catch (error: any) {
+    logs.push(`❌ 에러 발생: ${error.message}`);
     console.error('Failed to publish Coupang deal to Threads:', error);
-    return { success: false, error: error.message };
+    return { success: false, error: error.message, logs };
   }
 }
 
