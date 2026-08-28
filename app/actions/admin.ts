@@ -376,7 +376,7 @@ export async function publishCoupangDealToThreads(coupangUrl: string, customProd
 
 [상품 정보]
 - 상품명: "${productName}"
-- 링크: "${finalUrl}"
+- 링크: "${cleanUrl}"
 
 [작성 규칙]
 1. 첫 문장은 무조건 유저들의 스크롤을 멈추게 만드는 강력한 훅(공감/호기심/어그로)으로 시작하세요.
