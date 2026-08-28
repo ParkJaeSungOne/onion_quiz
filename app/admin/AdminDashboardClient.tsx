@@ -181,6 +181,8 @@ export default function AdminDashboardClient({
   // 🛒 쿠팡 핫딜 AI 스레드 자동 발행기 상태
   const [coupangUrl, setCoupangUrl] = useState('');
   const [customProductName, setCustomProductName] = useState('');
+  const [customImageUrl, setCustomImageUrl] = useState('');
+  const [customDetails, setCustomDetails] = useState('');
   const [isCoupangPublishing, setIsCoupangPublishing] = useState(false);
   const [coupangLogs, setCoupangLogs] = useState<string[]>([]);
   const [coupangResult, setCoupangResult] = useState<{
@@ -196,7 +198,7 @@ export default function AdminDashboardClient({
 
   const handlePublishCoupang = async () => {
     if (!coupangUrl.trim() || isCoupangPublishing) return;
-    if (!confirm('쿠팡 상품 페이지를 분석하고, Gemini AI로 어그로 카피를 생성하여 스레드에 실시간 포스팅하시겠습니까?')) {
+    if (!confirm('쿠팡 상품 정보를 분석하고, Gemini AI로 고품질 팩폭 카피를 생성하여 스레드에 실시간 포스팅하시겠습니까?')) {
       return;
     }
 
@@ -206,15 +208,17 @@ export default function AdminDashboardClient({
     setCoupangLogs([
       '🚀 [시작] 쿠팡 링크 실시간 AI 분석 & 스레드 포스팅 파이프라인 가동...',
       `🔗 대상 URL: ${coupangUrl.trim()}`,
-      customProductName.trim() ? `🏷️ 지정 상품명: "${customProductName.trim()}"` : '🔍 상품명 자동 크롤링 모드'
+      customProductName.trim() ? `🏷️ 지정 상품명: "${customProductName.trim()}"` : '🔍 상품명 자동 크롤링 모드',
+      customImageUrl.trim() ? `📸 지정 이미지: ${customImageUrl.trim().substring(0, 40)}...` : '🔍 이미지 자동 추출 모드',
+      customDetails.trim() ? `💡 핵심 혜택 메모: "${customDetails.trim()}"` : '✨ AI 자동 혜택 분석 모드'
     ]);
 
     // 실시간 진행 텍스트 시뮬레이션 인터벌 (서버 응답 대기 동안 시각적 피드백 제공)
     const timer1 = setTimeout(() => {
-      setCoupangLogs(prev => [...prev, '🌐 1단계: 쿠팡 서버 접속 및 HTML 상품명/고화질 이미지 크롤링 중...']);
+      setCoupangLogs(prev => [...prev, '🌐 1단계: 쿠팡 서버 접속 및 상품명/고화질 이미지 크롤링 중...']);
     }, 1200);
     const timer2 = setTimeout(() => {
-      setCoupangLogs(prev => [...prev, '🧠 2단계: Gemini AI 팩폭 어그로 카피라이팅 엔진 호출 중...']);
+      setCoupangLogs(prev => [...prev, '🧠 2단계: Gemini AI 논리적 팩폭 카피라이팅 엔진 호출 중...']);
     }, 3500);
     const timer3 = setTimeout(() => {
       setCoupangLogs(prev => [...prev, '📱 3단계: Meta Threads Graph API 미디어 컨테이너 생성 및 인코딩 검증 중...']);
@@ -224,7 +228,12 @@ export default function AdminDashboardClient({
     }, 9500);
 
     try {
-      const res = await publishCoupangDealToThreads(coupangUrl, customProductName);
+      const res = await publishCoupangDealToThreads(
+        coupangUrl, 
+        customProductName,
+        customImageUrl,
+        customDetails
+      );
       clearTimeout(timer1);
       clearTimeout(timer2);
       clearTimeout(timer3);
@@ -238,6 +247,8 @@ export default function AdminDashboardClient({
         setCoupangResult(res as any);
         setCoupangUrl('');
         setCustomProductName('');
+        setCustomImageUrl('');
+        setCustomDetails('');
       } else {
         setCoupangError(res.error || '스레드 발행 실패');
       }
@@ -674,60 +685,95 @@ export default function AdminDashboardClient({
         </div>
 
         <div style={{ display: 'flex', gap: '10px', marginTop: '16px', flexWrap: 'wrap' }}>
-          <input
-            type="text"
-            value={coupangUrl}
-            onChange={(e) => setCoupangUrl(e.target.value)}
-            placeholder="쿠팡 링크 입력 (예: https://link.coupang.com/a/gzAKLjJpyC)"
-            disabled={isCoupangPublishing}
-            style={{
-              flex: '2 1 300px',
-              padding: '12px 14px',
-              fontSize: '14px',
-              fontWeight: 800,
-              border: '3px solid #000000',
-              borderRadius: '12px',
-              backgroundColor: '#ffffff',
-              boxShadow: '3px 3px 0px #000000',
-              outline: 'none'
-            }}
-          />
-          <input
-            type="text"
-            value={customProductName}
-            onChange={(e) => setCustomProductName(e.target.value)}
-            placeholder="상품명/키워드 직접입력 (선택, 예: 소노벨 단양 패키지)"
-            disabled={isCoupangPublishing}
-            style={{
-              flex: '1 1 200px',
-              padding: '12px 14px',
-              fontSize: '13.5px',
-              fontWeight: 800,
-              border: '3px solid #000000',
-              borderRadius: '12px',
-              backgroundColor: '#ffffff',
-              boxShadow: '3px 3px 0px #000000',
-              outline: 'none'
-            }}
-          />
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '10px', width: '100%' }}>
+            <input
+              type="text"
+              value={coupangUrl}
+              onChange={(e) => setCoupangUrl(e.target.value)}
+              placeholder="🔗 [필수] 쿠팡 파트너스 링크 (예: https://link.coupang.com/a/...)"
+              disabled={isCoupangPublishing}
+              style={{
+                padding: '12px 14px',
+                fontSize: '13.5px',
+                fontWeight: 800,
+                border: '3px solid #000000',
+                borderRadius: '12px',
+                backgroundColor: '#ffffff',
+                boxShadow: '3px 3px 0px #000000',
+                outline: 'none'
+              }}
+            />
+            <input
+              type="text"
+              value={customProductName}
+              onChange={(e) => setCustomProductName(e.target.value)}
+              placeholder="🏷️ [선택] 상품명/키워드 (예: 소노벨 단양 워터파크 패키지)"
+              disabled={isCoupangPublishing}
+              style={{
+                padding: '12px 14px',
+                fontSize: '13.5px',
+                fontWeight: 800,
+                border: '3px solid #000000',
+                borderRadius: '12px',
+                backgroundColor: '#ffffff',
+                boxShadow: '3px 3px 0px #000000',
+                outline: 'none'
+              }}
+            />
+            <input
+              type="text"
+              value={customImageUrl}
+              onChange={(e) => setCustomImageUrl(e.target.value)}
+              placeholder="📸 [선택] 고화질 이미지 URL (미입력시 자동 추출/생성)"
+              disabled={isCoupangPublishing}
+              style={{
+                padding: '12px 14px',
+                fontSize: '13.5px',
+                fontWeight: 800,
+                border: '3px solid #000000',
+                borderRadius: '12px',
+                backgroundColor: '#ffffff',
+                boxShadow: '3px 3px 0px #000000',
+                outline: 'none'
+              }}
+            />
+            <input
+              type="text"
+              value={customDetails}
+              onChange={(e) => setCustomDetails(e.target.value)}
+              placeholder="💡 [선택] 핵심 혜택 메모 (예: 오션플레이 포함, 조식 뷔페, 남한강 뷰)"
+              disabled={isCoupangPublishing}
+              style={{
+                padding: '12px 14px',
+                fontSize: '13.5px',
+                fontWeight: 800,
+                border: '3px solid #000000',
+                borderRadius: '12px',
+                backgroundColor: '#ffffff',
+                boxShadow: '3px 3px 0px #000000',
+                outline: 'none'
+              }}
+            />
+          </div>
           <button
             onClick={handlePublishCoupang}
             disabled={isCoupangPublishing || !coupangUrl.trim()}
             style={{
-              padding: '12px 20px',
-              fontSize: '14px',
+              width: '100%',
+              marginTop: '10px',
+              padding: '14px 20px',
+              fontSize: '15px',
               fontWeight: 900,
               backgroundColor: isCoupangPublishing ? '#94a3b8' : '#e11d48',
               color: '#ffffff',
               border: '3px solid #000000',
               borderRadius: '12px',
-              boxShadow: '3px 3px 0px #000000',
+              boxShadow: '4px 4px 0px #000000',
               cursor: isCoupangPublishing ? 'not-allowed' : 'pointer',
-              transition: 'all 0.15s ease',
-              whiteSpace: 'nowrap'
+              transition: 'all 0.15s ease'
             }}
           >
-            {isCoupangPublishing ? '⏳ AI 분석 & 스레드 발행 중...' : '🚀 AI 어그로 분석 및 스레드 실시간 발행'}
+            {isCoupangPublishing ? '⏳ AI 논리적 팩폭 분석 & 스레드 발행 중...' : '🚀 [원클릭 발행] AI 논리적 어그로 카피 작성 및 스레드 실시간 포스팅'}
           </button>
         </div>
 

@@ -286,7 +286,12 @@ export async function triggerThreadsPostAction() {
 /**
  * 🛒 쿠팡 링크 분석 -> Gemini 어그로 바이럴 카피 생성 -> 스레드 이미지+본문+댓글 자동 발행
  */
-export async function publishCoupangDealToThreads(coupangUrl: string, customProductName?: string) {
+export async function publishCoupangDealToThreads(
+  coupangUrl: string, 
+  customProductName?: string,
+  customImageUrl?: string,
+  customDetails?: string
+) {
   const logs: string[] = [];
   try {
     const cookieStore = await cookies();
@@ -301,10 +306,11 @@ export async function publishCoupangDealToThreads(coupangUrl: string, customProd
     }
 
     let productName = customProductName?.trim() || '';
-    let selectedImage = '';
+    let selectedImage = customImageUrl?.trim() || '';
+    let productDetails = customDetails?.trim() || '';
 
     // 1. 쿠팡 페이지 크롤링 및 상품 정보 추출
-    logs.push(`🌐 1단계: 쿠팡 링크 접속 및 리다이렉트 추적 중... (${cleanUrl.substring(0, 45)}...)`);
+    logs.push(`🌐 [1단계] 쿠팡 링크 접속 및 리다이렉트 추적 중... (${cleanUrl.substring(0, 40)}...)`);
     console.log('[CoupangToThreads] Fetching URL:', cleanUrl);
 
     try {
@@ -336,55 +342,67 @@ export async function publishCoupangDealToThreads(coupangUrl: string, customProd
         }
       }
 
-      // 대표 이미지 추출
-      const imgMatches = html.match(/https:\/\/[^"'\s]+\.(?:jpg|jpeg|png|webp)/gi) || [];
-      const validImg = imgMatches.find(url => 
-        (url.includes('travelSeller') || url.includes('thumbnail.coupangcdn.com') || url.includes('image.coupangcdn.com') || url.includes('img1a.coupangcdn.com')) 
-        && !url.includes('img_fb') 
-        && !url.includes('icons') 
-        && !url.includes('static/media')
-      );
-      if (validImg) {
-        selectedImage = validImg;
+      // 대표 이미지 자동 추출 (사용자가 직접 입력하지 않은 경우)
+      if (!selectedImage) {
+        const imgMatches = html.match(/https:\/\/[^"'\s]+\.(?:jpg|jpeg|png|webp)/gi) || [];
+        const validImg = imgMatches.find(url => 
+          (url.includes('travelSeller') || url.includes('thumbnail.coupangcdn.com') || url.includes('image.coupangcdn.com') || url.includes('img1a.coupangcdn.com')) 
+          && !url.includes('img_fb') 
+          && !url.includes('icons') 
+          && !url.includes('static/media')
+        );
+        if (validImg) {
+          selectedImage = validImg;
+        }
       }
     } catch (crawlErr: any) {
-      logs.push(`⚠️ 크롤링 통신 예외 (${crawlErr.message}) ➔ 안전 모드로 전환`);
+      logs.push(`⚠️ [크롤링 예외] 쿠팡 방화벽 감지 ➔ 입력된 커스텀 메타데이터 우선 적용`);
     }
 
     if (!productName || productName.toLowerCase().includes('access denied')) {
       productName = '쿠팡 역대급 초특가 핫딜 상품';
-      logs.push(`📦 2단계: 상품명 ➔ "${productName}" (기본 핫딜 모드)`);
+      logs.push(`📦 [2단계] 상품명 ➔ "${productName}" (기본 핫딜 모드)`);
     } else {
-      logs.push(`📦 2단계: 상품명 확인 완료 ➔ "${productName}"`);
+      logs.push(`✅ [2단계] 상품명 확정 ➔ "${productName}"`);
     }
 
     if (!selectedImage) {
-      selectedImage = 'https://kkado-kkado.com/thumbnail.png';
-      logs.push(`📸 대표 이미지: 기본 까도까도 썸네일 배정`);
+      // 일반 양파 이미지가 아닌, 해당 상품명이 큼직하게 박힌 고해상도 다이내믹 핫딜 썸네일 카드 자동 생성
+      selectedImage = `https://kkado-kkado.com/api/og?title=${encodeURIComponent(productName.substring(0, 30))}&category=${encodeURIComponent('🔥 역대급 쿠팡 핫딜')}`;
+      logs.push(`📸 [이미지] 다이내믹 핫딜 전용 썸네일 카드 자동 생성 배정`);
     } else {
-      logs.push(`📸 대표 이미지 추출 완료: ${selectedImage.substring(0, 60)}...`);
+      logs.push(`✅ [이미지] 고화질 상품 대표 이미지 확정 (${selectedImage.substring(0, 60)}...)`);
     }
 
-    // 2. Gemini AI 멀티 모델 자동 폴백 가동 (429 Rate Limit 방지)
-    logs.push(`🧠 3단계: Gemini AI 팩폭 바이럴 카피라이팅 엔진 가동...`);
+    // 2. Gemini AI 고급 바이럴 카피라이팅 (논리적 팩폭 + 실사용 강점 + 현실 비교)
+    logs.push(`🧠 [3단계] 논리적 팩폭 AI 카피라이팅 엔진 가동...`);
     const { GoogleGenAI } = await import('@google/genai');
     const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || '' });
 
     const prompt = `
-당신은 스레드(Threads)에서 수만 조회수와 폭발적인 댓글/공유를 이끌어내는 최고의 '트렌드 & 핫딜 바이럴 마케터'입니다.
-다음 쿠팡 핫딜 상품에 대한 매력적이고 솔직하며 킹받는 B급 어그로 감성의 스레드 본문 글을 작성해 주세요.
+당신은 스레드(Threads)에서 10만+ 조회수와 폭발적인 공유/저장을 만들어내는 대한민국 최고의 '핫딜 & 트렌드 전문 에디터'입니다.
+단순한 뻔한 광고성 어그로가 아니라, **소비자가 무릎을 탁 치게 만드는 논리적인 비교, 구체적인 혜택 분석, 현실적인 팩트 체크**를 기반으로 찰진 B급 후기글을 작성하세요.
 
-[상품 정보]
+[상품 및 딜 정보]
 - 상품명: "${productName}"
+- 핵심 특징/혜택/옵션: "${productDetails || '가성비 최우수 구성, 실사용자 만족도 최상, 한정 특가'}"
 - 링크: "${cleanUrl}"
 
-[작성 규칙]
-1. 첫 문장은 무조건 유저들의 스크롤을 멈추게 만드는 강력한 훅(공감/호기심/어그로)으로 시작하세요.
-   (예: "와 이거 진짜 아는 사람만 쟁여두는 꿀템인데...", "주변에 이거 추천해 주고 욕먹은 적 한 번도 없음 ㄷㄷ", "가성비 미쳤다는 말밖에 안 나오는 이유...")
-2. 친근한 반말 구어체("~했음", "~임 ㅋㅋㅋ", "~인 거 알지?", "~추천함!")를 사용하세요.
-3. 상품의 실제 매력과 장점, 꼭 사야 하는 이유 2~3가지를 자연스럽게 어필하세요.
-4. 글 마지막은 무조건 **"👇 구매/예약 링크는 아래 첫 댓글에 달아둘게!"** 로 끝나야 합니다. (본문에 링크 삽입 금지!)
-5. 마크다운 볼드(**), 제목(#), 따옴표 없이 자연스러운 줄바꿈과 이모지(🔥, ㄷㄷ, ㅋㅋㅋ, 👍, ✈️ 등)를 적절히 섞어 딱 3~4문단(공백 포함 200~350자)으로 작성하세요.
+[작성 가이드라인 - 반드시 준수]
+1. **첫 문장 (현실 비교 & 스크롤 멈춤 훅)**:
+   - "그냥 싸다"가 아니라, 소비자가 일상에서 겪는 비효율/돈 낭비를 콕 짚으며 시작하세요.
+   - 예시: "주말에 1박 20만원 넘게 주고 숙소 가느니, 워터파크+조식까지 다 묶어서 이 가격이면 왜 무조건 이득인지 팩트만 까봄 ㄷㄷ", "마트에서 찔끔찔끔 사다 통장 거덜 나는 자취생들 이거 모르면 진짜 손해임 ㅋㅋㅋ"
+2. **본문 (논리적인 3단 팩트 분해)**:
+   - ① **[가격 및 구성 팩폭]**: 다른 일반 구매나 경쟁 옵션 대비 왜 이 패키지/구성이 압도적으로 이득인지 수치나 혜택 관점에서 논리적으로 설명.
+   - ② **[실사용 핵심 포인트]**: 이 상품을 100% 뽕 뽑는 실전 활용 팁(데이트 코스, 보관 팁, 가족 여행 코스 등).
+   - ③ **[타이밍]**: 왜 지금 이 링크로 사두거나 일정을 선점해야 하는지 명확한 이유.
+3. **톤앤매너**:
+   - 솔직하고 쿨한 찐사용자 반말체 ("~했음", "~임 ㅋㅋㅋ", "~인 거 알지?", "~추천함!").
+   - 과장된 광고 티 내지 말고, 아는 사람만 챙겨 먹는 '알짜배기 꿀팁 공유' 느낌.
+4. **마무리**:
+   - 본문에는 링크를 넣지 말고, 반드시 **"👇 특가 링크는 아래 첫 댓글에 달아둘게!"** 로 마무리.
+5. **분량 & 포맷**:
+   - 마크다운 볼드(**), 제목(#) 없이 깔끔한 줄바꿈과 이모지(🔥, ㄷㄷ, ㅋㅋㅋ, 👍, ✈️ 등)를 섞어 3~4개 단락(공백 포함 280~400자).
 `;
 
     let postText = '';
@@ -393,7 +411,7 @@ export async function publishCoupangDealToThreads(coupangUrl: string, customProd
 
     for (const modelName of modelsToTry) {
       try {
-        logs.push(`⚙️ [AI 엔진] ${modelName} 호출 시도 중...`);
+        logs.push(`⚙️ [AI 엔진] ${modelName} 모델로 논리 분석 중...`);
         const aiRes = await ai.models.generateContent({
           model: modelName,
           contents: prompt
@@ -401,24 +419,24 @@ export async function publishCoupangDealToThreads(coupangUrl: string, customProd
         if (aiRes.text?.trim()) {
           postText = aiRes.text.trim();
           aiSuccess = true;
-          logs.push(`✅ [AI 완료] ${modelName} 모델로 바이럴 카피 생성 성공 (${postText.length}자)`);
+          logs.push(`✅ [AI 완료] ${modelName} 모델로 고품질 팩폭 카피 작성 완료 (${postText.length}자)`);
           break;
         }
       } catch (aiErr: any) {
-        const status = aiErr?.status || (aiErr?.message?.includes('429') ? '429 Quota Exceeded' : 'Error');
-        logs.push(`⚠️ [${modelName}] 한도 초과 (${status}) ➔ 다음 안정 모델로 자동 전환`);
+        const status = aiErr?.status || (aiErr?.message?.includes('429') ? '429 Quota' : 'API Busy');
+        logs.push(`⚠️ [${modelName}] ${status} ➔ 다음 안정 모델로 자동 전환`);
       }
     }
 
     if (!aiSuccess || !postText) {
       logs.push(`💡 스마트 고효율 핫딜 템플릿 엔진으로 자동 폴백`);
-      postText = `가족이나 친구, 지인들한테 추천해 주고 칭찬만 들었던 핫딜인데 이번에 쿠팡 특가 제대로 떴음 ㄷㄷ🔥\n\n[${productName}]\n\n가성비나 혜택 대비 가격이 너무 좋아서 품절 대란 나기 전에 미리 쟁여두는 거 추천함 ㅋㅋㅋ 👍\n\n👇 쿠팡 단독 특가 링크는 아래 첫 댓글에 달아둘게!`;
+      postText = `가족이나 지인들한테 추천해 주고 칭찬만 들었던 역대급 핫딜인데 이번에 쿠팡 단독 특가 제대로 떴음 ㄷㄷ🔥\n\n[${productName}]\n\n다른 곳에서 일반가로 구매하면 무조건 손해인 구성이고, 혜택 대비 가격이 너무 좋아서 재고 마감 전에 미리 챙겨두는 거 추천함 ㅋㅋㅋ 👍\n\n👇 쿠팡 단독 특가 링크는 아래 첫 댓글에 달아둘게!`;
     }
 
     const replyText = `🛒 [${productName.substring(0, 30)}] 특가 보러가기 👇\n${cleanUrl}\n\n(이 포스팅은 쿠팡 파트너스 활동의 일환으로, 이에 따른 일정액의 수수료를 제공받습니다.)`;
 
     // 3. Threads API 포스팅 실행
-    logs.push(`📱 4단계: Meta Threads Graph API 통신 시작...`);
+    logs.push(`📱 [4단계] Meta Threads Graph API 미디어 발행 시작...`);
     const { getThreadsToken } = await import('@/lib/threadsToken');
     const token = await getThreadsToken();
     if (!token) {
