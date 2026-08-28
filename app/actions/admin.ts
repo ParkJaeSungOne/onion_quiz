@@ -494,17 +494,46 @@ export async function publishCoupangDealToThreads(
       );
     }
 
-    // 🚫 3단계 검증: 대표 이미지 확보 확인 (양파 썸네일 폴백 금지, 미입력/미추출 시 즉시 중단)
+    // 🚫 3단계: 대표 이미지 자동 발굴 및 검증 (수동 미입력 시 웹 카탈로그에서 고화질 상품 이미지 자동 수집)
+    if (!selectedImage && productName) {
+      logs.push(`🔍 [3단계] 웹 카탈로그에서 "${productName}" 대표 이미지 자동 탐색 중...`);
+      try {
+        const daumImgUrl = `https://search.daum.net/search?w=img&q=${encodeURIComponent(productName)}`;
+        const imgSearchRes = await fetch(daumImgUrl, {
+          headers: {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36'
+          }
+        });
+        const imgHtml = await imgSearchRes.text();
+        const srcMatches = imgHtml.match(/https:\/\/[^"'\s]+(?:jpg|jpeg|png|webp)/gi) || [];
+        const candidates = srcMatches.filter(src => 
+          (src.includes('daumcdn.net') || src.includes('search.daum')) &&
+          !src.includes('ico') &&
+          !src.includes('top') &&
+          !src.includes('icon') &&
+          !src.includes('blank') &&
+          !src.includes('transparent')
+        );
+
+        if (candidates.length > 0) {
+          selectedImage = candidates[0];
+          logs.push(`📸 [이미지 자동 발굴 성공] ${selectedImage.substring(0, 45)}...`);
+        }
+      } catch (imgSearchErr: any) {
+        logs.push(`⚠️ 이미지 자동 검색 통신 예외 (${imgSearchErr.message})`);
+      }
+    }
+
     if (!selectedImage) {
-      logs.push(`❌ [3단계 실패] 상품 대표 이미지가 없습니다.`);
+      logs.push(`❌ [3단계 실패] 상품 대표 이미지를 찾지 못했습니다.`);
       throw new Error(
         `[3단계: 대표 이미지 URL 누락]\n` +
         `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n` +
-        `❌ 사유: 쿠팡 보안 방화벽으로 인해 상품 이미지를 자동으로 읽어오지 못했습니다.\n` +
+        `❌ 사유: 상품 대표 이미지를 자동으로 찾지 못했습니다.\n` +
         `📦 대상 상품: "${productName}"\n` +
         `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n` +
         `👉 해결 방법:\n` +
-        `관리자 화면의 '📸 3. 이미지 URL' 입력칸에 쿠팡 상품 사진의 이미지 주소를 복사해 넣어주세요.`
+        `관리자 화면의 '📸 3. 이미지 URL' 입력칸에 상품 사진 이미지 주소를 복사해 넣어주세요.`
       );
     }
 
