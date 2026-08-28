@@ -673,7 +673,21 @@ export default function AdminDashboardClient({
               type="text"
               value={coupangUrl}
               onChange={(e) => {
-                const raw = e.target.value;
+                const raw = e.target.value.trim();
+
+                // 1. 쿠팡 파트너스 HTML 배너 태그 형태인 경우
+                if (raw.includes('<a') || raw.includes('<img') || raw.includes('href=') || raw.includes('src=')) {
+                  const hrefMatch = raw.match(/href=["'](https:\/\/[^"']+)["']/i) || raw.match(/https:\/\/link\.coupang\.com\/[a-zA-Z0-9_\/]+/i);
+                  const srcMatch = raw.match(/src=["'](https:\/\/[^"']+)["']/i) || raw.match(/https:\/\/[^"'\s]+\.(?:jpg|jpeg|png|webp)/i);
+                  const altMatch = raw.match(/alt=["']([^"']+)["']/i);
+
+                  if (hrefMatch) setCoupangUrl(hrefMatch[1] || hrefMatch[0]);
+                  if (srcMatch) setCustomImageUrl(srcMatch[1] || srcMatch[0]);
+                  if (altMatch && altMatch[1]?.trim()) setCustomProductName(altMatch[1].trim());
+                  return;
+                }
+
+                // 2. 일반 텍스트 + 링크 형태인 경우
                 const urlMatch = raw.match(/https:\/\/[^\s]+/i);
                 if (urlMatch) {
                   const extractedUrl = urlMatch[0];
@@ -686,7 +700,7 @@ export default function AdminDashboardClient({
                   setCoupangUrl(raw);
                 }
               }}
-              placeholder="🔗 [필수] 쿠팡 링크 (붙여넣으면 상품명까지 자동 입력)"
+              placeholder="🔗 [필수] 쿠팡 파트너스 링크 / HTML 배너 태그 복사 붙여넣기"
               disabled={isCoupangPublishing}
               style={{
                 padding: '12px 14px',

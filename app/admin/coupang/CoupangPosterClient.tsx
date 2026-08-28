@@ -22,9 +22,29 @@ export default function CoupangPosterClient() {
   } | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
-  // 클립보드에서 링크 즉시 붙여넣기 기능 (스마트 링크 & 상품명 자동 분리)
+  // 클립보드/인풋 스마트 파서 (쿠팡 파트너스 HTML 배너 태그, 텍스트+링크, 일반 URL 모두 100% 자동 분해)
   const processSharedText = (rawText: string) => {
     const trimmed = rawText.trim();
+
+    // 1. 쿠팡 파트너스 HTML 배너 태그 형태인 경우 (<a href="..." ...><img src="..." alt="..." ...></a>)
+    if (trimmed.includes('<a') || trimmed.includes('<img') || trimmed.includes('href=') || trimmed.includes('src=')) {
+      const hrefMatch = trimmed.match(/href=["'](https:\/\/[^"']+)["']/i) || trimmed.match(/https:\/\/link\.coupang\.com\/[a-zA-Z0-9_\/]+/i);
+      const srcMatch = trimmed.match(/src=["'](https:\/\/[^"']+)["']/i) || trimmed.match(/https:\/\/[^"'\s]+\.(?:jpg|jpeg|png|webp)/i);
+      const altMatch = trimmed.match(/alt=["']([^"']+)["']/i);
+
+      if (hrefMatch) {
+        setCoupangUrl(hrefMatch[1] || hrefMatch[0]);
+      }
+      if (srcMatch) {
+        setCustomImageUrl(srcMatch[1] || srcMatch[0]);
+      }
+      if (altMatch && altMatch[1]?.trim()) {
+        setCustomProductName(altMatch[1].trim());
+      }
+      return;
+    }
+
+    // 2. 일반 텍스트 + 링크 형태인 경우
     const urlMatch = trimmed.match(/https:\/\/[^\s]+/i);
     if (urlMatch) {
       const extractedUrl = urlMatch[0];

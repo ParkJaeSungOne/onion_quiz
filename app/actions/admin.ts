@@ -300,14 +300,28 @@ export async function publishCoupangDealToThreads(
       throw new Error('Unauthorized');
     }
 
-    const cleanUrl = coupangUrl.trim();
+    let cleanUrl = coupangUrl.trim();
+    let productName = customProductName?.trim() || '';
+    let selectedImage = customImageUrl?.trim() || '';
+    let productDetails = customDetails?.trim() || '';
+
+    // 쿠팡 파트너스 HTML 배너 태그 지원 (<a href="..." ...><img src="..." alt="..." ...></a>)
+    if (cleanUrl.includes('<a') || cleanUrl.includes('<img') || cleanUrl.includes('href=') || cleanUrl.includes('src=')) {
+      const hrefMatch = cleanUrl.match(/href=["'](https:\/\/[^"']+)["']/i) || cleanUrl.match(/https:\/\/link\.coupang\.com\/[a-zA-Z0-9_\/]+/i);
+      const srcMatch = cleanUrl.match(/src=["'](https:\/\/[^"']+)["']/i) || cleanUrl.match(/https:\/\/[^"'\s]+\.(?:jpg|jpeg|png|webp)/i);
+      const altMatch = cleanUrl.match(/alt=["']([^"']+)["']/i);
+
+      if (hrefMatch) cleanUrl = hrefMatch[1] || hrefMatch[0];
+      if (srcMatch && !selectedImage) selectedImage = srcMatch[1] || srcMatch[0];
+      if (altMatch && altMatch[1]?.trim() && !productName) productName = altMatch[1].trim();
+
+      logs.push(`🏷️ [쿠팡 배너 태그 자동 분해 완료] 링크, 상품명("${productName}"), 이미지 추출 성공!`);
+    }
+
     if (!cleanUrl.startsWith('http://') && !cleanUrl.startsWith('https://')) {
       throw new Error('올바른 URL(http/https)을 입력해 주세요.');
     }
 
-    let productName = customProductName?.trim() || '';
-    let selectedImage = customImageUrl?.trim() || '';
-    let productDetails = customDetails?.trim() || '';
     let redirectedUrl = cleanUrl;
 
     // 1. 쿠팡 리다이렉트 및 메타데이터 추적
