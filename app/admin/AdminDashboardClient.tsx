@@ -467,6 +467,25 @@ export default function AdminDashboardClient({
           >
             {isGenerating ? '⏳ 생성 중...' : '✨ 커스텀 AI 생성'}
           </button>
+          <Link
+            href="/admin/coupang"
+            style={{
+              padding: '10px 16px',
+              fontSize: '14px',
+              fontWeight: 900,
+              backgroundColor: '#e11d48',
+              color: '#ffffff',
+              border: '4px solid #000000',
+              borderRadius: '10px',
+              boxShadow: '3px 3px 0px #000000',
+              textDecoration: 'none',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '6px'
+            }}
+          >
+            📱 핫딜 전용 앱
+          </Link>
           <button onClick={handleLogout} className={styles.logoutButton}>
             로그아웃 ↩
           </button>

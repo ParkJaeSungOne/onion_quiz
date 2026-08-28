@@ -16,6 +16,8 @@ export default function Footer() {
         <Link href="/privacy" className={styles.link}>🔒 개인정보처리방침</Link>
         <span className={styles.divider}>|</span>
         <Link href="/terms" className={styles.link}>📄 이용약관</Link>
+        <span className={styles.divider}>|</span>
+        <Link href="/admin" className={styles.link} style={{ fontWeight: 900, color: '#e11d48' }}>🔐 관리자센터</Link>
       </div>
       <p className={styles.copyright}>© 2026 까도까도 (Kkado-Kkado). All rights reserved.</p>
       <p className={styles.footerInfo}>
