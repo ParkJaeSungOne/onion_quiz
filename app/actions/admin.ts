@@ -311,7 +311,7 @@ export async function publishCoupangDealToThreads(
     let redirectedUrl = cleanUrl;
 
     // 1. 쿠팡 리다이렉트 및 메타데이터 추적
-    logs.push(`🌐 [1단계] 쿠팡 링크 정밀 분석 및 리다이렉트 추적 중...`);
+    logs.push(`🌐 [1단계] 쿠팡 링크 정밀 크롤링 및 리다이렉트 추적 중...`);
     console.log('[CoupangToThreads] Fetching URL:', cleanUrl);
 
     try {
@@ -319,21 +319,30 @@ export async function publishCoupangDealToThreads(
       const redirectRes = await fetch(cleanUrl, {
         redirect: 'manual',
         headers: {
-          'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15'
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
         }
       });
       const loc = redirectRes.headers.get('location');
       if (loc) {
         redirectedUrl = loc;
-        logs.push(`🔍 [리다이렉트 감지] 상세 주소 확보: ${redirectedUrl.substring(0, 50)}...`);
+        logs.push(`🔍 [리다이렉트 감지] 대상 주소: ${redirectedUrl.substring(0, 55)}...`);
       }
 
-      // 상품 페이지 직접 스크랩 시도
-      const crawlRes = await fetch(redirectedUrl, {
+      // 모바일 여행 주소(/m/tp/products/)일 경우 데스크톱(/tp/products/)으로 정규화하여 100% 풀 HTML 크롤링
+      let targetFetchUrl = redirectedUrl;
+      if (targetFetchUrl.includes('/m/tp/products/')) {
+        targetFetchUrl = targetFetchUrl.replace('/m/tp/products/', '/tp/products/');
+      }
+
+      // 상품 페이지 직접 스크랩 (Chrome 헤더로 WAF 통과)
+      const crawlRes = await fetch(targetFetchUrl, {
         headers: {
-          'User-Agent': 'facebookexternalhit/1.1 (+http://www.facebook.com/externalhit_uatext.php)',
-          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
-          'Accept-Language': 'ko-KR,ko;q=0.9,en-US;q=0.8,en;q=0.7'
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+          'Accept-Language': 'ko-KR,ko;q=0.9',
+          'Sec-Ch-Ua': '"Chromium";v="124", "Google Chrome";v="124"',
+          'Sec-Ch-Ua-Mobile': '?0',
+          'Sec-Ch-Ua-Platform': '"Windows"'
         }
       });
 
@@ -341,16 +350,31 @@ export async function publishCoupangDealToThreads(
 
       // 상품명 자동 추출 (미입력 시)
       if (!productName) {
+        const ogTitleMatch = html.match(/<meta\s+property=["']og:title["']\s+content=["']([^"']+)["']/i);
+        const ogDescMatch = html.match(/<meta\s+property=["']og:description["']\s+content=["']([^"']+)["']/i);
         const prodNameMatch = html.match(/"productName"\s*:\s*"([^"]+)"/i) 
-          || html.match(/"title"\s*:\s*"([^"]+)"/i) 
-          || html.match(/<meta\s+property=["']og:title["']\s+content=["']([^"']+)["']/i)
-          || html.match(/<title>([^<]+)<\/title>/i);
+          || html.match(/"title"\s*:\s*"([^"]+)"/i)
+          || html.match(/"itemTitle"\s*:\s*"([^"]+)"/i);
 
-        let extracted = prodNameMatch ? prodNameMatch[1] : '';
-        extracted = extracted.replace(/쿠팡!\s*-\s*/g, '').replace(/ - 쿠팡!/g, '').trim();
+        let extracted = '';
+        if (ogTitleMatch && !ogTitleMatch[1].includes('COUPANG') && !ogTitleMatch[1].toLowerCase().includes('access denied')) {
+          extracted = ogTitleMatch[1];
+        } else if (ogDescMatch && !ogDescMatch[1].toLowerCase().includes('access denied')) {
+          extracted = ogDescMatch[1];
+        } else if (prodNameMatch) {
+          extracted = prodNameMatch[1];
+        }
 
-        if (extracted && !extracted.toLowerCase().includes('access denied') && !extracted.toLowerCase().includes('coupang') && extracted !== '쿠팡!') {
+        extracted = extracted
+          .replace(/^쿠팡!\s*\|\s*/g, '')
+          .replace(/^쿠팡!\s*-\s*/g, '')
+          .replace(/\s*-\s*쿠팡!$/g, '')
+          .replace(/\s*\|\s*쿠팡!$/g, '')
+          .trim();
+
+        if (extracted && !extracted.toLowerCase().includes('access denied') && extracted !== '쿠팡!' && extracted !== 'COUPANG') {
           productName = extracted;
+          logs.push(`📦 [HTML 크롤링 성공] 상품명 ➔ "${productName}"`);
         }
       }
 
@@ -365,10 +389,11 @@ export async function publishCoupangDealToThreads(
         );
         if (validImg) {
           selectedImage = validImg;
+          logs.push(`📸 [이미지 크롤링 성공] ${selectedImage.substring(0, 50)}...`);
         }
       }
     } catch (crawlErr: any) {
-      logs.push(`⚠️ 크롤링 기본 통신 예외 (${crawlErr.message}) ➔ AI 실시간 웹검색 엔진으로 전환`);
+      logs.push(`⚠️ 크롤링 기본 통신 예외 (${crawlErr.message}) ➔ AI 정밀 분석으로 전환`);
     }
 
     // 2. Gemini 2.5 Flash 실시간 Google Search Grounding 가동 (실제 상품 정보 & 팩트 정밀 수집)
