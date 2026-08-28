@@ -437,7 +437,24 @@ export async function publishCoupangDealToThreads(
           logs.push(`📸 [AI 웹검색 자동 특정] 이미지 ➔ ${selectedImage.substring(0, 45)}...`);
         }
       } catch (searchErr: any) {
-        logs.push(`⚠️ 구글 검색 엔진 통신 예외 (${searchErr.message?.substring(0, 30)}...)`);
+        logs.push(`⚠️ 구글 검색 도구 제한 (${searchErr.message?.substring(0, 30)}...) ➔ 고속 AI 추론으로 전환`);
+
+        // A-2. Search Grounding 실패 시 직통 AI 모델로 즉각 상품명 추론
+        try {
+          const directRes = await ai.models.generateContent({
+            model: 'gemini-flash-lite-latest',
+            contents: `다음 쿠팡 상품 링크(${cleanUrl}) 또는 쿠팡 상품 번호(${prodId})의 상품명을 특정하거나, 파라미터를 기반으로 상품명(예: 닥터지 선크림, 페리페라 틴트, 오션월드 종일권 등)을 추론해.
+반드시 첫 줄에 [PRODUCT_NAME: 상품명] 으로만 답해줘.`
+          });
+          const directText = directRes.text?.trim() || '';
+          const nameMatch = directText.match(/\[PRODUCT_NAME:\s*([^\]]+)\]/i);
+          if (nameMatch && nameMatch[1]?.trim() && !nameMatch[1].includes('쿠팡!')) {
+            productName = nameMatch[1].trim();
+            logs.push(`🏷️ [AI 지능형 추론 특정] 상품명 ➔ "${productName}"`);
+          }
+        } catch {
+          // ignore
+        }
       }
 
       // B. Daum 웹 검색 스니펫 폴백 (초고속 보조)

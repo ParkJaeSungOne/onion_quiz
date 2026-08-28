@@ -22,12 +22,29 @@ export default function CoupangPosterClient() {
   } | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
-  // 클립보드에서 링크 즉시 붙여넣기 기능 (아이폰 편의성 극대화)
+  // 클립보드에서 링크 즉시 붙여넣기 기능 (스마트 링크 & 상품명 자동 분리)
+  const processSharedText = (rawText: string) => {
+    const trimmed = rawText.trim();
+    const urlMatch = trimmed.match(/https:\/\/[^\s]+/i);
+    if (urlMatch) {
+      const extractedUrl = urlMatch[0];
+      setCoupangUrl(extractedUrl);
+
+      // URL 앞뒤의 텍스트가 있다면 상품명으로 자동 입력
+      const remainingText = trimmed.replace(extractedUrl, '').trim().replace(/^\[|\]$/g, '').trim();
+      if (remainingText && remainingText.length > 1 && !customProductName) {
+        setCustomProductName(remainingText);
+      }
+    } else {
+      setCoupangUrl(trimmed);
+    }
+  };
+
   const handlePasteUrl = async () => {
     try {
       const text = await navigator.clipboard.readText();
       if (text) {
-        setCoupangUrl(text.trim());
+        processSharedText(text);
       }
     } catch {
       alert('클립보드 접근 권한을 허용해 주시거나 직접 붙여넣어 주세요.');
@@ -196,7 +213,7 @@ export default function CoupangPosterClient() {
           <input
             type="text"
             value={coupangUrl}
-            onChange={(e) => setCoupangUrl(e.target.value)}
+            onChange={(e) => processSharedText(e.target.value)}
             placeholder="https://link.coupang.com/a/..."
             disabled={isPublishing}
             style={{
