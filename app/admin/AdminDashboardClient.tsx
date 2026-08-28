@@ -672,8 +672,21 @@ export default function AdminDashboardClient({
             <input
               type="text"
               value={coupangUrl}
-              onChange={(e) => setCoupangUrl(e.target.value)}
-              placeholder="🔗 [필수] 쿠팡 파트너스 링크 (예: https://link.coupang.com/a/...)"
+              onChange={(e) => {
+                const raw = e.target.value;
+                const urlMatch = raw.match(/https:\/\/[^\s]+/i);
+                if (urlMatch) {
+                  const extractedUrl = urlMatch[0];
+                  setCoupangUrl(extractedUrl);
+                  const rem = raw.replace(extractedUrl, '').trim().replace(/^\[|\]$/g, '').trim();
+                  if (rem && rem.length > 1 && !customProductName) {
+                    setCustomProductName(rem);
+                  }
+                } else {
+                  setCoupangUrl(raw);
+                }
+              }}
+              placeholder="🔗 [필수] 쿠팡 링크 (붙여넣으면 상품명까지 자동 입력)"
               disabled={isCoupangPublishing}
               style={{
                 padding: '12px 14px',
