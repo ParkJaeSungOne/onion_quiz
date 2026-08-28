@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { logoutAdmin, deleteQuiz, triggerAIGenerate, exchangeThreadsToken, triggerThreadsPostAction, publishCoupangDealToThreads } from '@/app/actions/admin';
 import styles from './admin.module.css';
