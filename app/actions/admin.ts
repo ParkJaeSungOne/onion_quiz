@@ -396,6 +396,20 @@ export async function publishCoupangDealToThreads(
       logs.push(`⚠️ 크롤링 기본 통신 예외 (${crawlErr.message}) ➔ AI 정밀 분석으로 전환`);
     }
 
+    // 상품명이 비어있을 경우 안전한 기본값 배정
+    if (!productName || productName.toLowerCase().includes('access denied') || productName === '쿠팡!' || productName === 'COUPANG' || productName.trim().length < 2) {
+      if (productDetails) {
+        productName = productDetails.split(',')[0].trim();
+      } else if (redirectedUrl.includes('trip.coupang.com')) {
+        productName = '쿠팡 트래블 단독 특가 여행/숙박 패키지';
+      } else {
+        productName = '쿠팡 역대급 초특가 핫딜 상품';
+      }
+      logs.push(`⚠️ 상품명 자동 크롤링 제한 ➔ 기본 상품명("${productName}")으로 보정`);
+    } else {
+      logs.push(`📦 [상품명 확정] "${productName}"`);
+    }
+
     // 2. Gemini AI 고품질 팩폭 바이럴 카피라이팅 엔진 가동
     logs.push(`🧠 [2단계] Gemini AI 팩폭 바이럴 카피라이팅 가동 (상품명: "${productName}")...`);
     const { GoogleGenAI } = await import('@google/genai');
@@ -412,9 +426,9 @@ export async function publishCoupangDealToThreads(
 
 [작성 규칙 - 반드시 준수]
 1. **첫 문장 (현실 비교 훅)**: 소비자가 일상에서 겪는 비효율/돈 낭비/고생을 콕 짚으며 시작하세요.
-   (예: "먹고싶은 거 다 먹었는데 살이빠졌어요", "남들 땡볕에서 2시간 줄 서서 어트랙션 하나 탈 때, 7시 반에 들어가서 인기 슬라이드 3개 연속 조지는 법 알려줌 ㄷㄷ", "호텔 1박 20만원 넘게 주고 숙소 가느니, 워터파크+조식까지 다 묶어서 이 가격이면 왜 무조건 이득인지 팩트만 까봄 ㄷㄷ")
+   (예: "남들 땡볕에서 2시간 줄 서서 어트랙션 하나 탈 때, 7시 반에 들어가서 인기 슬라이드 3개 연속 조지는 법 알려줌 ㄷㄷ", "호텔 1박 20만원 넘게 주고 숙소 가느니, 워터파크+조식까지 다 묶어서 이 가격이면 왜 무조건 이득인지 팩트만 까봄 ㄷㄷ")
 2. **본문 (논리적인 3단 팩트 분해)**:
-   - ① [핵심 혜택/구성 팩폭]: 이 상품의 핵심 혜택(얼리파크인 조기입장, 조식 포함, 대기시간 단축, 패키지 할인 등)이 왜 사기적인지 구체적으로 명시.
+   - ① [핵심 혜택/구성 팩폭]: 이 상품("${productName}")의 핵심 혜택과 구성이 왜 사기적인지 구체적으로 명시.
    - ② [실사용/가성비 포인트]: 다른 사람들 고생할 때 체력과 시간을 아끼며 100% 뽕 뽑는 실전 꿀팁.
    - ③ [선점 타이밍]: 왜 지금 이 링크로 사두거나 일정을 잡아야 하는지 명확한 이유 제시.
 3. **톤앤매너**:

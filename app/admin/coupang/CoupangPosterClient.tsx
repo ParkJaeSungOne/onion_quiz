@@ -214,25 +214,25 @@ export default function CoupangPosterClient() {
           />
         </div>
 
-        {/* 2. 상품명/키워드 (선택) */}
+        {/* 2. 상품명/키워드 */}
         <div style={{ marginBottom: '14px' }}>
-          <label style={{ display: 'block', fontSize: '12.5px', fontWeight: 900, marginBottom: '6px' }}>
-            🏷️ 2. 상품명 / 키워드 (선택)
+          <label style={{ display: 'block', fontSize: '13px', fontWeight: 900, marginBottom: '6px', color: '#1d4ed8' }}>
+            🏷️ 2. 상품명 / 키워드 (입력 권장) 🔥
           </label>
           <input
             type="text"
             value={customProductName}
             onChange={(e) => setCustomProductName(e.target.value)}
-            placeholder="예: 소노벨 단양 워터파크 패키지"
+            placeholder="예: 오션월드 얼리파크인 종일권 / 소노벨 단양 / 코카콜라 제로"
             disabled={isPublishing}
             style={{
               width: '100%',
-              padding: '10px 12px',
-              fontSize: '13.5px',
-              fontWeight: 700,
-              border: '2.5px solid #000000',
+              padding: '11px 12px',
+              fontSize: '14px',
+              fontWeight: 800,
+              border: '3px solid #000000',
               borderRadius: '10px',
-              backgroundColor: '#ffffff',
+              backgroundColor: '#eff6ff',
               boxShadow: '2px 2px 0px #000000',
               outline: 'none',
               boxSizing: 'border-box'

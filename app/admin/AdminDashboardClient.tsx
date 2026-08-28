@@ -690,7 +690,7 @@ export default function AdminDashboardClient({
               type="text"
               value={customProductName}
               onChange={(e) => setCustomProductName(e.target.value)}
-              placeholder="🏷️ [선택] 상품명/키워드 (예: 소노벨 단양 워터파크 패키지)"
+              placeholder="🏷️ [상품명 입력 권장] 예: 오션월드 얼리파크인 종일권 / 소노벨 단양"
               disabled={isCoupangPublishing}
               style={{
                 padding: '12px 14px',
@@ -698,7 +698,7 @@ export default function AdminDashboardClient({
                 fontWeight: 800,
                 border: '3px solid #000000',
                 borderRadius: '12px',
-                backgroundColor: '#ffffff',
+                backgroundColor: '#eff6ff',
                 boxShadow: '3px 3px 0px #000000',
                 outline: 'none'
               }}
