@@ -312,9 +312,10 @@ export async function publishCoupangDealToThreads(
       const altMatch = cleanUrl.match(/alt=["']([^"']+)["']/i);
 
       if (hrefMatch) cleanUrl = hrefMatch[1] || hrefMatch[0];
+      if (srcMatch && !selectedImage) selectedImage = srcMatch[1] || srcMatch[0];
       if (altMatch && altMatch[1]?.trim() && !productName) productName = altMatch[1].trim();
 
-      logs.push(`🏷️ [쿠팡 배너 태그 자동 분해 완료] 링크 및 상품명("${productName}") 추출 성공!`);
+      logs.push(`🏷️ [쿠팡 배너 태그 자동 분해 완료] 링크, 상품명("${productName}"), 쿠팡 정품 이미지 확보!`);
     }
 
     if (!cleanUrl.startsWith('http://') && !cleanUrl.startsWith('https://')) {
@@ -603,6 +604,10 @@ export async function publishCoupangDealToThreads(
         const srcMatches = imgHtml.match(/https:\/\/[^"'\s]+(?:jpg|jpeg|png|webp)/gi) || [];
         const candidates = srcMatches.filter(src => 
           (src.includes('daumcdn.net') || src.includes('search.daum')) &&
+          !src.includes('daum_og') &&
+          !src.includes('statics') &&
+          !src.includes('common') &&
+          !src.includes('logo') &&
           !src.includes('ico') &&
           !src.includes('top') &&
           !src.includes('icon') &&
