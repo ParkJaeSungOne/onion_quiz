@@ -180,6 +180,7 @@ export default function AdminDashboardClient({
 
   // 🛒 쿠팡 핫딜 AI 스레드 자동 발행기 상태
   const [coupangUrl, setCoupangUrl] = useState('');
+  const [customProductName, setCustomProductName] = useState('');
   const [isCoupangPublishing, setIsCoupangPublishing] = useState(false);
   const [coupangLogs, setCoupangLogs] = useState<string[]>([]);
   const [coupangResult, setCoupangResult] = useState<{
@@ -195,7 +196,7 @@ export default function AdminDashboardClient({
 
   const handlePublishCoupang = async () => {
     if (!coupangUrl.trim() || isCoupangPublishing) return;
-    if (!confirm('쿠팡 상품 페이지를 크롤링하고, Gemini AI로 어그로 카피를 생성하여 스레드에 실시간 포스팅하시겠습니까?')) {
+    if (!confirm('쿠팡 상품 페이지를 분석하고, Gemini AI로 어그로 카피를 생성하여 스레드에 실시간 포스팅하시겠습니까?')) {
       return;
     }
 
@@ -204,7 +205,8 @@ export default function AdminDashboardClient({
     setCoupangResult(null);
     setCoupangLogs([
       '🚀 [시작] 쿠팡 링크 실시간 AI 분석 & 스레드 포스팅 파이프라인 가동...',
-      `🔗 대상 URL: ${coupangUrl.trim()}`
+      `🔗 대상 URL: ${coupangUrl.trim()}`,
+      customProductName.trim() ? `🏷️ 지정 상품명: "${customProductName.trim()}"` : '🔍 상품명 자동 크롤링 모드'
     ]);
 
     // 실시간 진행 텍스트 시뮬레이션 인터벌 (서버 응답 대기 동안 시각적 피드백 제공)
@@ -212,7 +214,7 @@ export default function AdminDashboardClient({
       setCoupangLogs(prev => [...prev, '🌐 1단계: 쿠팡 서버 접속 및 HTML 상품명/고화질 이미지 크롤링 중...']);
     }, 1200);
     const timer2 = setTimeout(() => {
-      setCoupangLogs(prev => [...prev, '🧠 2단계: Gemini 2.0 Flash AI 팩폭 어그로 카피라이팅 엔진 호출 중...']);
+      setCoupangLogs(prev => [...prev, '🧠 2단계: Gemini AI 팩폭 어그로 카피라이팅 엔진 호출 중...']);
     }, 3500);
     const timer3 = setTimeout(() => {
       setCoupangLogs(prev => [...prev, '📱 3단계: Meta Threads Graph API 미디어 컨테이너 생성 및 인코딩 검증 중...']);
@@ -222,7 +224,7 @@ export default function AdminDashboardClient({
     }, 9500);
 
     try {
-      const res = await publishCoupangDealToThreads(coupangUrl);
+      const res = await publishCoupangDealToThreads(coupangUrl, customProductName);
       clearTimeout(timer1);
       clearTimeout(timer2);
       clearTimeout(timer3);
@@ -235,6 +237,7 @@ export default function AdminDashboardClient({
       if (res.success && (res as any).postId) {
         setCoupangResult(res as any);
         setCoupangUrl('');
+        setCustomProductName('');
       } else {
         setCoupangError(res.error || '스레드 발행 실패');
       }
@@ -678,9 +681,27 @@ export default function AdminDashboardClient({
             placeholder="쿠팡 링크 입력 (예: https://link.coupang.com/a/gzAKLjJpyC)"
             disabled={isCoupangPublishing}
             style={{
-              flex: '1 1 300px',
+              flex: '2 1 300px',
               padding: '12px 14px',
               fontSize: '14px',
+              fontWeight: 800,
+              border: '3px solid #000000',
+              borderRadius: '12px',
+              backgroundColor: '#ffffff',
+              boxShadow: '3px 3px 0px #000000',
+              outline: 'none'
+            }}
+          />
+          <input
+            type="text"
+            value={customProductName}
+            onChange={(e) => setCustomProductName(e.target.value)}
+            placeholder="상품명/키워드 직접입력 (선택, 예: 소노벨 단양 패키지)"
+            disabled={isCoupangPublishing}
+            style={{
+              flex: '1 1 200px',
+              padding: '12px 14px',
+              fontSize: '13.5px',
               fontWeight: 800,
               border: '3px solid #000000',
               borderRadius: '12px',
@@ -702,10 +723,11 @@ export default function AdminDashboardClient({
               borderRadius: '12px',
               boxShadow: '3px 3px 0px #000000',
               cursor: isCoupangPublishing ? 'not-allowed' : 'pointer',
-              transition: 'all 0.15s ease'
+              transition: 'all 0.15s ease',
+              whiteSpace: 'nowrap'
             }}
           >
-            {isCoupangPublishing ? '⏳ AI 크롤링 & 스레드 발행 중...' : '🚀 AI 어그로 분석 및 스레드 실시간 발행'}
+            {isCoupangPublishing ? '⏳ AI 분석 & 스레드 발행 중...' : '🚀 AI 어그로 분석 및 스레드 실시간 발행'}
           </button>
         </div>
 

@@ -286,7 +286,7 @@ export async function triggerThreadsPostAction() {
 /**
  * 🛒 쿠팡 링크 분석 -> Gemini 어그로 바이럴 카피 생성 -> 스레드 이미지+본문+댓글 자동 발행
  */
-export async function publishCoupangDealToThreads(coupangUrl: string) {
+export async function publishCoupangDealToThreads(coupangUrl: string, customProductName?: string) {
   const logs: string[] = [];
   try {
     const cookieStore = await cookies();
@@ -300,42 +300,67 @@ export async function publishCoupangDealToThreads(coupangUrl: string) {
       throw new Error('올바른 URL(http/https)을 입력해 주세요.');
     }
 
+    let productName = customProductName?.trim() || '';
+    let selectedImage = '';
+
     // 1. 쿠팡 페이지 크롤링 및 상품 정보 추출
     logs.push(`🌐 1단계: 쿠팡 링크 접속 및 리다이렉트 추적 중... (${cleanUrl.substring(0, 45)}...)`);
     console.log('[CoupangToThreads] Fetching URL:', cleanUrl);
-    const crawlRes = await fetch(cleanUrl, {
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
-        'Accept-Language': 'ko-KR,ko;q=0.9,en-US;q=0.8,en;q=0.7'
+
+    try {
+      const crawlRes = await fetch(cleanUrl, {
+        headers: {
+          'User-Agent': 'facebookexternalhit/1.1 (+http://www.facebook.com/externalhit_uatext.php)',
+          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
+          'Accept-Language': 'ko-KR,ko;q=0.9,en-US;q=0.8,en;q=0.7',
+          'Sec-Ch-Ua': '"Chromium";v="124", "Google Chrome";v="124"',
+          'Sec-Ch-Ua-Mobile': '?0',
+          'Sec-Ch-Ua-Platform': '"Windows"'
+        }
+      });
+
+      const html = await crawlRes.text();
+
+      // 상품명 자동 추출 (사용자가 직접 입력하지 않은 경우)
+      if (!productName) {
+        const prodNameMatch = html.match(/"productName"\s*:\s*"([^"]+)"/i) 
+          || html.match(/"title"\s*:\s*"([^"]+)"/i) 
+          || html.match(/<meta\s+property=["']og:title["']\s+content=["']([^"']+)["']/i)
+          || html.match(/<title>([^<]+)<\/title>/i);
+
+        let extracted = prodNameMatch ? prodNameMatch[1] : '';
+        extracted = extracted.replace(/쿠팡!\s*-\s*/g, '').replace(/ - 쿠팡!/g, '').trim();
+
+        if (extracted && !extracted.toLowerCase().includes('access denied') && !extracted.toLowerCase().includes('coupang') && extracted !== '쿠팡!') {
+          productName = extracted;
+        }
       }
-    });
 
-    const html = await crawlRes.text();
-    const finalUrl = crawlRes.url || cleanUrl;
+      // 대표 이미지 추출
+      const imgMatches = html.match(/https:\/\/[^"'\s]+\.(?:jpg|jpeg|png|webp)/gi) || [];
+      const validImg = imgMatches.find(url => 
+        (url.includes('travelSeller') || url.includes('thumbnail.coupangcdn.com') || url.includes('image.coupangcdn.com') || url.includes('img1a.coupangcdn.com')) 
+        && !url.includes('img_fb') 
+        && !url.includes('icons') 
+        && !url.includes('static/media')
+      );
+      if (validImg) {
+        selectedImage = validImg;
+      }
+    } catch (crawlErr: any) {
+      logs.push(`⚠️ 크롤링 통신 예외 (${crawlErr.message}) ➔ 안전 모드로 전환`);
+    }
 
-    // 상품명 추출
-    const prodNameMatch = html.match(/"productName"\s*:\s*"([^"]+)"/i) 
-      || html.match(/"title"\s*:\s*"([^"]+)"/i) 
-      || html.match(/<meta\s+property=["']og:title["']\s+content=["']([^"']+)["']/i)
-      || html.match(/<title>([^<]+)<\/title>/i);
-
-    let productName = prodNameMatch ? prodNameMatch[1] : '쿠팡 핫딜 추천 상품';
-    productName = productName.replace(/쿠팡!\s*-\s*/g, '').replace(/ - 쿠팡!/g, '').trim();
-    logs.push(`📦 2단계: 상품명 추출 완료 ➔ "${productName}"`);
-
-    // 대표 이미지 추출
-    const imgMatches = html.match(/https:\/\/[^"'\s]+\.(?:jpg|jpeg|png|webp)/gi) || [];
-    let selectedImage = imgMatches.find(url => 
-      (url.includes('travelSeller') || url.includes('thumbnail.coupangcdn.com') || url.includes('image.coupangcdn.com')) 
-      && !url.includes('img_fb') 
-      && !url.includes('icons') 
-      && !url.includes('static/media')
-    );
+    if (!productName || productName.toLowerCase().includes('access denied')) {
+      productName = '쿠팡 역대급 초특가 핫딜 상품';
+      logs.push(`📦 2단계: 상품명 ➔ "${productName}" (기본 핫딜 모드)`);
+    } else {
+      logs.push(`📦 2단계: 상품명 확인 완료 ➔ "${productName}"`);
+    }
 
     if (!selectedImage) {
       selectedImage = 'https://kkado-kkado.com/thumbnail.png';
-      logs.push(`📸 대표 이미지: 기본 까도까도 썸네일 사용`);
+      logs.push(`📸 대표 이미지: 기본 까도까도 썸네일 배정`);
     } else {
       logs.push(`📸 대표 이미지 추출 완료: ${selectedImage.substring(0, 60)}...`);
     }
