@@ -5,14 +5,18 @@ const envFile = fs.readFileSync('.env', 'utf-8');
 const match = envFile.match(/GEMINI_API_KEY=["']?([^"'\r\n]+)/);
 const apiKey = match ? match[1] : '';
 
-async function listModels() {
+async function listAll() {
   const ai = new GoogleGenAI({ apiKey });
   try {
-    const list = await ai.models.list();
-    console.log('Available models:', list.models?.map(m => m.name));
+    const pager = await ai.models.list();
+    for await (const m of pager) {
+      if (m.name.includes('image') || m.name.includes('imagen')) {
+        console.log('Image model:', m.name);
+      }
+    }
   } catch (e) {
-    console.error('List error:', e.message);
+    console.error('Err:', e.message);
   }
 }
 
-listModels();
+listAll();

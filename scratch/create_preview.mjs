@@ -1,0 +1,24 @@
+import fs from 'fs';
+import http from 'http';
+
+// Let's create an HTML preview file that users can view in browser or screenshot, plus render directly
+const html = `<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+  body { margin: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh; background: #222; font-family: sans-serif; }
+  .card { background: white; padding: 20px; border-radius: 24px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); text-align: center; }
+  h2 { margin: 0 0 16px 0; color: #111; }
+</style>
+</head>
+<body>
+<div class="card">
+  <h2>🗄️ pickmycabinet 공식 캐릭터 프로필</h2>
+  <img src="/pickmycabinet/profile_hip_korean_vector_mascot.svg" width="400" height="400" />
+</div>
+</body>
+</html>`;
+
+fs.writeFileSync('public/pickmycabinet/preview.html', html);
+console.log('Saved preview.html');
